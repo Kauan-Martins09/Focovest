@@ -69,6 +69,10 @@
         <button onclick="voltarMenu()">Voltar</button>
     </div>
 
+    <div id="home" class="tela">
+        <h1>Bem-vindo ao AlunoNet</h1>
+    </div>
+
     <script>
         function mostrarTela(id) {
             document.querySelectorAll(".tela").forEach(t => {
@@ -85,6 +89,10 @@
 
         function abrirLogin(){
             mostrarTela("login");
+        }
+
+        function abrirHome(){
+            mostrarTela("home")
         }
 
         function voltarMenu(){
@@ -128,7 +136,11 @@
 
             const json = await resposta.json();
 
-            alert(json.msg);
+            if (json.msg === "Login efetuado"){
+                abrirHome()
+            } else{
+                 alert(json.msg);
+            }
         }
 
     </script>

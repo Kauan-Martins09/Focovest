@@ -45,3 +45,4 @@ def login(user: UserLog, db: Session = Depends(get_db)):
         return{"msg": "Senha incorreta"}
     
     return {"msg": "Login efetuado"}
+    
