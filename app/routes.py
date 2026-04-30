@@ -19,7 +19,7 @@ def get_db():
 
 @router.post("/cadastro")
 def cadastro(user: UserCreate, db: Session = Depends(get_db)):
-    usuario = db.query(User).filter(user.email == user.email).first()
+    usuario = db.query(User).filter(User.email == user.email).first()
     if  usuario:
         return{"msg": "Usuário ja cadastrado"}
     
@@ -33,7 +33,7 @@ def cadastro(user: UserCreate, db: Session = Depends(get_db)):
     db.add(novo)
     db.commit()
 
-    return{"msg": "Usuário cadastrado"}
+    return{"msg": "usuario cadastrado"}
         
 
 @router.post("/login")
@@ -45,4 +45,3 @@ def login(user: UserLog, db: Session = Depends(get_db)):
         return{"msg": "Senha incorreta"}
     
     return {"msg": "Login efetuado"}
-    

@@ -7,35 +7,86 @@
 
 <style>
     .tela {
-        display: none;
-    }
+    display: none;
+}
 
-    .ativa {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    body {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        font-family: Arial, sans-serif;
-    }
+.ativa {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
-    input {
-        margin: 5px;
-        padding: 8px;
-        width: 200px;
-    }
+/* Fundo mais moderno */
+body {
+    margin: 0;
+    height: 100vh;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #9F96BD, #67E191);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-    button {
-        margin-top: 10px;
-        padding: 8px;
-        cursor: pointer;
-    }
+/* Caixa central estilo app */
+.tela.ativa {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    width: 280px;
+}
+
+/* Título */
+h1 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Inputs mais bonitos */
+input {
+    margin: 8px 0;
+    padding: 10px;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    outline: none;
+    transition: 0.3s;
+}
+
+/* Efeito ao clicar no input */
+input:focus {
+    border-color: #9F96BD;
+    box-shadow: 0 0 5px rgba(79,172,254,0.5);
+}
+
+/* Botões */
+button {
+    margin-top: 10px;
+    padding: 10px;
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    background: #9F96BD;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+/* Hover */
+button:hover {
+    background: #9F96BD;
+}
+
+/* Botão voltar diferente */
+button:last-child {
+    background: #ccc;
+    color: black;
+}
+
+button:last-child:hover {
+    background: #aaa;
+}
 </style>
 
 </head>
@@ -70,7 +121,7 @@
     </div>
 
     <div id="home" class="tela">
-        <h1>Bem-vindo ao AlunoNet</h1>
+        <h1>Bem-vindo ao FocoVest</h1>
     </div>
 
     <script>
@@ -116,8 +167,12 @@
             });
 
             const json = await resposta.json();
-
-            alert(json.msg);
+            if (json.msg === "usuario cadastrado"){
+                abrirHome()
+            
+            } else {
+                alert(json.msg)
+            }
         }
 
         async function entrar() {
@@ -137,9 +192,10 @@
             const json = await resposta.json();
 
             if (json.msg === "Login efetuado"){
+                alert(json.msg);
                 abrirHome()
             } else{
-                 alert(json.msg);
+                alert(json.msg);
             }
         }
 
