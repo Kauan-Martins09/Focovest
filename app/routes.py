@@ -38,9 +38,9 @@ def cadastro(user: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login")
 def login(user: UserLog, db: Session = Depends(get_db)):
-    usuario = db.query(User).filter(user.email == user.email).first()
+    usuario = db.query(User).filter(User.email == user.email).first()
     if not usuario:
-        return {"msg": "Uusário não encontrado"}
+        return {"msg": "usário não encontrado"}
     if usuario.senha != user.senha:
         return{"msg": "Senha incorreta"}
     
