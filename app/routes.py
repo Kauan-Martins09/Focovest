@@ -5,6 +5,7 @@ from .db import SessionLocal
 from .models import User
 from .schemas import UserCreate
 from .schemas import UserLog
+from .security import hash_senha, verificar_senha
 
 router = APIRouter()
 
@@ -23,9 +24,11 @@ def cadastro(user: UserCreate, db: Session = Depends(get_db)):
     if  usuario:
         return{"msg": "Usuário ja cadastrado"}
     
+    senha_hash = hash_senha(user.senha)
+
     novo = User(
         email=user.email,
-        senha=user.senha,
+        senha=senha_hash,
         nome=user.nome,
         idade=user.idade
     )
@@ -41,7 +44,7 @@ def login(user: UserLog, db: Session = Depends(get_db)):
     usuario = db.query(User).filter(User.email == user.email).first()
     if not usuario:
         return {"msg": "usário não encontrado"}
-    if usuario.senha != user.senha:
+    if not verificar_senha(user.senha, usuario.senha):
         return{"msg": "Senha incorreta"}
     
-    return {"msg": "Login efetuado"}
+    return {"success": True}

@@ -191,7 +191,7 @@ button:last-child:hover {
 
             const json = await resposta.json();
 
-            if (json.msg === "Login efetuado"){
+            if (json.success){
                 abrirHome()
             } else{
                 alert(json.msg);
