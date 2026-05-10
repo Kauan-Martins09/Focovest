@@ -1,203 +1,560 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>FocoVest</title>
 
 <style>
-    .tela {
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* TELAS */
+
+.tela{
     display: none;
 }
 
-.ativa {
+.ativa{
+    display: flex;
+}
+
+/* BODY */
+
+body{
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    overflow-x: hidden;
+}
+
+/* LOGIN E CADASTRO */
+
+.caixa{
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+
+    width: 280px;
+
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-/* Fundo mais moderno */
-body {
-    margin: 0;
-    height: 100vh;
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #9F96BD, #67E191);
-    display: flex;
+/* HOME */
+
+#home{
+    width: 100%;
+
+    flex-direction: column;
+    align-items: center;
+
+    padding: 40px 20px;
+
+    position: relative;
+}
+
+/* LOGIN E CADASTRO */
+
+#cadastro,
+#login{
     justify-content: center;
     align-items: center;
+
+    min-height: 100vh;
+
+    background: linear-gradient(135deg, #9F96BD, #67E191);
 }
 
-/* Caixa central estilo app */
-.tela.ativa {
-    background: white;
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    width: 280px;
-}
+/* INPUTS */
 
-/* Título */
-h1 {
-    margin-bottom: 20px;
-    color: #333;
-}
-
-/* Inputs mais bonitos */
-input {
+input{
     margin: 8px 0;
+
     padding: 10px;
+
     width: 100%;
+
     border-radius: 8px;
+
     border: 1px solid #ccc;
+
     outline: none;
-    transition: 0.3s;
 }
 
-/* Efeito ao clicar no input */
-input:focus {
+input:focus{
     border-color: #9F96BD;
     box-shadow: 0 0 5px rgba(79,172,254,0.5);
 }
 
-/* Botões */
-button {
+/* BOTÕES */
+
+button{
     margin-top: 10px;
+
     padding: 10px;
+
     width: 100%;
+
     border: none;
+
     border-radius: 8px;
+
     background: #9F96BD;
+
     color: white;
+
     font-weight: bold;
+
     cursor: pointer;
+
     transition: 0.3s;
 }
 
-/* Hover */
-button:hover {
-    background: #9F96BD;
+button:hover{
+    transform: scale(1.03);
 }
 
-/* Botão voltar diferente */
-button:last-child {
-    background: #ccc;
-    color: black;
+/* BOLAS FUNDO */
+
+.bola1{
+    position: fixed;
+
+    width: 700px;
+    height: 700px;
+
+    background: #cfc8e8;
+
+    border-radius: 50%;
+
+    top: 80px;
+    left: -120px;
+
+    z-index: -1;
 }
 
-button:last-child:hover {
-    background: #aaa;
+.bola2{
+    position: fixed;
+
+    width: 500px;
+    height: 500px;
+
+    background: #b7f0c6;
+
+    border-radius: 50%;
+
+    top: 450px;
+    left: -150px;
+
+    z-index: -1;
 }
+
+/* TOPO */
+
+.logo-topo {
+  font-size: 55px;
+  font-weight: bold;
+  margin-bottom: 40px;
+  
+  background: linear-gradient(to right, #67E191, #9F96BD);
+  
+  /* Gradiente no texto */
+  -webkit-background-clip: text;     /* Safari + browsers antigos */
+  background-clip: text;             /* ← versão padrão (recomendado) */
+  
+  -webkit-text-fill-color: transparent;
+  color: transparent;                /* opcional, mas bom pra compatibilidade */
+}
+
+/* CARD PRINCIPAL */
+
+.card-principal{
+    width: 100%;
+    max-width: 500px;
+
+    background: white;
+
+    padding: 35px;
+
+    border-radius: 20px;
+
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+
+    text-align: center;
+
+    margin-bottom: 60px;
+}
+
+.card-principal h2{
+    margin-bottom: 20px;
+}
+
+.card-principal p{
+    line-height: 1.5;
+    margin-bottom: 30px;
+}
+
+.card-principal button{
+    background: linear-gradient(to right, #67E191, #9F96BD);
+}
+
+/* TÍTULO */
+
+.titulo{
+    width: 100%;
+    max-width: 1000px;
+
+    margin-bottom: 20px;
+}
+
+/* CARDS */
+
+.cards{
+    width: 100%;
+    max-width: 1000px;
+
+    display: grid;
+
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+
+    gap: 25px;
+}
+
+.card{
+    background: white;
+
+    border-radius: 18px;
+
+    padding: 25px;
+
+    display: flex;
+
+    gap: 20px;
+
+    box-shadow: 0 5px 15px rgba(0,0,0,0.12);
+}
+
+.icone{
+    width: 65px;
+    height: 65px;
+
+    border-radius: 12px;
+
+    background: #dcd3f5;
+
+    flex-shrink: 0;
+}
+
+.card h3{
+    margin-bottom: 10px;
+}
+
+.card p{
+    line-height: 1.5;
+}
+
+.troca-tela{
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.troca-tela span{
+    color: #9F96BD;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.troca-tela span:hover{
+    text-decoration: underline;
+}
+
+/* RESPONSIVO */
+
+@media(max-width: 768px){
+
+    .logo-topo{
+        font-size: 42px;
+    }
+
+    .cards{
+        grid-template-columns: 1fr;
+    }
+
+}
+
 </style>
-
 </head>
 <body>
-    <div id="menu" class="tela ativa">
-        <h1>FocoVest</h1>
-        <button onclick ="abrirCadastro()">CADASTRAR</button>
-        <button onclick="abrirLogin()">LOGIN</button>
+
+<!-- HOME -->
+
+<div id="home" class="tela ativa">
+
+    <div class="bola1"></div>
+    <div class="bola2"></div>
+
+    <h1 class="logo-topo">FocoVest</h1>
+
+    <div class="card-principal">
+
+        <h2>COMEÇA AQUI</h2>
+
+        <p>
+            O FocoVest reúne tudo que você precisa
+            para se preparar para o ENEM e vestibulares
+            em um só lugar.
+        </p>
+
+        <button onclick="abrirLogin()">
+            Começar Agora
+        </button>
+
     </div>
 
-    <div id="cadastro" class="tela">
+    <h2 class="titulo">
+        O que você encontra
+    </h2>
+
+    <div class="cards">
+
+        <div class="card">
+
+            <div class="icone"></div>
+
+            <div>
+
+                <h3>Datas de Provas</h3>
+
+                <p>
+                    Acompanhe as datas importantes
+                    do ENEM e vestibulares.
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="card">
+
+            <div class="icone"></div>
+
+            <div>
+
+                <h3>Provas Anteriores</h3>
+
+                <p>
+                    Acesse e pratique com questões
+                    de anos anteriores.
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="card">
+
+            <div class="icone" style="background:#b7f0c6;"></div>
+
+            <div>
+
+                <h3>Inscrições</h3>
+
+                <p>
+                    Não perca os prazos dos
+                    principais exames.
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="card">
+
+            <div class="icone" style="background:#b7f0c6;"></div>
+
+            <div>
+
+                <h3>Conteúdos de Estudo</h3>
+
+                <p>
+                    Material organizado para
+                    otimizar sua preparação.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- CADASTRO -->
+
+<div id="cadastro" class="tela">
+
+    <div class="caixa">
+
         <h1>Cadastro</h1>
+
         <input id="email_cad" placeholder="Email">
-        <input id="senha_cad" placeholder="senha" type="password">
+
+        <input id="senha_cad" placeholder="Senha" type="password">
+
         <input id="nome_cad" placeholder="Nome">
+
         <input id="idade_cad" placeholder="Idade" type="number">
 
-        <button onclick="cadastrar()">Cadastrar</button>
+        <button onclick="cadastrar()">
+            Cadastrar
+        </button>
 
-        <button onclick="voltarMenu()">Voltar</button>
+        <button onclick="voltarHome()">
+            Voltar
+        </button>
+
     </div>
 
-    <div id="login" class="tela">
+</div>
+
+<!-- LOGIN -->
+
+<div id="login" class="tela">
+
+    <div class="caixa">
+
         <h1>Login</h1>
 
         <input id="email_log" placeholder="Email">
-        <input id="senha_log" placeholder="senha" type="password">
 
-        <button onclick="entrar()">Entrar</button>
+        <input id="senha_log" placeholder="Senha" type="password">
 
-        <button onclick="voltarMenu()">Voltar</button>
+        <button onclick="entrar()">
+            Entrar
+        </button>
+
+        <p class="troca-tela">
+            Não tem uma conta?
+
+            <span onclick="abrirCadastro()">
+                Cadastre-se
+            </span>
+        </p>
+
+
     </div>
 
-    <div id="home" class="tela">
-        <h1>Bem-vindo ao FocoVest</h1>
-    </div>
+</div>
 
-    <script>
-        function mostrarTela(id) {
-            document.querySelectorAll(".tela").forEach(t => {
-                t.classList.remove("ativa");
-            });
+<script>
 
-            document.getElementById(id).classList.add("ativa");
+function mostrarTela(id){
 
-        }
+    document.querySelectorAll(".tela").forEach(t => {
+        t.classList.remove("ativa");
+    });
 
-        function abrirCadastro(){
-            mostrarTela("cadastro");
-        }
+    document.getElementById(id).classList.add("ativa");
+}
 
-        function abrirLogin(){
-            mostrarTela("login");
-        }
+function abrirCadastro(){
+    mostrarTela("cadastro");
+}
 
-        function abrirHome(){
-            mostrarTela("home")
-        }
+function abrirLogin(){
+    mostrarTela("login");
+}
 
-        function voltarMenu(){
-            mostrarTela("menu");
-        }
+function abrirHome(){
+    mostrarTela("home");
+}
 
-        async function cadastrar() {
-            const dados = {
-                email: document.getElementById("email_cad").value,
-                senha: document.getElementById("senha_cad").value,
-                nome: document.getElementById("nome_cad").value,
-                idade: Number(document.getElementById("idade_cad").value)
-            };
+function voltarHome(){
+    mostrarTela("home");
+}
 
-            const resposta = await fetch("http://127.0.0.1:8000/cadastro", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(dados)
-            });
+/* CADASTRO */
 
-            const json = await resposta.json();
-            if (json.msg === "usuario cadastrado"){
-                abrirHome()
-            
-            } else {
-                alert(json.msg)
-            }
-        }
+async function cadastrar(){
 
-        async function entrar() {
-            const dados = {
-                email: document.getElementById("email_log").value,
-                senha: document.getElementById("senha_log").value,
-            };
+    const dados = {
 
-            const resposta = await fetch("http://127.0.0.1:8000/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(dados)
-            });
+        email: document.getElementById("email_cad").value,
 
-            const json = await resposta.json();
+        senha: document.getElementById("senha_cad").value,
 
-            if (json.success){
-                abrirHome()
-            } else{
-                alert(json.msg);
-            }
-        }
+        nome: document.getElementById("nome_cad").value,
 
-    </script>
+        idade: Number(document.getElementById("idade_cad").value)
+    };
+
+    const resposta = await fetch("http://127.0.0.1:8000/cadastro", {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify(dados)
+    });
+
+    const json = await resposta.json();
+
+    if(json.msg === "Usuário cadastrado"){
+
+        alert(json.msg);
+
+        abrirLogin();
+
+    }else{
+
+        alert(json.msg);
+    }
+}
+
+/* LOGIN */
+
+async function entrar(){
+
+    const dados = {
+
+        email: document.getElementById("email_log").value,
+
+        senha: document.getElementById("senha_log").value
+    };
+
+    const resposta = await fetch("http://127.0.0.1:8000/login", {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify(dados)
+    });
+
+    const json = await resposta.json();
+
+    if(json.success){
+
+        alert("Login efetuado");
+
+    }else{
+
+        alert(json.msg);
+    }
+}
+
+</script>
+
 </body>
 </html>
