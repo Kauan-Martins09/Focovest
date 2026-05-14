@@ -5,6 +5,9 @@ from app.models import *
 
 print("MODELS IMPORTADOS")
 
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print("Erro no banco:", e)
 
 print("TABELAS CRIADAS")
