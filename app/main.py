@@ -11,7 +11,9 @@ app.include_router(routes.router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # libera qualquer front (dev)
+    allow_origins=[
+        "https://focovest.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
