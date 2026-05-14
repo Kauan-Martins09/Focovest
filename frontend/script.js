@@ -38,7 +38,7 @@ async function cadastrar(){
         idade: Number(document.getElementById("idade_cad").value)
     };
 
-    const resposta = await fetch("http://127.0.0.1:8000/cadastro", {
+    const resposta = await fetch("https://focovest-backend.onrender.com/cadastro", {
 
         method: "POST",
 
@@ -74,7 +74,7 @@ async function entrar(){
         senha: document.getElementById("senha_log").value
     };
 
-    const resposta = await fetch("http://127.0.0.1:8000/login", {
+    const resposta = await fetch("https://focovest-backend.onrender.com/login", {
 
         method: "POST",
 
