@@ -6,290 +6,8 @@
 
 <title>FocoVest</title>
 
-<style>
+<link rel="stylesheet" href="style.css">
 
-*{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-/* TELAS */
-
-.tela{
-    display: none;
-}
-
-.ativa{
-    display: flex;
-}
-
-/* BODY */
-
-body{
-    min-height: 100vh;
-    font-family: Arial, sans-serif;
-    background: #f5f5f5;
-    overflow-x: hidden;
-}
-
-/* LOGIN E CADASTRO */
-
-.caixa{
-    background: white;
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-
-    width: 280px;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-/* HOME */
-
-#home{
-    width: 100%;
-
-    flex-direction: column;
-    align-items: center;
-
-    padding: 40px 20px;
-
-    position: relative;
-}
-
-/* LOGIN E CADASTRO */
-
-#cadastro,
-#login{
-    justify-content: center;
-    align-items: center;
-
-    min-height: 100vh;
-
-    background: linear-gradient(135deg, #9F96BD, #67E191);
-}
-
-/* INPUTS */
-
-input{
-    margin: 8px 0;
-
-    padding: 10px;
-
-    width: 100%;
-
-    border-radius: 8px;
-
-    border: 1px solid #ccc;
-
-    outline: none;
-}
-
-input:focus{
-    border-color: #9F96BD;
-    box-shadow: 0 0 5px rgba(79,172,254,0.5);
-}
-
-/* BOTÕES */
-
-button{
-    margin-top: 10px;
-
-    padding: 10px;
-
-    width: 100%;
-
-    border: none;
-
-    border-radius: 8px;
-
-    background: #9F96BD;
-
-    color: white;
-
-    font-weight: bold;
-
-    cursor: pointer;
-
-    transition: 0.3s;
-}
-
-button:hover{
-    transform: scale(1.03);
-}
-
-/* BOLAS FUNDO */
-
-.bola1{
-    position: fixed;
-
-    width: 700px;
-    height: 700px;
-
-    background: #cfc8e8;
-
-    border-radius: 50%;
-
-    top: 80px;
-    left: -120px;
-
-    z-index: -1;
-}
-
-.bola2{
-    position: fixed;
-
-    width: 500px;
-    height: 500px;
-
-    background: #b7f0c6;
-
-    border-radius: 50%;
-
-    top: 450px;
-    left: -150px;
-
-    z-index: -1;
-}
-
-/* TOPO */
-
-.logo-topo {
-  font-size: 55px;
-  font-weight: bold;
-  margin-bottom: 40px;
-  
-  background: linear-gradient(to right, #67E191, #9F96BD);
-  
-  /* Gradiente no texto */
-  -webkit-background-clip: text;     /* Safari + browsers antigos */
-  background-clip: text;             /* ← versão padrão (recomendado) */
-  
-  -webkit-text-fill-color: transparent;
-  color: transparent;                /* opcional, mas bom pra compatibilidade */
-}
-
-/* CARD PRINCIPAL */
-
-.card-principal{
-    width: 100%;
-    max-width: 500px;
-
-    background: white;
-
-    padding: 35px;
-
-    border-radius: 20px;
-
-    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-
-    text-align: center;
-
-    margin-bottom: 60px;
-}
-
-.card-principal h2{
-    margin-bottom: 20px;
-}
-
-.card-principal p{
-    line-height: 1.5;
-    margin-bottom: 30px;
-}
-
-.card-principal button{
-    background: linear-gradient(to right, #67E191, #9F96BD);
-}
-
-/* TÍTULO */
-
-.titulo{
-    width: 100%;
-    max-width: 1000px;
-
-    margin-bottom: 20px;
-}
-
-/* CARDS */
-
-.cards{
-    width: 100%;
-    max-width: 1000px;
-
-    display: grid;
-
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-
-    gap: 25px;
-}
-
-.card{
-    background: white;
-
-    border-radius: 18px;
-
-    padding: 25px;
-
-    display: flex;
-
-    gap: 20px;
-
-    box-shadow: 0 5px 15px rgba(0,0,0,0.12);
-}
-
-.icone{
-    width: 65px;
-    height: 65px;
-
-    border-radius: 12px;
-
-    background: #dcd3f5;
-
-    flex-shrink: 0;
-}
-
-.card h3{
-    margin-bottom: 10px;
-}
-
-.card p{
-    line-height: 1.5;
-}
-
-.troca-tela{
-    margin-top: 15px;
-    font-size: 14px;
-}
-
-.troca-tela span{
-    color: #9F96BD;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.troca-tela span:hover{
-    text-decoration: underline;
-}
-
-/* RESPONSIVO */
-
-@media(max-width: 768px){
-
-    .logo-topo{
-        font-size: 42px;
-    }
-
-    .cards{
-        grid-template-columns: 1fr;
-    }
-
-}
-
-</style>
 </head>
 <body>
 
@@ -453,108 +171,54 @@ button:hover{
 
 </div>
 
-<script>
 
-function mostrarTela(id){
+<!-- NOVA TELA: BEM-VINDO -->
+<div id="bemvindo" class="tela">
+    <div class="bemvindo-container">
+        <h1 class="logo-topo" style="margin-bottom: 10px;">FocoVest</h1>
+        <h2 class="welcome-title">Bem-Vindo!</h2>
+        <h3 class="section-title">Começa por aqui:</h3>
 
-    document.querySelectorAll(".tela").forEach(t => {
-        t.classList.remove("ativa");
-    });
+        <div class="cards-grid">
+            <button class="card-btn" data-action="aulas">
+                <h4>Aulas</h4>
+                <p>Confira a lista dos 10 temas que mais caíram nos últimos 5 anos.</p>
+            </button>
 
-    document.getElementById(id).classList.add("ativa");
-}
+            <button class="card-btn" data-action="rotina">
+                <h4>Minha Rotina</h4>
+                <p>Crie seu cronograma de estudos personalizado aqui.</p>
+            </button>
 
-function abrirCadastro(){
-    mostrarTela("cadastro");
-}
+            <button class="card-btn" data-action="inscricoes">
+                <h4>Inscrições</h4>
+                <p>Prazo de inscrição termina em 15 dias. Clique aqui para ver o edital.</p>
+            </button>
 
-function abrirLogin(){
-    mostrarTela("login");
-}
+            <button class="card-btn" data-action="simulador">
+                <h4>Simulador de Notas</h4>
+                <p>Sua nota atual te coloca em qual faculdade? Simule sua aprovação agora.</p>
+            </button>
 
-function abrirHome(){
-    mostrarTela("home");
-}
+            <button class="card-btn" data-action="provas">
+                <h4>Provas</h4>
+                <p>Consulte seu local de prova e veja as melhores rotas de ônibus.</p>
+            </button>
 
-function voltarHome(){
-    mostrarTela("home");
-}
+            <button class="card-btn" data-action="rota">
+                <h4>Minha Rota de Prova</h4>
+                <p>Veja as escolas mais próximas de você que aplicam a prova e como chegar nelas sem atraso.</p>
+            </button>
+        </div>
 
-/* CADASTRO */
+        <button class="btn-inicial" onclick="voltarHome()">
+            Página inicial
+        </button>
+    </div>
+</div>
 
-async function cadastrar(){
 
-    const dados = {
-
-        email: document.getElementById("email_cad").value,
-
-        senha: document.getElementById("senha_cad").value,
-
-        nome: document.getElementById("nome_cad").value,
-
-        idade: Number(document.getElementById("idade_cad").value)
-    };
-
-    const resposta = await fetch("http://127.0.0.1:8000/cadastro", {
-
-        method: "POST",
-
-        headers: {
-            "Content-Type": "application/json"
-        },
-
-        body: JSON.stringify(dados)
-    });
-
-    const json = await resposta.json();
-
-    if(json.msg === "Usuário cadastrado"){
-
-        alert(json.msg);
-
-        abrirLogin();
-
-    }else{
-
-        alert(json.msg);
-    }
-}
-
-/* LOGIN */
-
-async function entrar(){
-
-    const dados = {
-
-        email: document.getElementById("email_log").value,
-
-        senha: document.getElementById("senha_log").value
-    };
-
-    const resposta = await fetch("http://127.0.0.1:8000/login", {
-
-        method: "POST",
-
-        headers: {
-            "Content-Type": "application/json"
-        },
-
-        body: JSON.stringify(dados)
-    });
-
-    const json = await resposta.json();
-
-    if(json.success){
-
-        alert("Login efetuado");
-
-    }else{
-
-        alert(json.msg);
-    }
-}
-
-</script>
+<script src = "script.js "></script>
 
 </body>
 </html>
