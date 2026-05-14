@@ -28,38 +28,38 @@ function voltarHome(){
 async function cadastrar(){
 
     const dados = {
-
         email: document.getElementById("email_cad").value,
-
         senha: document.getElementById("senha_cad").value,
-
         nome: document.getElementById("nome_cad").value,
-
         idade: Number(document.getElementById("idade_cad").value)
     };
 
     const resposta = await fetch("https://focovest-backend.onrender.com/cadastro", {
-
         method: "POST",
-
         headers: {
             "Content-Type": "application/json"
         },
-
         body: JSON.stringify(dados)
     });
 
-    const json = await resposta.json();
+    console.log("STATUS:", resposta.status);
 
-    if(json.msg === "Usuário cadastrado"){
+    const text = await resposta.text();
+    console.log("RESPOSTA BRUTA:", text);
 
+    let json;
+    try {
+        json = JSON.parse(text);
+    } catch (e) {
+        alert("Backend não retornou JSON válido");
+        return;
+    }
+
+    if (json.msg === "Usuário cadastrado"){
         alert(json.msg);
-
         abrirLogin();
-
-    }else{
-
-        alert(json.msg);
+    } else {
+        alert(json.msg || "Erro no cadastro");
     }
 }
 
