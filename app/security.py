@@ -1,13 +1,12 @@
-from passlib.context import CryptContext
+import bcrypt
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+def hash_senha(senha: str) -> str:
+    senha_bytes = senha[:72].enconde('utf-8')
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(senha_bytes, salt)
+    return hashed.decode('utf-8')
 
-def hash_senha(senha: str):
-    # Limita a senha em 72 caracteres (padrão seguro do bcrypt)
-    senha_truncada = senha[:72]
-    return pwd_context.hash(senha_truncada)
-
-def verificar_senha(senha: str, hash: str):
-    # Também trunca na verificação pra ser consistente
-    senha_truncada = senha[:72]
-    return pwd_context.verify(senha_truncada, hash)
+def verificar_senha(senha: str, hashed_senha: str) -> bool:
+    senha_bytes = senha[:72].encode('utf-8')
+    hashed_bytes = hashed_senha.encode('utf-8')
+    return bcrypt.checkpw(senha_bytes, hashed_bytes)
