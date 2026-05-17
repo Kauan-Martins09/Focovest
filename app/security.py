@@ -1,7 +1,7 @@
 import bcrypt
 
 def hash_senha(senha: str) -> str:
-    senha_bytes = senha[:72].enconde('utf-8')
+    senha_bytes = senha[:72].encode('utf-8')
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(senha_bytes, salt)
     return hashed.decode('utf-8')
