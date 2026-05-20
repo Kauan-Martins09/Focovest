@@ -36,6 +36,7 @@
 
     </div>
 
+
     <h2 class="titulo">
         O que você encontra
     </h2>
@@ -179,7 +180,7 @@
         <h3 class="section-title">Começa por aqui:</h3>
 
         <div class="cards-grid">
-            <button class="card-btn" data-action="aulas">
+            <button onclick="abrirTela('aulas')">
                 <h4>Aulas</h4>
                 <p>Confira a lista dos 10 temas que mais caíram nos últimos 5 anos.</p>
             </button>
@@ -214,6 +215,53 @@
             Página inicial
         </button>
     </div>
+</div>
+
+<!---------- NOVA TELA DE AULAS ---------->
+<div id="aulas" class="tela">
+
+    <div class="hero">
+
+        <!-------Imagem na esquerda------->
+        <div class="hero-image">
+            <img src="img-estudando.png" alt="Estudante">
+            <div class="label-aulas">Aulas</div>
+        </div>
+
+        <div class="hero-content">
+            <p>Para alcançar a aprovação, é preciso estudar com estratégia e fontes confiáveis. Reunimos aqui as melhores plataformas gratuitas para você dominar os conteúdos do ENEM e dos principais vestibulares.</p>
+
+            <p>Organize seu cronograma e aproveite esses recursos para potencializar seu aprendizado.</p>
+        </div>
+
+    </div>
+
+    <section class="recomendados">
+        <h2>Recomendados</h2>
+
+        <div class="recomendados-container">
+
+            <div class="recomendados-card">
+                <h3> Prática e Provas Oficiais</h3>
+                <ul>
+                    <li><strong>Portal INEP:</strong> Todas as provas e gabritos oficiais.</li>
+                    <li><strong>FGV Ensino Médio:</strong> Simulados online e gratuitos.</li>
+                    <li><strong>Brasil Escola:</strong> Excercícios resolvidos e comentados.</li>
+                </ul>
+            </div>
+
+            <div class="recomendados-card">
+                <h3>Plataformas de Vídeo e Teoria</h3>
+                <ul>
+                    <li><strong>Khan Academy:</strong> Foco em excercícios de exatas e biológicas.</li>
+                    <li><strong>MEC Place:</strong> Livors e apostilas oficiais do governo.</li>
+                    <li><strong>YouTube Edu:</strong> Aulas gratuitas organizadas por matéria.</li>
+                </ul>
+            </div>
+
+        </div>
+    </section>
+
 </div>
 
 
