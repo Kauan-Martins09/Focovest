@@ -398,88 +398,65 @@ button:hover{
     background: #f8fafc;
 }
 
-/* ===================== TELA AULAS - CORRIGIDO ===================== */
+/* ==================== RECOMENDADOS ==================== */
 
-#aulas {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    min-height: 100vh;
-    background: #f8fafc;
-    padding: 40px 20px;
-    flex-direction: column;
-    align-items: center;
-    overflow-y: auto;
-    z-index: 100;           /* importante */
-}
-
-#aulas.ativa {
-    display: flex !important;
-}
-
-/* ==================== HERO ==================== */
-
-.hero {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 50px;
-    max-width: 1250px;
-    width: 100%;
-    margin: 20px auto 60px;
-    align-items: center;
-}
-
-.hero-image {
-    position: relative;
-    flex: 1 1 520px;
-    min-width: 300px;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-}
-
-.hero-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.label-aulas {
-    position: absolute;
-    top: 25px;
-    left: 25px;
-    background: white;
-    color: #1f2937;
-    font-size: 1.6rem;
-    font-weight: bold;
-    padding: 12px 34px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-}
-
-/* Texto da direita */
-.hero-content {
-    flex: 1 1 480px;
-    font-size: 1.3rem;
-    line-height: 1.8;
-    color: #374151;
-}
-
-.hero-content p {
-    margin-bottom: 28px;
-}
-
-/* Recomendados */
 .recomendados {
     width: 100%;
     max-width: 1100px;
+    margin-top: 20px;
 }
 
 .recomendados h2 {
     text-align: center;
-    font-size: 2.2rem;
+    font-size: 2.3rem;
     margin-bottom: 40px;
     color: #1f2937;
+}
+
+.recomendados-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+    gap: 30px;
+    width: 100%;
+}
+
+.recomendados-card {
+    background: white;
+    padding: 35px;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+}
+
+.recomendados-card:hover {
+    transform: translateY(-8px);
+}
+
+.recomendados-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 25px;
+    color: #1f2937;
+    border-bottom: 3px solid #67E191;
+    padding-bottom: 12px;
+}
+
+.recomendados-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.recomendados-card li {
+    padding: 12px 0;
+    font-size: 1.12rem;
+    line-height: 1.7;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.recomendados-card li:last-child {
+    border-bottom: none;
+}
+
+.recomendados-card strong {
+    color: #10b981;
 }
