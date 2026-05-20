@@ -398,17 +398,92 @@ button:hover{
     background: #f8fafc;
 }
 
+/* ===================== TELA AULAS ===================== */
+
+#aulas {
+    display: none;                    /* Esconde por padrão */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 100vh;
+    background: #f8fafc;
+    padding: 40px 20px;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: auto;
+    z-index: 100;                     /* Fica por cima das outras telas */
+}
+
+#aulas.ativa {
+    display: flex !important;
+}
+
+/* ==================== HERO SECTION ==================== */
+
+.hero {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 50px;
+    max-width: 1200px;
+    width: 100%;
+    margin-bottom: 60px;
+    align-items: center;        /* melhor alinhamento */
+}
+
+.hero-image {
+    position: relative;
+    flex: 1 1 500px;           /* força um tamanho mínimo */
+    min-width: 300px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.hero-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.label-aulas {
+    position: absolute;
+    top: 25px;
+    left: 25px;
+    background: white;
+    color: #1f2937;
+    font-size: 1.55rem;
+    font-weight: bold;
+    padding: 10px 32px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+    z-index: 2;
+}
+
+/* Conteúdo da direita */
+.hero-content {
+    flex: 1 1 450px;           /* força tamanho mínimo */
+    min-width: 300px;
+    font-size: 1.22rem;        /* aumentei a fonte */
+    line-height: 1.75;
+    color: #374151;
+}
+
+.hero-content p {
+    margin-bottom: 24px;
+}
+
 /* ==================== RECOMENDADOS ==================== */
 
 .recomendados {
     width: 100%;
     max-width: 1100px;
-    margin-top: 20px;
 }
 
 .recomendados h2 {
     text-align: center;
-    font-size: 2.3rem;
+    font-size: 2.1rem;
     margin-bottom: 40px;
     color: #1f2937;
 }
@@ -417,40 +492,28 @@ button:hover{
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
     gap: 30px;
-    width: 100%;
 }
 
 .recomendados-card {
     background: white;
     padding: 35px;
     border-radius: 20px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s;
-}
-
-.recomendados-card:hover {
-    transform: translateY(-8px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.09);
 }
 
 .recomendados-card h3 {
-    font-size: 1.5rem;
+    font-size: 1.45rem;
     margin-bottom: 25px;
     color: #1f2937;
-    border-bottom: 3px solid #67E191;
-    padding-bottom: 12px;
-}
-
-.recomendados-card ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 14px;
 }
 
 .recomendados-card li {
     padding: 12px 0;
-    font-size: 1.12rem;
-    line-height: 1.7;
-    border-bottom: 1px solid #f1f1f1;
+    border-bottom: 1px solid #f3f4f6;
+    line-height: 1.6;
+    font-size: 1.08rem;
 }
 
 .recomendados-card li:last-child {
@@ -459,4 +522,17 @@ button:hover{
 
 .recomendados-card strong {
     color: #10b981;
+}
+
+/* ==================== RESPONSIVO ==================== */
+
+@media (max-width: 900px) {
+    .hero {
+        flex-direction: column;
+        gap: 35px;
+    }
+    
+    .hero-content {
+        font-size: 1.15rem;
+    }
 }
