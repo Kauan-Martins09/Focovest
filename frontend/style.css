@@ -402,7 +402,6 @@ button:hover{
 
 #aulas {
     display: none;                    /* Esconde por padrão */
-    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
