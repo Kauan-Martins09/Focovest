@@ -135,15 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-function abrirTela(telaId) {
-    // Esconde todas as telas
-    document.querySelectorAll('.tela').forEach(tela => {
-        tela.classList.remove('ativa');
-    });
-    
-    // Mostra a tela desejada
-    const tela = document.getElementById(telaId);
-    if (tela) {
-        tela.classList.add('ativa');
-    }
+function abrirAulas() {
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    document.getElementById('aulas').classList.add('ativa');
 }
