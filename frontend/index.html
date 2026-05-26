@@ -21,6 +21,10 @@
     <img src="logo-focovest.png" alt="FocoVest" class="logo-topo" style="margin-bottom: 40px ;">
 
     <div class="card-principal">
+        <!-- Coloque isso dentro da div #home, por exemplo abaixo do card-principal -->
+        <button onclick="abrirMinhaRotina()" style="margin-top: 20px; padding: 12px 30px; font-size: 1.1rem;">
+            Testar Minha Rotina
+        </button>
 
         <h2>COMEÇA AQUI</h2>
 
@@ -264,7 +268,7 @@
 
 </div>
 
-<!--TELA MINHA ROTINA-->
+<!-- ===================== TELA MINHA ROTINA ===================== -->
 <div id="minha-rotina" class="tela">
 
     <div class="rotina-header">
@@ -275,23 +279,73 @@
     <div class="tabs">
         <button class="tab-btn ativa" data-tab="calendario">📅 Calendário</button>
         <button class="tab-btn" data-tab="anotacoes">📝 Anotações</button>
-        <button class="tab-btn" data-tab="notificacoes">🛎️ Notificações Ativas</button>
     </div>
 
-    <!-- Conteúdo das abas-->
+    <!-- ABA CALENDÁRIO -->
     <div id="tab-calendario" class="tab-content ativa">
-        <!--calendário aqui-->
+        <div class="rotina-content">
+            <!-- Calendário -->
+            <div class="calendar-box">
+                <div class="calendar-header">
+                    <button class="nav-btn" id="prev-month">←</button>
+                    <h2 id="month-year">Maio 2026</h2>
+                    <button class="nav-btn" id="next-month">→</button>
+                </div>
+                <table class="calendar-table" id="calendar-table">
+                    <thead>
+                        <tr>
+                            <th>Dom</th><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendar-body"></tbody>
+                </table>
+            </div>
+
+            <!-- Painel de Compromissos -->
+            <div class="side-panel">
+                <h3>Compromissos - 09 de maio</h3>
+                <div class="add-tarefa">
+                    <input type="text" placeholder="Adicionar nova tarefa...">
+                    <button class="btn-add">Adicionar</button>
+                </div>
+                <div class="tarefas-list">
+                    <div class="tarefa-item">
+                        <input type="checkbox">
+                        <span>Estudar Matemática - Álgebra Linear</span>
+                        <span class="tag importante">Importante</span>
+                    </div>
+                    <div class="tarefa-item">
+                        <input type="checkbox">
+                        <span>Revisar Química Orgânica</span>
+                        <span class="tag normal">Normal</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <!-- ABA ANOTAÇÕES -->
     <div id="tab-anotacoes" class="tab-content">
-        <!--anotações-->
-    </div>
+        <div class="rotina-content">
+            <!-- Nova Anotação -->
+            <div class="anotacao-box">
+                <h3>Nova Anotação</h3>
+                <input type="text" id="anotacao-titulo" placeholder="Título da anotação...">
+                <textarea id="anotacao-texto" placeholder="Escreva sua anotação..."></textarea>
+                <button class="btn-salvar" onclick="salvarAnotacao()">Salvar Anotação</button>
+            </div>
 
-    <div id="tab-notificacoes" class="tab-content">
-        <!--notificações aqui-->
+            <!-- Minhas Anotações -->
+            <div class="anotacoes-list">
+                <h3>Minhas Anotações</h3>
+                <div id="lista-anotacoes"></div>
+            </div>
+        </div>
     </div>
 
 </div>
+
+
 
 
 <script src = "script.js "></script>
