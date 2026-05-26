@@ -1,179 +1,247 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FocoVest</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FocoVest</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- 1. TELA HOME -->
-    <div id="home" class="tela ativa">
-        <div class="bola1"></div>
-        <div class="bola2"></div>
-        <img src="logo-focovest.png" alt="FocoVest" class="logo-topo" style="margin-bottom: 40px ;">
-        <div class="card-principal">
-            <h2>COMEÇA AQUI</h2>
-            <p>O FocoVest reúne tudo que você precisa para se preparar para o ENEM e vestibulares em um só lugar.</p>
-            <button onclick="abrirLogin()">Começar Agora</button>
-        </div>
-        <h2 class="titulo">O que você encontra</h2>
-        <div class="cards">
-            <div class="card"><div class="icone"></div><div><h3>Datas de Provas</h3><p>Acompanhe as datas importantes do ENEM e vestibulares.</p></div></div>
-            <div class="card"><div class="icone"></div><div><h3>Provas Anteriores</h3><p>Acesse e pratique com questões de anos anteriores.</p></div></div>
-            <div class="card"><div class="icone" style="background:#b7f0c6;"></div><div><h3>Inscrições</h3><p>Não perca os prazos dos principais exames.</p></div></div>
-            <div class="card"><div class="icone" style="background:#b7f0c6;"></div><div><h3>Conteúdos de Estudo</h3><p>Material organizado para otimizar sua preparação.</p></div></div>
-        </div>
+<!-- HOME -->
+<div id="home" class="tela ativa">
+    <div class="bola1"></div>
+    <div class="bola2"></div>
+    <img src="logo-focovest.png" alt="FocoVest" class="logo-topo" style="margin-bottom: 40px ;">
+    <div class="card-principal">
+        <h2>COMEÇA AQUI</h2>
+        <p>
+            O FocoVest reúne tudo que você precisa
+            para se preparar para o ENEM e vestibulares
+            em um só lugar.
+        </p>
+        <button onclick="abrirLogin()">
+            Começar Agora
+        </button>
     </div>
-
-    <!-- 2. TELA CADASTRO -->
-    <div id="cadastro" class="tela">
-        <div class="caixa">
-            <h1>Cadastro</h1>
-            <input id="email_cad" placeholder="Email">
-            <input id="senha_cad" placeholder="Senha" type="password">
-            <input id="nome_cad" placeholder="Nome">
-            <input id="idade_cad" placeholder="Idade" type="number">
-            <button onclick="cadastrar()">Cadastrar</button>
-            <p class="troca-tela">Já tem uma conta? <span onclick="abrirLogin()">Faça Login</span></p>
-            <button class="btn-voltar-home" onclick="voltarHome()">Voltar ao Início</button>
-        </div>
-    </div>
-
-    <!-- 3. TELA LOGIN -->
-    <div id="login" class="tela">
-        <div class="caixa">
-            <h1>Login</h1>
-            <input id="email_log" placeholder="Email">
-            <input id="senha_log" placeholder="Senha" type="password">
-            <button onclick="entrar()">Entrar</button>
-            <div class="divisor"><span>ou</span></div>
-            <p class="troca-tela">Não tem uma conta?</p>
-            <button class="btn-secundario" onclick="abrirCadastro()">Criar nova conta</button>
-        </div>
-    </div>
-
-    <!-- 4. TELA BEM-VINDO (MENU PRINCIPAL) -->
-    <div id="bemvindo" class="tela">
-        <div class="bemvindo-container">
-            <h2 class="welcome-title">Bem-Vindo!</h2>
-            <h3 class="section-title">Começa por aqui:</h3>
-            <div class="cards-grid">
-                <button class="card-btn" onclick="abrirAulas()">
-                    <h4>Aulas</h4>
-                    <p>Confira a lista dos 10 temas que mais caíram nos últimos 5 anos.</p>
-                </button>
-                <button class="card-btn" onclick="abrirMinhaRotina()">
-                    <h4>Minha Rotina</h4>
-                    <p>Crie seu cronograma de estudos personalizado aqui.</p>
-                </button>
-                <button class="card-btn" onclick="alert('📝 Em breve: Inscrições')">
-                    <h4>Inscrições</h4>
-                    <p>Prazo de inscrição e editais dos principais exames.</p>
-                </button>
-                <button class="card-btn" onclick="alert('📊 Em breve: Simulador')">
-                    <h4>Simulador de Notas</h4>
-                    <p>Simule sua aprovação com base na sua nota atual.</p>
-                </button>
-                <button class="card-btn" onclick="alert('🚌 Em breve: Locais de Prova')">
-                    <h4>Provas</h4>
-                    <p>Consulte seu local de prova e rotas de transporte.</p>
-                </button>
-                <button class="card-btn" onclick="alert('🗺️ Em breve: Rotas')">
-                    <h4>Minha Rota de Prova</h4>
-                    <p>Veja as escolas mais próximas e como chegar sem atraso.</p>
-                </button>
-            </div>
-            <button class="btn-inicial" onclick="voltarHome()">Página inicial</button>
-        </div>
-    </div>
-
-    <!-- 5. TELA AULAS -->
-    <div id="aulas" class="tela">
-        <div class="hero">
-            <div class="hero-image">
-                <img src="img-estudando.png" alt="Estudante">
-                <div class="label-aulas">Aulas</div>
-            </div>
-            <div class="hero-content">
-                <p>Para alcançar a aprovação, é preciso estudar com estratégia e fontes confiáveis. Reunimos aqui as melhores plataformas gratuitas para você dominar os conteúdos do ENEM e dos principais vestibulares.</p>
-                <p>Organize seu cronograma e aproveite esses recursos para potencializar seu aprendizado.</p>
+    <h2 class="titulo">
+        O que você encontra
+    </h2>
+    <div class="cards">
+        <div class="card">
+            <div class="icone"></div>
+            <div>
+                <h3>Datas de Provas</h3>
+                <p>
+                    Acompanhe as datas importantes
+                    do ENEM e vestibulares.
+                </p>
             </div>
         </div>
-        <section class="recomendados">
-            <h2>Recomendados</h2>
-            <div class="recomendados-container">
-                <div class="recomendados-card">
-                    <h3>Prática e Provas Oficiais</h3>
-                    <ul>
-                        <li><strong>Portal INEP:</strong> Todas as provas e gabaritos oficiais.</li>
-                        <li><strong>FGV Ensino Médio:</strong> Simulados online e gratuitos.</li>
-                        <li><strong>Brasil Escola:</strong> Exercícios resolvidos e comentados.</li>
-                    </ul>
-                </div>
-                <div class="recomendados-card">
-                    <h3>Plataformas de Vídeo e Teoria</h3>
-                    <ul>
-                        <li><strong>Khan Academy:</strong> Foco em exercícios de exatas e biológicas.</li>
-                        <li><strong>MEC Place:</strong> Livros e apostilas oficiais do governo.</li>
-                        <li><strong>YouTube Edu:</strong> Aulas gratuitas organizadas por matéria.</li>
-                    </ul>
-                </div>
-            </div>
-            <button onclick="abrirBemVindo()" style="margin-top: 30px; width: 200px;">Voltar ao Menu</button>
-        </section>
-    </div>
-
-    <!-- 6. TELA MINHA ROTINA -->
-    <div id="minha-rotina" class="tela">
-        <div class="rotina-header">
-            <button onclick="abrirBemVindo()" class="btn-voltar">←</button>
-            <h1>Minha Rotina</h1>
-        </div>
-        <div class="tabs">
-            <button class="tab-btn ativa" data-tab="calendario">📅 Calendário</button>
-            <button class="tab-btn" data-tab="anotacoes">📝 Anotações</button>
-        </div>
-        <div id="tab-calendario" class="tab-content ativa">
-            <div class="rotina-content">
-                <div class="calendar-box">
-                    <div class="calendar-header">
-                        <button class="nav-btn" id="prev-month">←</button>
-                        <h2 id="month-year">Maio 2026</h2>
-                        <button class="nav-btn" id="next-month">→</button>
-                    </div>
-                    <table class="calendar-table">
-                        <thead><tr><th>Dom</th><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th></tr></thead>
-                        <tbody id="calendar-body"></tbody>
-                    </table>
-                </div>
-                <div class="side-panel">
-                    <h3>Compromissos</h3>
-                    <div class="add-tarefa">
-                        <input type="text" placeholder="Nova tarefa...">
-                        <button class="btn-add">Add</button>
-                    </div>
-                    <div class="tarefas-list"></div>
-                </div>
+        <div class="card">
+            <div class="icone"></div>
+            <div>
+                <h3>Provas Anteriores</h3>
+                <p>
+                    Acesse e pratique com questões
+                    de anos anteriores.
+                </p>
             </div>
         </div>
-        <div id="tab-anotacoes" class="tab-content">
-            <div class="rotina-content">
-                <div class="anotacao-box">
-                    <h3>Nova Anotação</h3>
-                    <input type="text" id="anotacao-titulo" placeholder="Título...">
-                    <textarea id="anotacao-texto" placeholder="Escreva aqui..."></textarea>
-                    <button class="btn-salvar" onclick="salvarAnotacao()">Salvar</button>
-                </div>
-                <div class="anotacoes-list">
-                    <h3>Minhas Anotações</h3>
-                    <div id="lista-anotacoes"></div>
-                </div>
+        <div class="card">
+            <div class="icone" style="background:#b7f0c6;"></div>
+            <div>
+                <h3>Inscrições</h3>
+                <p>
+                    Não perca os prazos dos
+                    principais exames.
+                </p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="icone" style="background:#b7f0c6;"></div>
+            <div>
+                <h3>Conteúdos de Estudo</h3>
+                <p>
+                    Material organizado para
+                    otimizar sua preparação.
+                </p>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="script.js"></script>
+<!-- CADASTRO -->
+<div id="cadastro" class="tela">
+    <div class="caixa">
+        <h1>Cadastro</h1>
+        <input id="email_cad" placeholder="Email">
+        <input id="senha_cad" placeholder="Senha" type="password">
+        <input id="nome_cad" placeholder="Nome">
+        <input id="idade_cad" placeholder="Idade" type="number">
+        <button onclick="cadastrar()">
+            Cadastrar
+        </button>
+        <p class="troca-tela">
+            Já tem uma conta? 
+            <span onclick="abrirLogin()">Faça Login</span>
+        </p>
+        <button class="btn-voltar-home" onclick="voltarHome()">
+            Voltar ao Início
+        </button>
+    </div>
+</div>
+
+<!-- LOGIN -->
+<div id="login" class="tela">
+    <div class="caixa">
+        <h1>Login</h1>
+        <input id="email_log" placeholder="Email">
+        <input id="senha_log" placeholder="Senha" type="password">
+        <button onclick="entrar()">
+            Entrar
+        </button>
+        <div class="divisor">
+            <span>ou</span>
+        </div>
+        <p class="troca-tela">Não tem uma conta?</p>
+        <button class="btn-secundario" onclick="abrirCadastro()">
+            Criar nova conta
+        </button>
+    </div>
+</div>
+
+<!-- NOVA TELA: BEM-VINDO -->
+<div id="bemvindo" class="tela">
+    <div class="bemvindo-container">
+        <h2 class="welcome-title">Bem-Vindo!</h2>
+        <h3 class="section-title">Começa por aqui:</h3>
+        <div class="cards-grid">
+            <button class="card-btn" onclick="abrirAulas()">
+                <h4>Aulas</h4>
+                <p>Confira a lista dos 10 temas que mais caíram nos últimos 5 anos.</p>
+            </button>
+            <button class="card-btn" onclick="abrirMinhaRotina()">
+                <h4>Minha Rotina</h4>
+                <p>Crie seu cronograma de estudos personalizado aqui.</p>
+            </button>
+
+                        <button class="card-btn">
+                <h4>Inscrições</h4>
+                <p>Prazo de inscrição termina em 15 dias. Clique aqui para ver o edital.</p>
+            </button>
+            <button class="card-btn">
+                <h4>Simulador de Notas</h4>
+                <p>Sua nota atual te coloca em qual faculdade? Simule sua aprovação agora.</p>
+            </button>
+            <button class="card-btn">
+                <h4>Provas</h4>
+                <p>Consulte seu local de prova e veja as melhores rotas de ônibus.</p>
+            </button>
+            <button class="card-btn">
+                <h4>Minha Rota de Prova</h4>
+                <p>Veja as escolas mais próximas de você que aplicam a prova e como chegar nelas sem atraso.</p>
+            </button>
+        </div>
+        <button class="btn-inicial" onclick="voltarHome()">
+            Página inicial
+        </button>
+    </div>
+</div>
+
+<!-- NOVA TELA DE AULAS -->
+<div id="aulas" class="tela">
+    <div class="hero">
+        <div class="hero-image">
+            <img src="img-estudando.png" alt="Estudante">
+            <div class="label-aulas">Aulas</div>
+        </div>
+        <div class="hero-content">
+            <p>Para alcançar a aprovação, é preciso estudar com estratégia e fontes confiáveis. Reunimos aqui as melhores plataformas gratuitas para você dominar os conteúdos do ENEM e dos principais vestibulares.</p>
+            <p>Organize seu cronograma e aproveite esses recursos para potencializar seu aprendizado.</p>
+        </div>
+    </div>
+    <section class="recomendados">
+        <h2>Recomendados</h2>
+        <div class="recomendados-container">
+            <div class="recomendados-card">
+                <h3> Prática e Provas Oficiais</h3>
+                <ul>
+                    <li><strong>Portal INEP:</strong> Todas as provas e gabritos oficiais.</li>
+                    <li><strong>FGV Ensino Médio:</strong> Simulados online e gratuitos.</li>
+                    <li><strong>Brasil Escola:</strong> Excercícios resolvidos e comentados.</li>
+                </ul>
+            </div>
+            <div class="recomendados-card">
+                <h3>Plataformas de Vídeo e Teoria</h3>
+                <ul>
+                    <li><strong>Khan Academy:</strong> Foco em excercícios de exatas e biológicas.</li>
+                    <li><strong>MEC Place:</strong> Livors e apostilas oficiais do governo.</li>
+                    <li><strong>YouTube Edu:</strong> Aulas gratuitas organizadas por matéria.</li>
+                </ul>
+            </div>
+        </div>
+        <button onclick="abrirBemVindo()" style="margin-top: 30px; width: 200px;">Voltar ao Menu</button>
+    </section>
+</div>
+
+<!-- TELA MINHA ROTINA -->
+<div id="minha-rotina" class="tela">
+    <div class="rotina-header">
+        <button onclick="abrirBemVindo()" class="btn-voltar">←</button>
+        <h1>Minha Rotina</h1>
+    </div>
+    <div class="tabs">
+        <button class="tab-btn ativa" data-tab="calendario">📅 Calendário</button>
+        <button class="tab-btn" data-tab="anotacoes">📝 Anotações</button>
+    </div>
+
+    <!-- ABA CALENDÁRIO -->
+    <div id="tab-calendario" class="tab-content ativa">
+        <div class="rotina-content">
+            <div class="calendar-box">
+                <div class="calendar-header">
+                    <button class="nav-btn" id="prev-month">←</button>
+                    <h2 id="month-year">Maio 2026</h2>
+                    <button class="nav-btn" id="next-month">→</button>
+                </div>
+                <table class="calendar-table">
+                    <thead>
+                        <tr>
+                            <th>Dom</th><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendar-body"></tbody>
+                </table>
+            </div>
+            <div class="side-panel">
+                <h3>Compromissos</h3>
+                <div class="add-tarefa">
+                    <input type="text" placeholder="Adicionar nova tarefa...">
+                    <button class="btn-add">Adicionar</button>
+                </div>
+                <div class="tarefas-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ABA ANOTAÇÕES -->
+    <div id="tab-anotacoes" class="tab-content">
+        <div class="rotina-content">
+            <div class="anotacao-box">
+                <h3>Nova Anotação</h3>
+                <input type="text" id="anotacao-titulo" placeholder="Título da anotação...">
+                <textarea id="anotacao-texto" placeholder="Escreva sua anotação..."></textarea>
+                <button class="btn-salvar" onclick="salvarAnotacao()">Salvar Anotação</button>
+            </div>
+            <div class="anotacoes-list">
+                <h3>Minhas Anotações</h3>
+                <div id="lista-anotacoes"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>

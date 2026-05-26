@@ -1,5 +1,9 @@
+// ===================== NAVEGAÇÃO =====================
+
 function mostrarTela(id){
-    document.querySelectorAll(".tela").forEach(t => t.classList.remove("ativa"));
+    document.querySelectorAll(".tela").forEach(t => {
+        t.classList.remove("ativa");
+    });
     document.getElementById(id).classList.add("ativa");
 }
 
@@ -7,68 +11,67 @@ function abrirCadastro(){ mostrarTela("cadastro"); }
 function abrirLogin(){ mostrarTela("login"); }
 function abrirHome(){ mostrarTela("home"); }
 function voltarHome(){ mostrarTela("home"); }
+function abrirBemVindo() { mostrarTela("bemvindo"); }
+function abrirAulas() { mostrarTela("aulas"); }
+function abrirMinhaRotina() { mostrarTela("minha-rotina"); }
 
-/* CADASTRO */
+// ===================== CADASTRO E LOGIN =====================
+
 async function cadastrar(){
-    const dados = {
-        email: document.getElementById("email_cad").value,
-        senha: document.getElementById("senha_cad").value,
-        nome: document.getElementById("nome_cad").value,
-        idade: Number(document.getElementById("idade_cad").value)
-    };
+    const email = document.getElementById("email_cad").value;
+    const senha = document.getElementById("senha_cad").value;
+    const nome = document.getElementById("nome_cad").value;
+    const idade = Number(document.getElementById("idade_cad").value);
+
+    const dados = { email, senha, nome, idade };
+
     const resposta = await fetch("https://focovest-backend.onrender.com/cadastro", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dados )
     });
+
     const json = await resposta.json();
-    if (json.msg === "usuario cadastrado"){
-        alert("Usuário cadastrado com sucesso!");
+    alert(json.msg);
+
+    if(json.msg === "Usuário cadastrado"){
         abrirLogin();
-    } else { alert(json.msg || "Erro no cadastro"); }
+    }
 }
 
-/* LOGIN */
 async function entrar(){
-    const dados = {
-        email: document.getElementById("email_log").value,
-        senha: document.getElementById("senha_log").value
-    };
+    const email = document.getElementById("email_log").value;
+    const senha = document.getElementById("senha_log").value;
+
+    const dados = { email, senha };
+
     const resposta = await fetch("https://focovest-backend.onrender.com/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dados )
     });
+
     const json = await resposta.json();
-    if(json.success){ abrirBemVindo(); } else { alert(json.msg); }
+
+    if(json.success){
+        abrirBemVindo();
+    } else {
+        alert(json.msg);
+    }
 }
 
-function abrirBemVindo() {
-    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-    document.getElementById('bemvindo').classList.add('ativa');
-}
-
-function abrirMinhaRotina() {
-    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-    document.getElementById('minha-rotina').classList.add('ativa');
-}
-
-function abrirAulas() {
-    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-    document.getElementById('aulas').classList.add('ativa');
-}
-
-// ===================== MINHA ROTINA =====================
+// ===================== MINHA ROTINA (TABS) =====================
 
 function setupRotinaTabs() {
-    const buttons = document.querySelectorAll('#minha-rotina .tab-btn');
-    buttons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            buttons.forEach(b => b.classList.remove('ativa'));
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('ativa'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('ativa'));
+            
             btn.classList.add('ativa');
-            document.querySelectorAll('#minha-rotina .tab-content').forEach(c => c.classList.remove('ativa'));
-            document.getElementById('tab-' + btn.getAttribute('data-tab')).classList.add('ativa');
-        });
+            const tabId = 'tab-' + btn.dataset.tab;
+            document.getElementById(tabId).classList.add('ativa');
+        };
     });
 }
 
@@ -97,40 +100,35 @@ function renderCalendar() {
 
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const daysInPrevMonth = new Date(year, month, 0).getDate();
 
     let date = 1;
-    let prevMonthDate = daysInPrevMonth - firstDay + 1;
-
     for (let i = 0; i < 6; i++) {
         let row = document.createElement('tr');
         for (let j = 0; j < 7; j++) {
             let cell = document.createElement('td');
-
             if (i === 0 && j < firstDay) {
-                cell.textContent = prevMonthDate++;
-                cell.classList.add('other-month');
+                // Vazio
             } else if (date > daysInMonth) {
-                // Preenche o final do calendário com dias do próximo mês
+                // Vazio
             } else {
                 cell.textContent = date;
+                const d = date;
                 
-                const hoje = new Date();
-                if (date === hoje.getDate() && month === hoje.getMonth() && year === hoje.getFullYear()) {
+                // Hoje
+                if (d === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear()) {
                     cell.classList.add('today');
                 }
                 
-                if (date === selectedDate.getDate() && month === selectedDate.getMonth() && year === selectedDate.getFullYear()) {
+                // Selecionado
+                if (d === selectedDate.getDate() && month === selectedDate.getMonth() && year === selectedDate.getFullYear()) {
                     cell.classList.add('selected');
                 }
                 
-                const d = date;
-                cell.addEventListener('click', () => {
+                cell.onclick = () => {
                     selectedDate = new Date(year, month, d);
                     renderCalendar();
                     atualizarCompromissos();
-                });
-                
+                };
                 date++;
             }
             row.appendChild(cell);
@@ -142,83 +140,60 @@ function renderCalendar() {
 
 function atualizarCompromissos() {
     const dataFormatada = formatarData(selectedDate);
-    const h3 = document.querySelector('.side-panel h3');
-    h3.textContent = `Compromissos - ${selectedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' })}`;
-    
     const tarefasList = document.querySelector('.tarefas-list');
     tarefasList.innerHTML = '';
     
-    if (compromissos[dataFormatada] && compromissos[dataFormatada].length > 0) {
-        compromissos[dataFormatada].forEach((tarefa) => {
+    if (compromissos[dataFormatada]) {
+        compromissos[dataFormatada].forEach(t => {
             const div = document.createElement('div');
             div.className = 'tarefa-item';
-            div.innerHTML = `
-                <input type="checkbox" ${tarefa.concluida ? 'checked' : ''}>
-                <span>${tarefa.titulo}</span>
-                <span class="tag ${tarefa.prioridade}">${tarefa.prioridade === 'importante' ? 'Importante' : 'Normal'}</span>
-            `;
+            div.innerHTML = `<span>${t.titulo}</span>`;
             tarefasList.appendChild(div);
         });
     } else {
-        tarefasList.innerHTML = '<p style="color: #999; text-align: center; margin-top: 20px;">Nenhum compromisso neste dia</p>';
+        tarefasList.innerHTML = '<p style="color: #999; text-align: center; margin-top: 20px;">Nenhum compromisso</p>';
     }
 }
 
 function adicionarCompromisso() {
     const input = document.querySelector('.add-tarefa input');
     const titulo = input.value.trim();
-    
-    if (!titulo) {
-        alert("Digite uma tarefa!");
-        return;
-    }
+    if (!titulo) return;
 
     const dataFormatada = formatarData(selectedDate);
+    if (!compromissos[dataFormatada]) compromissos[dataFormatada] = [];
     
-    if (!compromissos[dataFormatada]) {
-        compromissos[dataFormatada] = [];
-    }
-
-    compromissos[dataFormatada].push({
-        titulo: titulo,
-        prioridade: 'normal',
-        concluida: false
-    });
-
+    compromissos[dataFormatada].push({ titulo: titulo });
     input.value = '';
     atualizarCompromissos();
 }
 
 function setupCalendar() {
-    document.getElementById('prev-month').addEventListener('click', () => {
+    document.getElementById('prev-month').onclick = () => {
         currentDate.setMonth(currentDate.getMonth() - 1);
         renderCalendar();
-    });
-
-    document.getElementById('next-month').addEventListener('click', () => {
+    };
+    document.getElementById('next-month').onclick = () => {
         currentDate.setMonth(currentDate.getMonth() + 1);
         renderCalendar();
-    });
-
-    document.querySelector('.btn-add').addEventListener('click', adicionarCompromisso);
+    };
+    document.querySelector('.btn-add').onclick = adicionarCompromisso;
     
-    document.querySelector('.add-tarefa input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') adicionarCompromisso();
-    });
-
     renderCalendar();
     atualizarCompromissos();
 }
 
+// ===================== ANOTAÇÕES =====================
 
-// ANOTAÇÕES
 let anotacoes = [];
-function salvarAnotacao() {
-    const titulo = document.getElementById('anotacao-titulo').value;
-    const texto = document.getElementById('anotacao-texto').value;
-    if(!titulo || !texto) return alert("Preencha tudo!");
 
-    anotacoes.unshift({ id: Date.now(), titulo, texto, data: new Date() });
+function salvarAnotacao() {
+    const titulo = document.getElementById('anotacao-titulo').value.trim();
+    const texto = document.getElementById('anotacao-texto').value.trim();
+    
+    if (!titulo || !texto) { alert("Preencha tudo!"); return; }
+
+    anotacoes.unshift({ id: Date.now(), titulo, texto });
     document.getElementById('anotacao-titulo').value = '';
     document.getElementById('anotacao-texto').value = '';
     renderAnotacoes();
@@ -226,20 +201,12 @@ function salvarAnotacao() {
 
 function renderAnotacoes() {
     const lista = document.getElementById('lista-anotacoes');
-    lista.innerHTML = '';
-    anotacoes.forEach(a => {
-        const card = document.createElement('div');
-        card.className = 'anotacao-card';
-        card.innerHTML = `
-            <div class="anotacao-header">
-                <h4>${a.titulo}</h4>
-                <button class="btn-deletar" onclick="deletarAnotacao(${a.id})">×</button>
-            </div>
-            <p>${a.texto}</p>
-            <small>${a.data.toLocaleDateString('pt-BR')}</small>
-        `;
-        lista.appendChild(card);
-    });
+    lista.innerHTML = anotacoes.map(a => `
+        <div class="anotacao-card">
+            <h4>${a.titulo}</h4><p>${a.texto}</p>
+            <button class="btn-deletar" onclick="deletarAnotacao(${a.id})">×</button>
+        </div>
+    `).join('');
 }
 
 function deletarAnotacao(id) {
@@ -247,17 +214,10 @@ function deletarAnotacao(id) {
     renderAnotacoes();
 }
 
-// Inicializa tudo quando a página carregar completamente
+// ===================== INICIALIZAÇÃO =====================
+
 window.onload = () => {
-    // Inicializa as abas
-    if(typeof setupRotinaTabs === 'function') setupRotinaTabs();
-    
-    // Inicializa o calendário e os botões de navegação/adicionar
-    if(typeof setupCalendar === 'function') setupCalendar();
-    
-    // Inicializa as anotações
-    if(typeof renderAnotacoes === 'function') renderAnotacoes();
-    
-    // Forçar a primeira renderização do calendário
-    if(typeof renderCalendar === 'function') renderCalendar();
+    setupRotinaTabs();
+    setupCalendar();
+    renderAnotacoes();
 };
