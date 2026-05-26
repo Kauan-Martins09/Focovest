@@ -21,10 +21,6 @@
     <img src="logo-focovest.png" alt="FocoVest" class="logo-topo" style="margin-bottom: 40px ;">
 
     <div class="card-principal">
-        <!-- Coloque isso dentro da div #home, por exemplo abaixo do card-principal -->
-        <button onclick="abrirMinhaRotina()" style="margin-top: 20px; padding: 12px 30px; font-size: 1.1rem;">
-            Testar Minha Rotina
-        </button>
 
         <h2>COMEÇA AQUI</h2>
 
@@ -120,60 +116,50 @@
 </div>
 
 <!-- CADASTRO -->
-
 <div id="cadastro" class="tela">
-
     <div class="caixa">
-
         <h1>Cadastro</h1>
-
         <input id="email_cad" placeholder="Email">
-
         <input id="senha_cad" placeholder="Senha" type="password">
-
         <input id="nome_cad" placeholder="Nome">
-
         <input id="idade_cad" placeholder="Idade" type="number">
+        
+        <button onclick="cadastrar()">Cadastrar</button>
 
-        <button onclick="cadastrar()">
-            Cadastrar
+        <!-- NOVOS LINKS DE NAVEGAÇÃO -->
+        <p class="troca-tela">
+            Já tem uma conta? 
+            <span onclick="abrirLogin()">Faça Login</span>
+        </p>
+
+        <button class="btn-voltar-home" onclick="voltarHome()">
+            Voltar ao Início
         </button>
-
-        <button onclick="voltarHome()">
-            Voltar
-        </button>
-
     </div>
+</div>
+
 
 </div>
 
 <!-- LOGIN -->
-
 <div id="login" class="tela">
-
     <div class="caixa">
-
         <h1>Login</h1>
-
         <input id="email_log" placeholder="Email">
-
         <input id="senha_log" placeholder="Senha" type="password">
+        
+        <button onclick="entrar()">Entrar</button>
 
-        <button onclick="entrar()">
-            Entrar
+        <!-- NOVO DIVISOR E BOTÃO DE CADASTRO -->
+        <div class="divisor">
+            <span>ou</span>
+        </div>
+
+        <p class="troca-tela">Não tem uma conta?</p>
+        <button class="btn-secundario" onclick="abrirCadastro()">
+            Criar nova conta
         </button>
-
-        <p class="troca-tela">
-            Não tem uma conta?
-
-            <span onclick="abrirCadastro()">
-                Cadastre-se
-            </span>
-        </p>
-
-
     </div>
-
 </div>
 
 
@@ -226,7 +212,6 @@
 
     <div class="hero">
 
-        <!-------Imagem na esquerda------->
         <div class="hero-image">
             <img src="img-estudando.png" alt="Estudante">
             <div class="label-aulas">Aulas</div>
@@ -345,10 +330,7 @@
 
 </div>
 
-
-
-
-<script src = "script.js "></script>
+<script src="script.js"></script>
 
 </body>
 </html>
