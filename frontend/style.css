@@ -398,7 +398,7 @@ button:hover{
 
 .recomendados-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 30px;
 }
 
@@ -432,7 +432,24 @@ button:hover{
     .hero { flex-direction: column; gap: 35px; }
     .hero-content { font-size: 1.15rem; }
 }
+
+@media (max-width: 480px) {
+    #aulas {padding: 20px 10px; }
+
+    .label-aulas {
+        font-size: 1.1rem;
+        padding: 6px 18px;
+        top: 15px;
+        left: 15px;
+    }
+
+    .recomendados h2 { font-size: 1.6rem; }
+
+    .recomendados-card { padding: 20px; }
+}
+
 /* ===================== TELA MINHA ROTINA ===================== */
+
 #minha-rotina {
     display: none;
     position: fixed;
@@ -542,7 +559,8 @@ button:hover{
 .calendar-box { flex: 2; min-height: 520px; }
 .side-panel, .anotacao-box, .anotacoes-list { flex: 1; min-width: 360px; }
 
-/* Calendário */
+/*===================Calendário===================*/
+
 .calendar-header {
     display: flex;
     align-items: center;
@@ -605,7 +623,8 @@ button:hover{
     border-radius: 10px;
 }
 
-/* Anotações */
+/*===================Anotações===================*/
+
 .anotacao-box textarea {
     width: 100%;
     padding: 18px;
@@ -627,9 +646,31 @@ button:hover{
     border-left: 5px solid #9F96BD;
     position: relative;
     transition: 0.3s;
+
+    #lista-anotacoes h3 {
+        word-break: break-word;
+        overflow-wrap: break-word;
+        padding-right: 40px;
+    }
+
+    #lista-anotacoes p {
+        word-break: break-word;
+        overflow-wrap: break-word;
+        padding-right: 40px;
+    }
+
+    #lista-anotacoes span {
+        display: inline-block;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        padding-right: 40px;
+    }
+
 }
 
-.anotacao-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+.anotacao-card:hover { 
+    transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
+}
 
 .btn-deletar {
     background: none;
