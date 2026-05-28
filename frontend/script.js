@@ -202,16 +202,27 @@ function salvarAnotacao() {
 function renderAnotacoes() {
     const lista = document.getElementById('lista-anotacoes');
     lista.innerHTML = anotacoes.map(a => `
-        <div class="anotacao-card">
+        <div class="anotacao-card" onclick="abrirAnotacao(${a.id}" style="cursor: pointer;">
             <h4>${a.titulo}</h4><p>${a.texto}</p>
             <button class="btn-deletar" onclick="deletarAnotacao(${a.id})">×</button>
         </div>
     `).join('');
 }
 
-function deletarAnotacao(id) {
+function deletarAnotacao(event, id) {
+    event.stopPropagation();
+
     anotacoes = anotacoes.filter(a => a.id !== id);
     renderAnotacoes();
+}
+
+function abrirAnotacao(id) {
+    const anotacaoSelecionada = anotacoes.find( a => a.id === id);
+
+    if (anotacaoSelecionada) {
+        document.getElementById('anotacao-titulo').value = anotacaoSelecionada.titulo;
+        document.getElementById('anotacao-texto').value = anotacaoSelecionada.texto;
+    }
 }
 
 // ===================== INICIALIZAÇÃO =====================
