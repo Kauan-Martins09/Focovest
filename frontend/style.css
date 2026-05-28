@@ -646,26 +646,28 @@ button:hover{
     border-left: 5px solid #9F96BD;
     position: relative;
     transition: 0.3s;
+}
 
-    #lista-anotacoes h3 {
-        word-break: break-word;
-        overflow-wrap: break-word;
-        padding-right: 40px;
-    }
+.anotacao-card:hover { 
+    transform: translateY(-3px); 
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
+}
 
-    #lista-anotacoes p {
-        word-break: break-word;
-        overflow-wrap: break-word;
-        padding-right: 40px;
-    }
+/* 2. O conserto do Título (do lado de fora, livre e independente) */
+.anotacao-card h4 {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    margin: 0 0 8px 0;
+    padding-right: 35px;
+}
 
-    #lista-anotacoes span {
-        display: inline-block;
-        word-break: break-word;
-        overflow-wrap: break-word;
-        padding-right: 40px;
-    }
-
+/* 3. O conserto do Texto (também do lado de fora) */
+.anotacao-card p {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap; /* Esse cara respeita os "Enters" que você der no teclado */
+    margin: 0;
+    padding-right: 35px;
 }
 
 .anotacao-card:hover { 
