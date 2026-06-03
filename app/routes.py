@@ -47,4 +47,8 @@ def login(user: UserLog, db: Session = Depends(get_db)):
     if not verificar_senha(user.senha, usuario.senha):
         return{"msg": "Senha incorreta"}
     
-    return {"success": True}
+    return {
+        "success": True,
+        "usuario_id": usuario.id,
+        "nome": usuario.nome
+            }

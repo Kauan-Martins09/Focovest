@@ -54,10 +54,15 @@ async function entrar(){
     const json = await resposta.json();
 
     if(json.success){
-        abrirBemVindo();
-    } else {
-        alert(json.msg);
-    }
+
+    localStorage.setItem("usuario_id", json.usuario_id);
+    localStorage.setItem("nome", json.nome);
+
+    abrirBemVindo();
+
+} else {
+    alert(json.msg);
+}
 }
 
 // ===================== MINHA ROTINA (TABS) =====================

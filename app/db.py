@@ -7,6 +7,8 @@ load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+print(DATABASE_URL)
+
 # Força o uso do pymysql
 if DATABASE_URL and DATABASE_URL.startswith("mysql"):
     DATABASE_URL = DATABASE_URL.replace("mysql://", "mysql+pymysql://")

@@ -11,3 +11,4 @@ except Exception as e:
     print("Erro no banco:", e)
 
 print("TABELAS CRIADAS")
+print(Base.metadata.tables.keys())
