@@ -282,5 +282,5 @@ window.onload = async () => {
     setupRotinaTabs();
     setupCalendar();
     
-    awaitcarregarAnotacoes();
+    await carregarAnotacoes();
 };
