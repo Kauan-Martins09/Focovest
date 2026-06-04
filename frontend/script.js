@@ -215,7 +215,7 @@ async function salvarAnotacao() {
         headers: {
             "Content-type":"application/json"
         },
-        body:JSON.stringfy(dados)
+        body:JSON.stringify(dados)
     });
 
     const json = await resposta.json();
