@@ -229,6 +229,24 @@ async function salvarAnotacao() {
     renderAnotacoes();
 }
 
+async function carregarAnotacoes() {
+    const usuario_id = localStorage.getItem("usuario_id");
+
+    const resposta = await fetch(
+        `https://focovest-backend.onrender.com/anotacao/${usuario_id}`
+    );
+
+    const json = await resposta.json();
+
+    anotacoes = json.map(a => ({
+        id: a.id,
+        titulo: a.titulo,
+        texto: a.conteudo
+    }))
+
+    renderAnotacoes();
+}
+
 function renderAnotacoes() {
     const lista = document.getElementById('lista-anotacoes');
     
@@ -260,8 +278,9 @@ function abrirAnotacao(id) {
 
 // ===================== INICIALIZAÇÃO =====================
 
-window.onload = () => {
+window.onload = async () => {
     setupRotinaTabs();
     setupCalendar();
-    renderAnotacoes();
+    
+    awaitcarregarAnotacoes();
 };
