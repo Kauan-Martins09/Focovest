@@ -196,11 +196,32 @@ function setupCalendar() {
 
 let anotacoes = [];
 
-function salvarAnotacao() {
+async function salvarAnotacao() {
     const titulo = document.getElementById('anotacao-titulo').value.trim();
     const texto = document.getElementById('anotacao-texto').value.trim();
+    const usuario_id = Number(localStorage.getItem("usuario_id"));
     
     if (!titulo || !texto) { alert("Preencha tudo!"); return; }
+
+    const dados = {
+        usuario_id: usuario_id,
+        titulo: titulo,
+        conteudo: texto
+    }
+
+    const resposta = await
+    fetch("https://focovest-backend.onrender.com/anotacao", {
+        method: "POST",
+        headers: {
+            "Content-type":"application/json"
+        },
+        body:JSON.stringfy(dados)
+    });
+
+    const json = await resposta.json();
+    console.log(json)
+
+    
 
     anotacoes.unshift({ id: Date.now(), titulo, texto });
     document.getElementById('anotacao-titulo').value = '';

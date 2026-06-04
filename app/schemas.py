@@ -18,5 +18,5 @@ class AnotacaoCreate(BaseModel):
 
 class CompromissoCreate(BaseModel):
     usuario_id: int
-    date: date
+    data: date
     descricao: str

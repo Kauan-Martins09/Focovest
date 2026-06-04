@@ -2,9 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from .db import SessionLocal
-from .models import User
-from .schemas import UserCreate
-from .schemas import UserLog
+from .models import User, Anotacao
+from .schemas import UserCreate, UserLog, AnotacaoCreate
 from .security import hash_senha, verificar_senha
 
 router = APIRouter()
@@ -52,3 +51,32 @@ def login(user: UserLog, db: Session = Depends(get_db)):
         "usuario_id": usuario.id,
         "nome": usuario.nome
             }
+
+@router.post("/anotacao")
+def criar_anotacao(
+    anotacao: AnotacaoCreate,
+    db: Session = Depends(get_db)
+):
+    
+    nova = Anotacao(
+        usuario_id=anotacao.usuario_id,
+        titulo=anotacao.titulo,
+        conteudo=anotacao.conteudo
+    )
+
+    db.add(nova)
+    db.commit()
+
+    return {"msg": "Anotação salva"}
+
+@router.get("/anotacao/{usuario_id}")
+def listar_anotacoes(
+    usuario_id: int, 
+    db: Session = Depends(get_db)
+):
+    
+    anotacoes = db.query(Anotacao).filter(
+        Anotacao.usuario_id == usuario_id
+    ).all()
+
+    return anotacoes
