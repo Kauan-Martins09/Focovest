@@ -60,6 +60,8 @@ async function entrar(){
     localStorage.setItem("usuario_id", json.usuario_id);
     localStorage.setItem("nome", json.nome);
 
+    await carregarAnotacoes();
+
     abrirBemVindo();
 
 } else {
@@ -230,6 +232,8 @@ async function salvarAnotacao() {
 async function carregarAnotacoes() {
     const usuario_id = localStorage.getItem("usuario_id");
 
+    console.log("Carregando anotações do usuário:", usuario_id)
+
     const resposta = await fetch(
         `https://focovest-backend.onrender.com/anotacao/${usuario_id}`
     );
@@ -279,6 +283,4 @@ function abrirAnotacao(id) {
 window.onload = async () => {
     setupRotinaTabs();
     setupCalendar();
-    
-    await carregarAnotacoes();
 };
