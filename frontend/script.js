@@ -261,12 +261,28 @@ function renderAnotacoes() {
     `).join('');
 }
 
-function deletarAnotacao(event, id) {
+async function deletarAnotacao(event, id) {
     // Impede que o clique no "X" ative o clique do card de abrir
     event.stopPropagation(); 
+
+    if (confirm("Tem certeza que deseja excluir esta anotação?")) {
+        try {
+            const resposta = await fetch(`http://focovest-backend.onrender.com/anotacao/${id}`, {
+                method: "DELETE"
+            });
+
+            if (resposta.ok) {
+                anotacoes = anotacoes.filter(a => a.id !== id);
+                renderAnotacoes();
+            } else {
+                alert("Erro ao excluir a anotação no servidor.");
+            }
+        } catch (error) {
+            console.error("Erro na requisição:", error);
+            alert("Não foi possível conectar ao servidor.");
+        }
+    }
     
-    anotacoes = anotacoes.filter(a => a.id !== id);
-    renderAnotacoes();
 }
 
 function abrirAnotacao(id) {

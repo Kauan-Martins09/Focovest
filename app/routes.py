@@ -80,3 +80,13 @@ def listar_anotacoes(
     ).all()
 
     return anotacoes
+
+@router.delete("/anotcao/{id}")
+def deletar_anotacoes(id: int, db: Session = Depends(get_db)):
+    anotacao = db.query(Anotacao).filter(Anotacao.id == id).first()
+    if not anotacao:
+        return {"msg": "Anotação não encontrada"}
+    
+    db.delete(anotacao)
+    db.commit()
+    return {"msg": "Anotação excluída com sucesso"}
