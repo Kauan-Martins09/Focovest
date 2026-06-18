@@ -267,7 +267,7 @@ async function deletarAnotacao(event, id) {
 
     if (confirm("Tem certeza que deseja excluir esta anotação?")) {
         try {
-            const resposta = await fetch(`http://focovest-backend.onrender.com/anotacao/${id}`, {
+            const resposta = await fetch(`https://focovest-backend.onrender.com/anotacao/${id}`, {
                 method: "DELETE"
             });
 
