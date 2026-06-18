@@ -219,14 +219,12 @@ async function salvarAnotacao() {
     });
 
     const json = await resposta.json();
-    console.log(json)
+    console.log(json);
 
-    
-
-    anotacoes.unshift({ id: Date.now(), titulo, texto });
     document.getElementById('anotacao-titulo').value = '';
     document.getElementById('anotacao-texto').value = '';
-    renderAnotacoes();
+
+    await carregarAnotacoes();
 }
 
 async function carregarAnotacoes() {
