@@ -81,7 +81,7 @@ def listar_anotacoes(
 
     return anotacoes
 
-@router.delete("/anotcao/{id}")
+@router.delete("/anotacao/{id}")
 def deletar_anotacoes(id: int, db: Session = Depends(get_db)):
     anotacao = db.query(Anotacao).filter(Anotacao.id == id).first()
     if not anotacao:
