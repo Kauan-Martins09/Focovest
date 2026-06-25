@@ -479,6 +479,10 @@ button:hover{
 
 .rotina-header .btn-voltar {
     position: static;
+    background-color: white;
+    font-size: 2rem;
+    width: 64px;
+    height: 64px;
 }
 
 .rotina-header .btn-voltar:hover {
