@@ -471,29 +471,14 @@ button:hover{
 
 /* ===================== HEADER - MINHA ROTINA ===================== */
 .rotina-header {
-    width: 100%;
-    max-width: 1280px;
-    display: flex;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
-    margin-bottom: 30px;
-    position: relative;
-    padding: 0 10px;
+    width: 100%;
 }
 
 .rotina-header .btn-voltar {
-    font-size: 2.8rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px 12px;
-    border-radius: 50%;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    left: 10px;
-    z-index: 10;
+    position: static;
 }
 
 .rotina-header .btn-voltar:hover {
@@ -505,9 +490,8 @@ button:hover{
     font-size: 2.4rem;
     font-weight: 700;
     color: #1e2937;
-    margin: 0 auto;
-    flex: 1;
-    text-align: center;
+    margin: 0;
+    text-align: center; 
 }
 
 /* Tabs */
