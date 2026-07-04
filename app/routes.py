@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from .db import SessionLocal
-from .models import User, Anotacao
-from .schemas import UserCreate, UserLog, AnotacaoCreate
+from .models import User, Anotacao, Compromisso
+from .schemas import UserCreate, UserLog, AnotacaoCreate, CompromissoCreate
 from .security import hash_senha, verificar_senha
 
 router = APIRouter()
@@ -82,11 +82,53 @@ def listar_anotacoes(
     return anotacoes
 
 @router.delete("/anotacao/{id}")
-def deletar_anotacoes(id: int, db: Session = Depends(get_db)):
+def deletar_anotacoes(
+    id: int, 
+    db: Session = Depends(get_db)
+):
     anotacao = db.query(Anotacao).filter(Anotacao.id == id).first()
     if not anotacao:
         return {"msg": "Anotação não encontrada"}
     
     db.delete(anotacao)
     db.commit()
-    return {"msg": "Anotação excluída com sucesso"}
+    return {"msg": "Anotação excluída com sucesso!"}
+
+@router.post("/compromisso")
+def criar_compromisso(
+    compromisso: CompromissoCreate,
+    db:  Session = Depends(get_db)
+):
+    novo = Compromisso(
+        usuario_id=compromisso.usuario_id,
+        data=compromisso.data,
+        descricao=compromisso.descricao
+    )
+
+    db.add(novo)
+    db.commit()
+    return {"msg": "Compromisso salvo"}
+
+@router.get("/compromisso/{usuario_id}")
+def listar_compromisso(
+    usuario_id: int,
+    db: Session = Depends(get_db)
+):
+    compromisso = db.query(Compromisso).filter(
+        Compromisso.usuario_id == usuario_id
+    ).all()
+
+    return compromisso
+
+@router.delete("/compromisso/{id}")
+def deletar_compromisso(
+    id: int,
+    db: Session = Depends(get_db)
+):
+    compromisso = db.query(Compromisso).filter(Compromisso.id == id).first()
+    if not compromisso:
+        return{"msg": "Compromisso não encontrado"}
+    
+    db.delete(compromisso)
+    db.commit()
+    return {"msg": "Compromisso excluído com sucesso!"}

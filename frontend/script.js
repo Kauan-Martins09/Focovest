@@ -61,6 +61,7 @@ async function entrar(){
     localStorage.setItem("nome", json.nome);
 
     await carregarAnotacoes();
+    await carregarCompromissos();
 
     abrirBemVindo();
 
@@ -147,6 +148,31 @@ function renderCalendar() {
     }
 }
 
+// ===================== COMPROMISSO =====================
+
+async function carregarCompromissos() {
+    const usuario_id = localStorage.getItem("usuario_id");
+    if (!usuario_id) return;
+
+    try {
+        const resposta = await fetch(
+            `https://focovest-backend.onrender.com/compromisso/${usuario_id}`
+        );
+        const json = await resposta.json();
+
+        compromissos = {};
+        json.forEach(c => {
+            const dataFormatada = c.data; // backend já retorna "AAAA-MM-DD"
+            if (!compromissos[dataFormatada]) compromissos[dataFormatada] = [];
+            compromissos[dataFormatada].push({ id: c.id, titulo: c.descricao });
+        });
+
+        atualizarCompromissos();
+    } catch (error) {
+        console.error("Erro ao carregar compromissos:", error);
+    }
+}
+
 function atualizarCompromissos() {
     const dataFormatada = formatarData(selectedDate);
     const tarefasList = document.querySelector('.tarefas-list');
@@ -167,17 +193,55 @@ function atualizarCompromissos() {
     }
 }
 
-function adicionarCompromisso() {
+async function adicionarCompromisso() {
     const input = document.querySelector('.add-tarefa input');
     const titulo = input.value.trim();
     if (!titulo) return;
 
+    const usuario_id = Number(localStorage.getItem("usuario_id"));
     const dataFormatada = formatarData(selectedDate);
-    if (!compromissos[dataFormatada]) compromissos[dataFormatada] = [];
-    
-    compromissos[dataFormatada].push({ id: Date.now(), titulo: titulo });
-    input.value = '';
-    atualizarCompromissos();
+
+    const dados = {
+        usuario_id: usuario_id,
+        data: dataFormatada,
+        descricao: titulo
+    };
+
+    try {
+        const resposta = await fetch("https://focovest-backend.onrender.com/compromisso", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dados)
+        });
+
+        const json = await resposta.json();
+        console.log(json);
+
+        input.value = '';
+        await carregarCompromissos();
+    } catch (error) {
+        console.error("Erro ao salvar compromisso:", error);
+        alert("Não foi possível conectar ao servidor.");
+    }
+}
+
+async function deletarCompromisso(id) {
+    if (!confirm("Tem certeza que deseja excluir este compromisso?")) return;
+
+    try {
+        const resposta = await fetch(`https://focovest-backend.onrender.com/compromisso/${id}`, {
+            method: "DELETE"
+        });
+
+        if (resposta.ok) {
+            await carregarCompromissos();
+        } else {
+            alert("Erro ao excluir o compromisso no servidor.");
+        }
+    } catch (error) {
+        console.error("Erro na requisição:", error);
+        alert("Não foi possível conectar ao servidor.");
+    }
 }
 
 function setupCalendar() {
@@ -192,7 +256,7 @@ function setupCalendar() {
     document.querySelector('.btn-add').onclick = adicionarCompromisso;
     
     renderCalendar();
-    atualizarCompromissos();
+    carregarCompromissos();
 }
 
 
