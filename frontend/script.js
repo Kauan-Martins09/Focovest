@@ -192,7 +192,6 @@ function setupCalendar() {
     atualizarCompromissos();
 }
 
-// ===================== ANOTAÇÕES =====================
 
 // ===================== ANOTAÇÕES =====================
 
