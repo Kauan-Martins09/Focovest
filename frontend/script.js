@@ -156,7 +156,10 @@ function atualizarCompromissos() {
         compromissos[dataFormatada].forEach(t => {
             const div = document.createElement('div');
             div.className = 'tarefa-item';
-            div.innerHTML = `<span>${t.titulo}</span>`;
+            div.innerHTML = `
+                <span>${t.titulo}</span>
+                <button class="btn-deletar-tarefa" onclick="deletarCompromisso(${t.id})">×</button>
+            `;
             tarefasList.appendChild(div);
         });
     } else {
@@ -172,7 +175,7 @@ function adicionarCompromisso() {
     const dataFormatada = formatarData(selectedDate);
     if (!compromissos[dataFormatada]) compromissos[dataFormatada] = [];
     
-    compromissos[dataFormatada].push({ titulo: titulo });
+    compromissos[dataFormatada].push({ id: Date.now(), titulo: titulo });
     input.value = '';
     atualizarCompromissos();
 }
