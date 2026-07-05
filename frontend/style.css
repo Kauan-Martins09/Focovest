@@ -544,7 +544,7 @@ button:hover{
     display: block;
 }
 
-.calendar-box, .side-panel, .anotacao-box, .anotacoes-lista {
+.calendar-box, .side-panel, .anotacao-box, .anotacoes-list {
     background: white;
     border-radius: 24px;
     padding: 28px;
