@@ -644,6 +644,12 @@ button:hover{
     color: #ef4444;
 }
 
+.add-tarefa {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
 /*===================Anotações===================*/
 
 .anotacao-box textarea {
