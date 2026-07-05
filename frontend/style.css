@@ -551,7 +551,7 @@ button:hover{
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
-.anotacoes-list {
+.anotacoes-list h3 {
     margin-bottom: 25px;
 }
 
