@@ -646,6 +646,7 @@ button:hover{
 
 .add-tarefa {
     display: flex;
+    flex-direction: column;
     gap: 10px;
     margin-bottom: 18px;
 }
