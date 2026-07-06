@@ -5,6 +5,8 @@ from .db import SessionLocal
 from .models import User, Anotacao, Compromisso
 from .schemas import UserCreate, UserLog, AnotacaoCreate, CompromissoCreate
 from .security import hash_senha, verificar_senha
+import httpx
+import random
 
 router = APIRouter()
 
@@ -132,3 +134,28 @@ def deletar_compromisso(
     db.delete(compromisso)
     db.commit()
     return {"msg": "Compromisso excluído com sucesso!"}
+
+
+@router.get("/treino/{disciplina}")
+async def treino(disciplina: str, quantidade: int = 10):
+    ano = random.choice(range(2009, 2024))
+    todas_questoes = []
+    offset = 0
+
+    async with httpx.AsyncClient() as client:
+        while True:
+            resposta = await client.get(
+                f"https://api.enem.dev/v1/exams/{ano}/questions?limit=50&offset={offset}"
+            )
+            dados = resposta.json()
+            todas_questoes.extend(dados["questions"])
+
+            if not dados["metadata"]["hasMore"]:
+                break
+
+            offset += 50
+
+    questoes_fitradas = [q for q in todas_questoes if q["discipline"] == disciplina]
+    questoes_sorteadas = random.sample(questoes_fitradas, min(quantidade, len(questoes_fitradas)))
+
+    return questoes_sorteadas

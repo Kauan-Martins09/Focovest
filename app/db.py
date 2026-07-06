@@ -14,6 +14,7 @@ if DATABASE_URL and DATABASE_URL.startswith("mysql"):
 
 engine = create_engine(
     DATABASE_URL,
+    connect_args={"ssl": {"ssl": {}}},
     pool_pre_ping=True,
     pool_recycle=280
 )
