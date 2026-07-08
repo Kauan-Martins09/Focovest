@@ -111,40 +111,53 @@
     </div>
 </div>
 
-<!-- NOVA TELA: BEM-VINDO -->
-<div id="bemvindo" class="tela">
-    <div class="bemvindo-container">
-        <h2 class="welcome-title">Bem-Vindo!</h2>
-        <h3 class="section-title">Começa por aqui:</h3>
-        <div class="cards-grid">
-            <button class="card-btn" onclick="abrirAulas()">
-                <h4>Aulas</h4>
-                <p>Confira a lista dos 10 temas que mais caíram nos últimos 5 anos.</p>
-            </button>
-            <button class="card-btn" onclick="abrirMinhaRotina()">
-                <h4>Minha Rotina</h4>
-                <p>Crie seu cronograma de estudos personalizado aqui.</p>
-            </button>
-
-                        <button class="card-btn">
-                <h4>Inscrições</h4>
-                <p>Prazo de inscrição termina em 15 dias. Clique aqui para ver o edital.</p>
-            </button>
-            <button class="card-btn">
-                <h4>Simulador de Notas</h4>
-                <p>Sua nota atual te coloca em qual faculdade? Simule sua aprovação agora.</p>
-            </button>
-            <button class="card-btn">
-                <h4>Provas</h4>
-                <p>Consulte seu local de prova e veja as melhores rotas de ônibus.</p>
-            </button>
-            <button class="card-btn">
-                <h4>Minha Rota de Prova</h4>
-                <p>Veja as escolas mais próximas de você que aplicam a prova e como chegar nelas sem atraso.</p>
-            </button>
+<!-- PAINEL PRINCIPAL -->
+<div id="painel" class="tela">
+    <nav class="painel-nav">
+        <img src="logo-focovest.png" alt="FocoVest" class="painel-logo">
+        <div class="painel-perfil" onclick="togglePerfilMenu()">
+            <div class="avatar" id="avatar-inicial">?</div>
+            <span id="nome-usuario-nav">Usuário</span>
+            <span class="seta-perfil">▾</span>
+            <div class="perfil-menu" id="perfil-menu">
+                <button onclick="sairConta()">Sair</button>
+            </div>
         </div>
-        <button class="btn-inicial" onclick="voltarHome()">
-            Página inicial
+    </nav>
+
+    <section class="painel-hero">
+        <h1 id="saudacao-usuario">Olá 👋</h1>
+        <p class="painel-contagem">Faltam <strong id="dias-para-enem">--</strong> dias para o 1º dia do ENEM 2026</p>
+    </section>
+
+    <div class="bento-grid">
+        <button class="bento-card bento-grande bento-verde" onclick="abrirPraticar()">
+            <h3>Praticar</h3>
+            <p>Treine com questões reais do ENEM, separadas por área.</p>
+        </button>
+        <button class="bento-card bento-medio" onclick="abrirMinhaRotina()">
+            <h3>Minha Rotina</h3>
+            <p>Calendário de compromissos e anotações de estudo.</p>
+        </button>
+        <button class="bento-card bento-medio" onclick="abrirAulas()">
+            <h3>Aulas</h3>
+            <p>Os 10 temas que mais caíram nos últimos 5 anos.</p>
+        </button>
+        <button class="bento-card bento-pequeno">
+            <h3>Inscrições</h3>
+            <p>Prazo termina em breve. Veja o edital.</p>
+        </button>
+        <button class="bento-card bento-pequeno">
+            <h3>Simulador de Notas</h3>
+            <p>Descubra em qual curso sua nota te coloca.</p>
+        </button>
+        <button class="bento-card bento-pequeno">
+            <h3>Provas</h3>
+            <p>Consulte seu local e a melhor rota até lá.</p>
+        </button>
+        <button class="bento-card bento-pequeno">
+            <h3>Minha Rota de Prova</h3>
+            <p>Veja as escolas mais próximas que aplicam a prova.</p>
         </button>
     </div>
 </div>
@@ -181,14 +194,14 @@
                 </ul>
             </div>
         </div>
-        <button onclick="abrirBemVindo()" style="margin-top: 30px; width: 200px;">Voltar ao Menu</button>
+        <button onclick="abrirPainel()" style="margin-top: 30px; width: 200px;">Voltar ao Menu</button>
     </section>
 </div>
 
 <!-- TELA MINHA ROTINA -->
 <div id="minha-rotina" class="tela">
     <div class="rotina-header">
-        <button onclick="abrirBemVindo()" class="btn-voltar">←</button>
+        <button onclick="abrirPainel()" class="btn-voltar">←</button>
         <h1>Minha Rotina</h1>
     </div>
     <div class="tabs">

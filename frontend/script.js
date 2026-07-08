@@ -11,9 +11,39 @@ function abrirCadastro(){ mostrarTela("cadastro"); }
 function abrirLogin(){ mostrarTela("login"); }
 function abrirHome(){ mostrarTela("home"); }
 function voltarHome(){ mostrarTela("home"); }
-function abrirBemVindo() { mostrarTela("bemvindo"); }
+function abrirPainel() { mostrarTela("painel"); atualizarPainel() }
 function abrirAulas() { mostrarTela("aulas"); }
 function abrirMinhaRotina() { mostrarTela("minha-rotina"); }
+function atualizarPainel() {
+    const nome = localStorage.getItem("nome") || "Estudante";
+    const primeiroNome = nome.split(" ")[0];
+
+    document.getElementById("avatar-inicial").textContent = nome.charAt(0).toUpperCase();
+    document.getElementById("nome-usuario-nav").textContent = primeiroNome;
+
+    const hora = new Date().getHours();
+    let saudacao = "Boa noite";
+    if (hora >= 5 && hora < 12) saudacao = "Bom dia";
+    else if (hora >= 12 && hora < 18) saudacao = "Boa tarde";
+
+    document.getElementById("saudacao-usuario").textContent = `${saudacao}, ${primeiroNome} 👋`;
+
+    const hoje = new Date();
+    const diaProva = new Date("2026-11-08T00:00:00");
+    const diasRestantes = Math.max(0, Math.ceil((diaProva - hoje) / (1000 * 60 * 60 * 24)));
+
+    document.getElementById("dias-para-enem").textContent = diasRestantes;
+}
+
+function togglePerfilMenu() {
+    document.getElementById("perfil-menu").classList.toggle("aberto");
+}
+
+function sairConta() {
+    localStorage.removeItem("usuario_id");
+    localStorage.removeItem("nome");
+    voltarHome();
+}
 
 // ===================== CADASTRO E LOGIN =====================
 
@@ -63,7 +93,7 @@ async function entrar(){
     await carregarAnotacoes();
     await carregarCompromissos();
 
-    abrirBemVindo();
+    abrirPainel();
 
 } else {
     alert(json.msg);
