@@ -912,12 +912,8 @@ button:hover{
     line-height: 1.4;
 }
 
-.bento-verde {
-    background: linear-gradient(135deg, #67E191, #4ade80);
-}
-
-.bento-verde .bento-texto h3,
-.bento-verde .bento-texto p { color: white; }
+.bento-verde { border-left-color: #67E191; }
+.bento-verde .bento-icone { color: #67E191; }
 
 .bento-roxo { border-left-color: #9F96BD; }
 .bento-roxo .bento-icone { color: #9F96BD; }
@@ -944,3 +940,86 @@ button:hover{
     .intro-banner-wrap { padding: 0 20px; }
     .bento-grid { grid-template-columns: 1fr; padding: 20px; }
 }
+
+#praticar {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: #f8fafc;
+    padding: 40px 20px;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: auto;
+    z-index: 100;
+}
+
+#praticar.ativa { display: flex !important; }
+
+.praticar-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    width: 100%;
+    max-width: 1000px;
+}
+
+.praticar-header h1 {
+    font-size: 2.4rem;
+    color: #1e2937;
+    text-align: center;
+    margin: 0;
+}
+
+.praticar-subtitulo {
+    color: #64748b;
+    margin: 20px 0 35px 0;
+    font-size: 1.1rem;
+}
+
+.areas-grid {
+    width: 100%;
+    max-width: 1000px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 22px;
+}
+
+.area-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px 22px;
+    text-align: left;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    border-left: 6px solid transparent;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.area-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 28px rgba(0,0,0,0.15);
+}
+
+.area-icone {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 14px;
+}
+
+.area-card h3 {
+    color: #1f2937;
+    margin-bottom: 8px;
+    font-size: 1.2rem;
+}
+
+.area-card p {
+    color: #64748b;
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.area-linguagens { border-left-color: #9F96BD; }
+.area-humanas { border-left-color: #f59e0b; }
+.area-natureza { border-left-color: #67E191; }
+.area-matematica { border-left-color: #3b82f6; }

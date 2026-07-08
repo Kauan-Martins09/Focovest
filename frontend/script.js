@@ -389,6 +389,23 @@ function abrirAnotacao(id) {
         document.getElementById('anotacao-texto').value = anotacaoSelecionada.texto;
     }
 }
+// ================ TELA PRATICAR =============== //
+function abrirPraticar() { mostrarTela("praticar"); }
+
+async function iniciarTreino(disciplina) {
+    try {
+        const resposta = await fetch(
+            `https://focovest-backend.onrender.com/treino/${disciplina}?quantidade=10`
+        );
+        const questoes = await resposta.json();
+
+        console.log(`Questões carregadas para ${disciplina}:`, questoes);
+        alert(`Carregado! ${questoes.length} questões de ${disciplina} prontas. (Tela do quiz vem no próximo passo)`);
+    } catch (error) {
+        console.error("Erro ao carregar questões:", error);
+        alert("Não foi possível carregar as questões. Tente novamente.");
+    }
+}
 
 // ===================== INICIALIZAÇÃO =====================
 
