@@ -758,7 +758,7 @@ button:hover{
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
-.painel-logo { height: 54px; }
+.painel-logo { height: 60px; }
 
 .painel-perfil {
     display: flex;
@@ -962,6 +962,20 @@ button:hover{
     align-items: center;
     width: 100%;
     max-width: 1000px;
+}
+
+.praticar-header .btn-voltar{
+    position: static;
+    background-color: #f8fafc;
+    color: #9F96BD;
+    font-size: 2rem;
+    width: 64px;
+    height: 64px;
+}
+
+.praticar-header .btn-voltar:hover {
+    background: #e0e7ff;
+    transform: scale(1.08);
 }
 
 .praticar-header h1 {
