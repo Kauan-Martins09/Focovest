@@ -437,12 +437,18 @@ function renderQuestaoTreino() {
         ? `<img src="${questao.files[0]}" class="questao-imagem" alt="Imagem da questão">`
         : '';
 
-    const alternativasHtml = questao.alternatives.map(alt => `
-        <button class="alternativa-btn" data-letra="${alt.letter}" onclick="selecionarAlternativa('${alt.letter}')">
-            <span class="alternativa-letra">${alt.letter}</span>
-            <span class="alternativa-texto">${alt.text || ''}</span>
-        </button>
-    `).join('');
+    const alternativasHtml = questao.alternatives.map(alt => {
+        const conteudo = alt.file
+            ? `<img src="${alt.file}" class="alternativa-imagem" alt="Alternativa ${alt.letter}">`
+            : `<span class="alternativa-texto">${alt.text || ''}</span>`;
+
+        return `
+            <button class="alternativa-btn" data-letra="${alt.letter}" onclick="selecionarAlternativa('${alt.letter}')">
+                <span class="alternativa-letra">${alt.letter}</span>
+                ${conteudo}
+            </button>
+        `;
+    }).join('');
 
     document.getElementById("treino-conteudo").innerHTML = `
         <div class="questao-card">

@@ -1240,3 +1240,10 @@ button:hover{
 }
 
 .resultado-mensagem { color: #64748b; margin-bottom: 30px; font-size: 1.05rem; }
+
+.alternativa-imagem {
+    max-width: 220px;
+    max-height: 140px;
+    border-radius: 8px;
+    display: block;
+}
