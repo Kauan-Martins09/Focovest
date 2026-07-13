@@ -322,3 +322,25 @@
         </button>
     </div>
 </div>
+
+<!-- TELA TREINO (QUIZ) -->
+<div id="treino" class="tela">
+    <div class="treino-header">
+        <button onclick="sairDoTreino()" class="btn-voltar">←</button>
+        <div class="treino-progresso">
+            <span id="treino-progresso-texto">Questão 1 de 10</span>
+            <div class="progresso-barra">
+                <div class="progresso-preenchido" id="progresso-preenchido"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="treino-conteudo" id="treino-conteudo"></div>
+
+    <div class="treino-resultado" id="treino-resultado" style="display:none;">
+        <h2>Treino concluído!</h2>
+        <p class="resultado-nota" id="resultado-nota">0 de 0</p>
+        <p class="resultado-mensagem" id="resultado-mensagem"></p>
+        <button onclick="abrirPraticar()">Voltar para Praticar</button>
+    </div>
+</div>

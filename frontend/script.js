@@ -392,18 +392,125 @@ function abrirAnotacao(id) {
 // ================ TELA PRATICAR =============== //
 function abrirPraticar() { mostrarTela("praticar"); }
 
+// ===================== TREINO (QUIZ) =====================
+
+let questoesTreino = [];
+let indiceAtual = 0;
+let respostasTreino = [];
+
 async function iniciarTreino(disciplina) {
+    mostrarTela("treino");
+    document.getElementById("treino-resultado").style.display = "none";
+    document.getElementById("treino-conteudo").innerHTML = '<p class="treino-carregando">Carregando questões...</p>';
+
     try {
         const resposta = await fetch(
             `https://focovest-backend.onrender.com/treino/${disciplina}?quantidade=10`
         );
-        const questoes = await resposta.json();
+        questoesTreino = await resposta.json();
+        respostasTreino = new Array(questoesTreino.length).fill(null);
+        indiceAtual = 0;
 
-        console.log(`Questões carregadas para ${disciplina}:`, questoes);
-        alert(`Carregado! ${questoes.length} questões de ${disciplina} prontas. (Tela do quiz vem no próximo passo)`);
+        renderQuestaoTreino();
     } catch (error) {
-        console.error("Erro ao carregar questões:", error);
-        alert("Não foi possível carregar as questões. Tente novamente.");
+        console.error("Erro ao carregar treino:", error);
+        document.getElementById("treino-conteudo").innerHTML = '<p class="treino-erro">Não foi possível carregar as questões. Tente novamente.</p>';
+    }
+}
+
+function formatarContexto(texto) {
+    if (!texto) return '';
+    return texto
+        .replace(/!\[.*?\]\(.*?\)/g, '')                          // remove imagem embutida no markdown (mostramos separado)
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')          // **negrito** -> <strong>
+        .replace(/\n/g, '<br>');                                  // quebras de linha
+}
+
+function renderQuestaoTreino() {
+    const questao = questoesTreino[indiceAtual];
+    const total = questoesTreino.length;
+
+    document.getElementById("treino-progresso-texto").textContent = `Questão ${indiceAtual + 1} de ${total}`;
+    document.getElementById("progresso-preenchido").style.width = `${(indiceAtual / total) * 100}%`;
+
+    const imagemHtml = (questao.files && questao.files.length > 0)
+        ? `<img src="${questao.files[0]}" class="questao-imagem" alt="Imagem da questão">`
+        : '';
+
+    const alternativasHtml = questao.alternatives.map(alt => `
+        <button class="alternativa-btn" data-letra="${alt.letter}" onclick="selecionarAlternativa('${alt.letter}')">
+            <span class="alternativa-letra">${alt.letter}</span>
+            <span class="alternativa-texto">${alt.text || ''}</span>
+        </button>
+    `).join('');
+
+    document.getElementById("treino-conteudo").innerHTML = `
+        <div class="questao-card">
+            <span class="questao-tag">${questao.discipline} · ENEM ${questao.year}</span>
+            <div class="questao-contexto">${formatarContexto(questao.context)}</div>
+            ${imagemHtml}
+            <p class="questao-pergunta">${questao.alternativesIntroduction || ''}</p>
+            <div class="alternativas-lista">${alternativasHtml}</div>
+        </div>
+        <button class="btn-proxima" id="btn-proxima" onclick="proximaQuestao()" disabled>
+            ${indiceAtual === total - 1 ? 'Ver resultado' : 'Próxima'}
+        </button>
+    `;
+
+    const respostaSalva = respostasTreino[indiceAtual];
+    if (respostaSalva) {
+        marcarAlternativaSelecionada(respostaSalva);
+        document.getElementById("btn-proxima").disabled = false;
+    }
+}
+
+function selecionarAlternativa(letra) {
+    respostasTreino[indiceAtual] = letra;
+    marcarAlternativaSelecionada(letra);
+    document.getElementById("btn-proxima").disabled = false;
+}
+
+function marcarAlternativaSelecionada(letra) {
+    document.querySelectorAll('.alternativa-btn').forEach(btn => {
+        btn.classList.toggle('selecionada', btn.dataset.letra === letra);
+    });
+}
+
+function proximaQuestao() {
+    if (indiceAtual < questoesTreino.length - 1) {
+        indiceAtual++;
+        renderQuestaoTreino();
+    } else {
+        mostrarResultadoTreino();
+    }
+}
+
+function mostrarResultadoTreino() {
+    const total = questoesTreino.length;
+    let acertos = 0;
+    questoesTreino.forEach((q, i) => {
+        if (respostasTreino[i] === q.correctAlternative) acertos++;
+    });
+
+    document.getElementById("treino-conteudo").innerHTML = '';
+    document.getElementById("progresso-preenchido").style.width = '100%';
+    document.getElementById("treino-progresso-texto").textContent = 'Concluído';
+
+    document.getElementById("treino-resultado").style.display = 'flex';
+    document.getElementById("resultado-nota").textContent = `${acertos} de ${total}`;
+
+    const porcentagem = Math.round((acertos / total) * 100);
+    let mensagem;
+    if (porcentagem >= 80) mensagem = 'Mandou muito bem!';
+    else if (porcentagem >= 50) mensagem = 'Bom treino! Continue praticando.';
+    else mensagem = 'Vale revisar esse conteúdo com calma.';
+
+    document.getElementById("resultado-mensagem").textContent = mensagem;
+}
+
+function sairDoTreino() {
+    if (confirm("Sair do treino? Seu progresso nessa sessão será perdido.")) {
+        abrirPraticar();
     }
 }
 
