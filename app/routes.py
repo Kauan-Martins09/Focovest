@@ -37,11 +37,7 @@ def cadastro(user: UserCreate, db: Session = Depends(get_db)):
     db.add(novo)
     db.commit()
 
-    return {
-        "success": True,
-        "usuario_id": usuario.id,
-        "nome": usuario.nome
-            }
+    return{"msg": "usuario cadastrado"}
         
 
 @router.post("/login")

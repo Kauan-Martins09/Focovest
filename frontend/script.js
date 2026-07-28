@@ -90,22 +90,11 @@ async function entrar(){
     });
 
     const json = await resposta.json();
-
-    console.log(json);
-
-    if(json.success){
-
-    localStorage.setItem("usuario_id", json.usuario_id);
-    localStorage.setItem("nome", json.nome);
-
-    await carregarAnotacoes();
-    await carregarCompromissos();
-
-    abrirPainel();
-
-} else {
     alert(json.msg);
-}
+
+    if(json.msg === "Usuário cadastrado"){
+        abrirLogin();
+    }
 }
 
 // ===================== MINHA ROTINA (TABS) =====================
