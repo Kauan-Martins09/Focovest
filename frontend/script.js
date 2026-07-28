@@ -63,10 +63,7 @@ async function cadastrar(){
 
     const json = await resposta.json();
     alert(json.msg);
-
-    if(json.msg === "Usuário cadastrado"){
-        abrirLogin();
-    }
+    abrirLogin();
 }
 
 async function entrar(){
