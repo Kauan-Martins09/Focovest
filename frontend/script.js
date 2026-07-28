@@ -58,22 +58,14 @@ async function cadastrar(){
     const resposta = await fetch("https://focovest-backend.onrender.com/cadastro", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dados )
+        body: JSON.stringify(dados)
     });
 
     const json = await resposta.json();
+    alert(json.msg);
 
-    console.log(json);
-
-    if(json.success){
-
-    localStorage.setItem("usuario_id", json.usuario_id);
-    localStorage.setItem("nome", json.nome);
-
-    await carregarAnotacoes();
-    await carregarCompromissos();
-
-    abrirPainel();
+    if(json.msg === "Usuário cadastrado"){
+        abrirLogin();
     }
 }
 
