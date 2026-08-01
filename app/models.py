@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey, DateTime
 from .db import Base
+from datetime import datetime
 
 class User(Base):
     __tablename__ = "usuarios"
@@ -25,3 +26,13 @@ class Compromisso(Base):
     usuario_id = Column(Integer, ForeignKey("usuarios.id"))
     data = Column(Date, nullable=False)
     descricao = Column(String(500), nullable=False)
+
+class Resultado(Base):
+    __tablename__ = "resultados"
+
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"))
+    acertos = Column(Integer, nullable=False)
+    total = Column(Integer, nullable=False)
+    nota = Column(Integer, nullable=False)
+    data = Column(DateTime, default=datetime.utcnow)

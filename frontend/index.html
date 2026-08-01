@@ -163,36 +163,13 @@
             </div>
         </button>
     </div>
-        <!--
-        <button class="bento-card bento-pequeno bento-amber">
-            <span class="bento-icone">📝</span>
+        <button class="bento-card bento-pequeno bento-azul" onclick="iniciarProva()">
+            <span class="bento-icone">⏱️</span>
             <div class="bento-texto">
-                <h3>Inscrições</h3>
-                <p>Prazo termina em breve. Veja o edital.</p>
+                <h3>Prova</h3>
+                <p>Simulado completo com as 4 áreas e cronômetro de 90 minutos.</p>
             </div>
         </button>
-        <button class="bento-card bento-pequeno bento-rosa">
-            <span class="bento-icone">🎓</span>
-            <div class="bento-texto">
-                <h3>Simulador de Notas</h3>
-                <p>Descubra em qual curso sua nota te coloca.</p>
-            </div>
-        </button>
-        <button class="bento-card bento-pequeno bento-azul">
-            <span class="bento-icone">📄</span>
-            <div class="bento-texto">
-                <h3>Provas</h3>
-                <p>Consulte seu local e a melhor rota até lá.</p>
-            </div>
-        </button>
-        <button class="bento-card bento-pequeno bento-roxo">
-            <span class="bento-icone">🗺️</span>
-            <div class="bento-texto">
-                <h3>Minha Rota de Prova</h3>
-                <p>Veja as escolas mais próximas que aplicam a prova.</p>
-            </div>
-        </button>
-        -->
 </div>
 
 <!-- NOVA TELA DE AULAS -->
@@ -342,5 +319,28 @@
         <p class="resultado-nota" id="resultado-nota">0 de 0</p>
         <p class="resultado-mensagem" id="resultado-mensagem"></p>
         <button onclick="abrirPraticar()">Voltar para Praticar</button>
+    </div>
+</div>
+
+<!-- TELA PROVA (QUIZ COM TIMER) -->
+<div id="prova" class="tela">
+    <div class="treino-header">
+        <button onclick="sairDaProva()" class="btn-voltar">←</button>
+        <div class="treino-progresso">
+            <span id="prova-progresso-texto">Questão 1 de 60</span>
+            <div class="progresso-barra">
+                <div class="progresso-preenchido" id="prova-progresso-preenchido"></div>
+            </div>
+        </div>
+        <div class="prova-timer" id="prova-timer">90:00</div>
+    </div>
+
+    <div class="treino-conteudo" id="prova-conteudo"></div>
+
+    <div class="treino-resultado" id="prova-resultado" style="display:none;">
+        <h2>Prova concluída!</h2>
+        <p class="resultado-nota" id="prova-resultado-nota">0</p>
+        <p class="resultado-mensagem" id="prova-resultado-mensagem"></p>
+        <button onclick="abrirPainel()">Voltar ao Painel</button>
     </div>
 </div>

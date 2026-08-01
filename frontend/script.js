@@ -516,6 +516,165 @@ function sairDoTreino() {
     }
 }
 
+// ===================== PROVA (SIMULADO COM TIMER) =====================
+
+let questoesProva = [];
+let indiceProva = 0;
+let respostasProva = [];
+let timerProvaId = null;
+let segundosRestantes = 90 * 60;
+
+async function iniciarProva() {
+    mostrarTela("prova");
+    document.getElementById("prova-resultado").style.display = "none";
+    document.getElementById("prova-conteudo").innerHTML = '<p class="treino-carregando">Montando sua prova...</p>';
+
+    try {
+        const resposta = await fetch("https://focovest-backend.onrender.com/prova?quantidade_por_area=15");
+        const dados = await resposta.json();
+
+        questoesProva = dados.questoes;
+        respostasProva = new Array(questoesProva.length).fill(null);
+        indiceProva = 0;
+        segundosRestantes = 90 * 60;
+
+        iniciarCronometro();
+        renderQuestaoProva();
+    } catch (error) {
+        console.error("Erro ao montar prova:", error);
+        document.getElementById("prova-conteudo").innerHTML = '<p class="treino-erro">Não foi possível montar a prova. Tente novamente.</p>';
+    }
+}
+
+function iniciarCronometro() {
+    clearInterval(timerProvaId);
+    atualizarTimerTexto();
+
+    timerProvaId = setInterval(() => {
+        segundosRestantes--;
+        atualizarTimerTexto();
+
+        if (segundosRestantes <= 0) {
+            clearInterval(timerProvaId);
+            finalizarProva();
+        }
+    }, 1000);
+}
+
+function atualizarTimerTexto() {
+    const minutos = Math.floor(segundosRestantes / 60);
+    const segundos = segundosRestantes % 60;
+    const texto = `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+    document.getElementById("prova-timer").textContent = texto;
+
+    if (segundosRestantes <= 300) {
+        document.getElementById("prova-timer").classList.add("timer-urgente");
+    }
+}
+
+function renderQuestaoProva() {
+    const questao = questoesProva[indiceProva];
+    const total = questoesProva.length;
+
+    document.getElementById("prova-progresso-texto").textContent = `Questão ${indiceProva + 1} de ${total}`;
+    document.getElementById("prova-progresso-preenchido").style.width = `${(indiceProva / total) * 100}%`;
+
+    const imagemHtml = (questao.files && questao.files.length > 0)
+        ? `<img src="${questao.files[0]}" class="questao-imagem" alt="Imagem da questão">`
+        : '';
+
+    const alternativasHtml = questao.alternatives.map(alt => {
+        const conteudo = alt.file
+            ? `<img src="${alt.file}" class="alternativa-imagem" alt="Alternativa ${alt.letter}">`
+            : `<span class="alternativa-texto">${alt.text || ''}</span>`;
+
+        return `
+            <button class="alternativa-btn" data-letra="${alt.letter}" onclick="selecionarAlternativaProva('${alt.letter}')">
+                <span class="alternativa-letra">${alt.letter}</span>
+                ${conteudo}
+            </button>
+        `;
+    }).join('');
+
+    document.getElementById("prova-conteudo").innerHTML = `
+        <div class="questao-card">
+            <span class="questao-tag">${questao.discipline} · ENEM ${questao.year}</span>
+            <div class="questao-contexto">${formatarContexto(questao.context)}</div>
+            ${imagemHtml}
+            <p class="questao-pergunta">${questao.alternativesIntroduction || ''}</p>
+            <div class="alternativas-lista">${alternativasHtml}</div>
+        </div>
+        <button class="btn-proxima" id="btn-proxima-prova" onclick="proximaQuestaoProva()" disabled>
+            ${indiceProva === total - 1 ? 'Finalizar prova' : 'Próxima'}
+        </button>
+    `;
+
+    const respostaSalva = respostasProva[indiceProva];
+    if (respostaSalva) {
+        marcarAlternativaSelecionada(respostaSalva);
+        document.getElementById("btn-proxima-prova").disabled = false;
+    }
+}
+
+function selecionarAlternativaProva(letra) {
+    respostasProva[indiceProva] = letra;
+    marcarAlternativaSelecionada(letra);
+    document.getElementById("btn-proxima-prova").disabled = false;
+}
+
+function proximaQuestaoProva() {
+    if (indiceProva < questoesProva.length - 1) {
+        indiceProva++;
+        renderQuestaoProva();
+    } else {
+        finalizarProva();
+    }
+}
+
+async function finalizarProva() {
+    clearInterval(timerProvaId);
+
+    const total = questoesProva.length;
+    let acertos = 0;
+    questoesProva.forEach((q, i) => {
+        if (respostasProva[i] === q.correctAlternative) acertos++;
+    });
+
+    const nota = Math.round((acertos / total) * 1000);
+
+    document.getElementById("prova-conteudo").innerHTML = '';
+    document.getElementById("prova-progresso-preenchido").style.width = '100%';
+    document.getElementById("prova-progresso-texto").textContent = 'Concluído';
+
+    document.getElementById("prova-resultado").style.display = 'flex';
+    document.getElementById("prova-resultado-nota").textContent = nota;
+
+    let mensagem;
+    if (nota >= 800) mensagem = 'Excelente! Nota de quem já está pronto para o ENEM.';
+    else if (nota >= 500) mensagem = 'Bom resultado! Continue firme nos estudos.';
+    else mensagem = `Você acertou ${acertos} de ${total} questões. Vale reforçar o conteúdo.`;
+
+    document.getElementById("prova-resultado-mensagem").textContent = mensagem;
+
+    const usuario_id = Number(localStorage.getItem("usuario_id"));
+    try {
+        await fetch("https://focovest-backend.onrender.com/resultado", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ usuario_id, acertos, total, nota })
+        });
+    } catch (error) {
+        console.error("Erro ao salvar resultado:", error);
+    }
+}
+
+function sairDaProva() {
+    if (confirm("Sair da prova? Seu progresso será perdido e nada será salvo.")) {
+        clearInterval(timerProvaId);
+        abrirPainel();
+    }
+}
+
 // ===================== INICIALIZAÇÃO =====================
 
 window.onload = async () => {

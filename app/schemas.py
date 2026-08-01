@@ -20,3 +20,9 @@ class CompromissoCreate(BaseModel):
     usuario_id: int
     data: date
     descricao: str
+
+class ResultadoCreate(BaseModel):
+    usuario_id: int
+    acertos: int
+    total: int
+    nota: int

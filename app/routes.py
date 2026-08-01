@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from .db import SessionLocal
-from .models import User, Anotacao, Compromisso
-from .schemas import UserCreate, UserLog, AnotacaoCreate, CompromissoCreate
+from .models import User, Anotacao, Compromisso, Resultado
+from .schemas import UserCreate, UserLog, AnotacaoCreate, CompromissoCreate, ResultadoCreate
 from .security import hash_senha, verificar_senha
 import httpx
 import random
@@ -159,3 +159,58 @@ async def treino(disciplina: str, quantidade: int = 10):
     questoes_sorteadas = random.sample(questoes_fitradas, min(quantidade, len(questoes_fitradas)))
 
     return questoes_sorteadas
+
+@router.get("/prova")
+async def gerar_prova(quantidade_por_area: int = 15):
+    ano = random.choice(range(2009, 2024))
+    todas_questoes = []
+    offset = 0
+
+    async with httpx.AsyncClient() as client:
+        while True:
+            resposta = await client.get(
+                f"https://api.enem.dev/v1/exams/{ano}/questions?limit=50&offset={offset}"
+            )
+            dados = resposta.json()
+            todas_questoes.extend(dados["questions"])
+
+            if not dados["metadata"]["hasMore"]:
+                break
+
+            offset += 50
+
+    areas = ["linguagens", "ciencias-humanas", "ciencias-natureza", "matematica"]
+    prova = []
+
+    for area in areas:
+        questoes_area = [q for q in todas_questoes if q["discipline"] == area]
+        selecionadas = random.sample(questoes_area, min(quantidade_por_area, len(questoes_area)))
+        prova.extend(selecionadas)
+
+    random.shuffle(prova)
+
+    return {"ano": ano, "questoes": prova}
+
+
+@router.post("/resultado")
+def criar_resultado(resultado: ResultadoCreate, db: Session = Depends(get_db)):
+    novo = Resultado(
+        usuario_id=resultado.usuario_id,
+        acertos=resultado.acertos,
+        total=resultado.total,
+        nota=resultado.nota
+    )
+
+    db.add(novo)
+    db.commit()
+
+    return {"msg": "Resultado salvo"}
+
+
+@router.get("/resultado/{usuario_id}")
+def listar_resultados(usuario_id: int, db: Session = Depends(get_db)):
+    resultados = db.query(Resultado).filter(
+        Resultado.usuario_id == usuario_id
+    ).order_by(Resultado.data.desc()).all()
+
+    return resultados
