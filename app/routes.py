@@ -8,6 +8,13 @@ from .security import hash_senha, verificar_senha
 import httpx
 import random
 
+def questao_completa(q):
+    tinha_imagem_no_contexto = "![" in (q.get("context") or "")
+    tem_arquivo = bool(q.get("files"))
+    if tinha_imagem_no_contexto and not tem_arquivo:
+        return False
+    return True
+
 router = APIRouter()
 
 
@@ -155,8 +162,9 @@ async def treino(disciplina: str, quantidade: int = 10):
 
             offset += 50
 
-    questoes_fitradas = [q for q in todas_questoes if q["discipline"] == disciplina]
-    questoes_sorteadas = random.sample(questoes_fitradas, min(quantidade, len(questoes_fitradas)))
+    questoes_filtradas = [q for q in todas_questoes if q["discipline"] == disciplina]
+    questoes_filtradas = [q for q in questoes_filtradas if questao_completa(q)]
+    questoes_sorteadas = random.sample(questoes_filtradas, min(quantidade, len(questoes_filtradas)))
 
     return questoes_sorteadas
 
@@ -185,6 +193,7 @@ async def gerar_prova(quantidade_por_area: int = 15):
     for area in areas:
         questoes_area = [q for q in todas_questoes if q["discipline"] == area]
         selecionadas = random.sample(questoes_area, min(quantidade_por_area, len(questoes_area)))
+        questoes_area = [q for q in questoes_area if questao_completa(q)]
         prova.extend(selecionadas)
 
     random.shuffle(prova)
