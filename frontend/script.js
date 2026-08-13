@@ -490,24 +490,108 @@ function proximaQuestao() {
 function mostrarResultadoTreino() {
     const total = questoesTreino.length;
     let acertos = 0;
+
     questoesTreino.forEach((q, i) => {
         if (respostasTreino[i] === q.correctAlternative) acertos++;
     });
 
-    document.getElementById("treino-conteudo").innerHTML = '';
-    document.getElementById("progresso-preenchido").style.width = '100%';
-    document.getElementById("treino-progresso-texto").textContent = 'Concluído';
+    // Atualiza barra de progresso
+    document.getElementById("progresso-preenchido").style.width = "100%";
+    document.getElementById("treino-progresso-texto").textContent = "Revisão do treino";
 
-    document.getElementById("treino-resultado").style.display = 'flex';
-    document.getElementById("resultado-nota").textContent = `${acertos} de ${total}`;
+    // Gera o HTML de todas as questões com feedback
+    let htmlQuestoes = "";
 
+    questoesTreino.forEach((questao, i) => {
+        const respostaUsuario = respostasTreino[i];
+        const acertou = respostaUsuario === questao.correctAlternative;
+
+        if (acertou) acertos; // só para clareza
+
+        const imagemHtml = (questao.files && questao.files.length > 0)
+            ? `<img src="${questao.files[0]}" class="questao-imagem" alt="Imagem da questão">`
+            : "";
+
+        const alternativasHtml = questao.alternatives.map(alt => {
+            let classes = "alternativa-btn revisao";
+            let statusIcon = "";
+
+            // Resposta correta
+            if (alt.letter === questao.correctAlternative) {
+                classes += " correta";
+                statusIcon = `<span class="status-icon">✓</span>`;
+            }
+            // Resposta que o usuário marcou e estava errada
+            else if (alt.letter === respostaUsuario && !acertou) {
+                classes += " incorreta";
+                statusIcon = `<span class="status-icon">✗</span>`;
+            }
+
+            const conteudo = alt.file
+                ? `<img src="${alt.file}" class="alternativa-imagem" alt="Alternativa ${alt.letter}">`
+                : `<span class="alternativa-texto">${alt.text || ""}</span>`;
+
+            return `
+                <div class="${classes}" data-letra="${alt.letter}">
+                    <span class="alternativa-letra">${alt.letter}</span>
+                    ${conteudo}
+                    ${statusIcon}
+                </div>
+            `;
+        }).join("");
+
+        htmlQuestoes += `
+            <div class="questao-card revisao-card ${acertou ? "acertou" : "errou"}">
+                <div class="revisao-header">
+                    <span class="questao-tag">${questao.discipline} · ENEM ${questao.year}</span>
+                    <span class="badge-resultado ${acertou ? "badge-acerto" : "badge-erro"}">
+                        ${acertou ? "✓ Acertou" : "✗ Errou"}
+                    </span>
+                </div>
+
+                <div class="questao-contexto">${formatarContexto(questao.context)}</div>
+                ${imagemHtml}
+                <p class="questao-pergunta">${questao.alternativesIntroduction || ""}</p>
+
+                <div class="alternativas-lista">
+                    ${alternativasHtml}
+                </div>
+
+                ${!acertou ? `
+                    <p class="resposta-explicacao">
+                        Você marcou <strong>${respostaUsuario || "nenhuma"}</strong>. 
+                        A resposta correta é <strong>${questao.correctAlternative}</strong>.
+                    </p>
+                ` : ""}
+            </div>
+        `;
+    });
+
+    // Monta o resultado final
     const porcentagem = Math.round((acertos / total) * 100);
     let mensagem;
-    if (porcentagem >= 80) mensagem = 'Mandou muito bem!';
-    else if (porcentagem >= 50) mensagem = 'Bom treino! Continue praticando.';
-    else mensagem = 'Vale revisar esse conteúdo com calma.';
+    if (porcentagem >= 80) mensagem = "Mandou muito bem!";
+    else if (porcentagem >= 50) mensagem = "Bom treino! Continue praticando.";
+    else mensagem = "Vale revisar esse conteúdo com calma.";
 
-    document.getElementById("resultado-mensagem").textContent = mensagem;
+    document.getElementById("treino-conteudo").innerHTML = `
+        <div class="resumo-resultado">
+            <h2>Treino concluído!</h2>
+            <p class="resultado-nota">${acertos} de ${total}</p>
+            <p class="resultado-mensagem">${mensagem}</p>
+            <p class="resultado-porcentagem">${porcentagem}% de acerto</p>
+        </div>
+
+        <h3 class="titulo-revisao">Revisão das questões</h3>
+        ${htmlQuestoes}
+
+        <button class="btn-proxima" onclick="abrirPraticar()" style="margin-top: 30px;">
+            Voltar para Praticar
+        </button>
+    `;
+
+    // Esconde o bloco antigo de resultado (não usamos mais ele)
+    document.getElementById("treino-resultado").style.display = "none";
 }
 
 function sairDoTreino() {
