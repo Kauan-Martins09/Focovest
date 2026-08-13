@@ -1403,3 +1403,254 @@ button:hover{
     font-size: 0.95rem;
     line-height: 1.5;
 }
+
+/* ===== INTRODUÇÃO DA PROVA ===== */
+#prova-intro {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: #f8fafc;
+    padding: 40px 20px;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: auto;
+    z-index: 100;
+}
+
+#prova-intro.ativa { display: flex !important; }
+
+.prova-intro-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: 30px;
+}
+
+.prova-intro-header h1 {
+    text-align: center;
+    font-size: 2rem;
+    color: #1e2937;
+    margin: 0;
+}
+
+.prova-intro-header .btn-voltar {
+    position: static;
+    background-color: #f8fafc;
+    color: #9F96BD;
+    font-size: 2rem;
+    width: 64px;
+    height: 64px;
+}
+
+.prova-intro-card {
+    background: white;
+    border-radius: 24px;
+    padding: 36px 32px;
+    width: 100%;
+    max-width: 800px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    margin-bottom: 40px;
+}
+
+.prova-intro-card h2 {
+    margin-bottom: 20px;
+    color: #1e2937;
+}
+
+.prova-instrucoes {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 30px;
+}
+
+.prova-instrucoes li {
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+    color: #475569;
+    line-height: 1.5;
+}
+
+.prova-instrucoes li:last-child { border-bottom: none; }
+
+.btn-iniciar-prova {
+    width: 100%;
+    background: linear-gradient(90deg, #9F96BD, #67E191);
+    color: white;
+    font-weight: bold;
+    font-size: 1.15rem;
+    padding: 18px;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+}
+
+/* Histórico */
+.historico-provas {
+    width: 100%;
+    max-width: 800px;
+}
+
+.historico-provas h2 {
+    margin-bottom: 20px;
+    color: #1e2937;
+}
+
+.historico-item {
+    background: white;
+    border-radius: 16px;
+    padding: 18px 22px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    gap: 16px;
+}
+
+.historico-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.historico-info strong {
+    font-size: 1.15rem;
+    color: #1e2937;
+}
+
+.historico-info span {
+    color: #64748b;
+    font-size: 0.92rem;
+}
+
+.historico-data {
+    font-size: 0.85rem !important;
+}
+
+.btn-revisar {
+    background: #9F96BD;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    width: auto;
+    margin: 0;
+}
+
+.btn-revisar:hover { background: #7c73a8; }
+
+.sem-revisao {
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+.historico-vazio {
+    text-align: center;
+    color: #94a3b8;
+    padding: 30px;
+}
+
+/* ===== REVISÃO (reutilizado do Praticar) ===== */
+.resumo-resultado {
+    background: white;
+    border-radius: 24px;
+    padding: 40px 32px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    margin-bottom: 40px;
+    width: 100%;
+    max-width: 800px;
+}
+
+.titulo-revisao {
+    width: 100%;
+    max-width: 800px;
+    font-size: 1.35rem;
+    color: #1e2937;
+    margin-bottom: 24px;
+    font-weight: 700;
+}
+
+.revisao-card {
+    position: relative;
+    border-left: 6px solid transparent;
+}
+
+.revisao-card.acertou { border-left-color: #22c55e; }
+.revisao-card.errou { border-left-color: #ef4444; }
+
+.revisao-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.badge-resultado {
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 20px;
+}
+
+.badge-acerto {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge-erro {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.alternativa-btn.revisao {
+    cursor: default;
+    pointer-events: none;
+    position: relative;
+}
+
+.alternativa-btn.revisao.correta {
+    background: #dcfce7 !important;
+    border-color: #22c55e !important;
+}
+
+.alternativa-btn.revisao.correta .alternativa-letra {
+    background: #22c55e !important;
+    color: white !important;
+}
+
+.alternativa-btn.revisao.incorreta {
+    background: #fee2e2 !important;
+    border-color: #ef4444 !important;
+}
+
+.alternativa-btn.revisao.incorreta .alternativa-letra {
+    background: #ef4444 !important;
+    color: white !important;
+}
+
+.status-icon {
+    margin-left: auto;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.alternativa-btn.revisao.correta .status-icon { color: #16a34a; }
+.alternativa-btn.revisao.incorreta .status-icon { color: #dc2626; }
+
+.resposta-explicacao {
+    margin-top: 18px;
+    padding: 12px 16px;
+    background: #fef3c7;
+    border-radius: 12px;
+    color: #92400e;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}

@@ -600,6 +600,62 @@ function sairDoTreino() {
     }
 }
 
+// ===================== PROVA - INTRODUÇÃO E HISTÓRICO =====================
+
+function abrirProvaIntro() {
+    mostrarTela("prova-intro");
+    carregarHistoricoProvas();
+}
+
+async function carregarHistoricoProvas() {
+    const usuario_id = localStorage.getItem("usuario_id");
+    const container = document.getElementById("lista-historico-provas");
+
+    if (!usuario_id) {
+        container.innerHTML = '<p class="historico-vazio">Faça login para ver seu histórico.</p>';
+        return;
+    }
+
+    try {
+        const resposta = await fetch(`https://focovest-backend.onrender.com/resultado/${usuario_id}`);
+        const resultados = await resposta.json();
+
+        if (!resultados || resultados.length === 0) {
+            container.innerHTML = '<p class="historico-vazio">Você ainda não fez nenhuma prova.</p>';
+            return;
+        }
+
+        container.innerHTML = resultados.map(r => {
+            const data = new Date(r.data).toLocaleDateString("pt-BR", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+
+            const temRevisao = r.questoes && r.respostas;
+
+            return `
+                <div class="historico-item">
+                    <div class="historico-info">
+                        <strong>Nota: ${r.nota}</strong>
+                        <span>${r.acertos} de ${r.total} acertos</span>
+                        <span class="historico-data">${data}</span>
+                    </div>
+                    ${temRevisao 
+                        ? `<button class="btn-revisar" onclick="revisarProva(${r.id})">Revisar</button>`
+                        : `<span class="sem-revisao">Sem revisão</span>`
+                    }
+                </div>
+            `;
+        }).join("");
+    } catch (error) {
+        console.error("Erro ao carregar histórico:", error);
+        container.innerHTML = '<p class="historico-vazio">Erro ao carregar histórico.</p>';
+    }
+}
+
 // ===================== PROVA (SIMULADO COM TIMER) =====================
 
 let questoesProva = [];
@@ -611,6 +667,7 @@ let segundosRestantes = 90 * 60;
 async function iniciarProva() {
     mostrarTela("prova");
     document.getElementById("prova-resultado").style.display = "none";
+    document.getElementById("prova-timer").style.display = "block";
     document.getElementById("prova-conteudo").innerHTML = '<p class="treino-carregando">Montando sua prova...</p>';
 
     try {
@@ -621,6 +678,9 @@ async function iniciarProva() {
         respostasProva = new Array(questoesProva.length).fill(null);
         indiceProva = 0;
         segundosRestantes = 90 * 60;
+
+        // remove classe de urgente se existir
+        document.getElementById("prova-timer").classList.remove("timer-urgente");
 
         iniciarCronometro();
         renderQuestaoProva();
@@ -740,23 +800,152 @@ async function finalizarProva() {
 
     document.getElementById("prova-resultado-mensagem").textContent = mensagem;
 
+    // Salva no backend com questões e respostas (para revisão futura)
     const usuario_id = Number(localStorage.getItem("usuario_id"));
     try {
         await fetch("https://focovest-backend.onrender.com/resultado", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ usuario_id, acertos, total, nota })
+            body: JSON.stringify({
+                usuario_id,
+                acertos,
+                total,
+                nota,
+                questoes: questoesProva,
+                respostas: respostasProva
+            })
         });
     } catch (error) {
         console.error("Erro ao salvar resultado:", error);
     }
+
+    // Botão para revisar a prova que acabou de fazer
+    const resultadoDiv = document.getElementById("prova-resultado");
+    // remove botão antigo se existir
+    const antigo = resultadoDiv.querySelector(".btn-revisar-agora");
+    if (antigo) antigo.remove();
+
+    const btnRevisarAgora = document.createElement("button");
+    btnRevisarAgora.textContent = "Revisar esta prova";
+    btnRevisarAgora.classList.add("btn-revisar-agora");
+    btnRevisarAgora.style.marginTop = "12px";
+    btnRevisarAgora.onclick = () => {
+        mostrarRevisaoProva(questoesProva, respostasProva, acertos, total, nota);
+    };
+    resultadoDiv.appendChild(btnRevisarAgora);
 }
 
 function sairDaProva() {
     if (confirm("Sair da prova? Seu progresso será perdido e nada será salvo.")) {
         clearInterval(timerProvaId);
-        abrirPainel();
+        abrirProvaIntro(); // volta para a tela de introdução
     }
+}
+
+// ===================== REVISÃO DA PROVA =====================
+
+async function revisarProva(id) {
+    const usuario_id = localStorage.getItem("usuario_id");
+    try {
+        const resposta = await fetch(`https://focovest-backend.onrender.com/resultado/${usuario_id}`);
+        const resultados = await resposta.json();
+        const prova = resultados.find(r => r.id === id);
+
+        if (!prova || !prova.questoes || !prova.respostas) {
+            alert("Esta prova não possui dados de revisão.");
+            return;
+        }
+
+        mostrarRevisaoProva(
+            prova.questoes,
+            prova.respostas,
+            prova.acertos,
+            prova.total,
+            prova.nota
+        );
+    } catch (error) {
+        console.error("Erro ao carregar prova para revisão:", error);
+        alert("Não foi possível carregar a revisão.");
+    }
+}
+
+function mostrarRevisaoProva(questoes, respostas, acertos, total, nota) {
+    mostrarTela("prova");
+    document.getElementById("prova-resultado").style.display = "none";
+    document.getElementById("prova-timer").style.display = "none";
+
+    document.getElementById("prova-progresso-texto").textContent = "Revisão da prova";
+    document.getElementById("prova-progresso-preenchido").style.width = "100%";
+
+    let htmlQuestoes = "";
+
+    questoes.forEach((questao, i) => {
+        const respostaUsuario = respostas[i];
+        const acertou = respostaUsuario === questao.correctAlternative;
+
+        const imagemHtml = (questao.files && questao.files.length > 0)
+            ? `<img src="${questao.files[0]}" class="questao-imagem" alt="Imagem da questão">`
+            : "";
+
+        const alternativasHtml = questao.alternatives.map(alt => {
+            let classes = "alternativa-btn revisao";
+            let statusIcon = "";
+
+            if (alt.letter === questao.correctAlternative) {
+                classes += " correta";
+                statusIcon = `<span class="status-icon">✓</span>`;
+            } else if (alt.letter === respostaUsuario && !acertou) {
+                classes += " incorreta";
+                statusIcon = `<span class="status-icon">✗</span>`;
+            }
+
+            const conteudo = alt.file
+                ? `<img src="${alt.file}" class="alternativa-imagem" alt="Alternativa ${alt.letter}">`
+                : `<span class="alternativa-texto">${alt.text || ""}</span>`;
+
+            return `
+                <div class="${classes}" data-letra="${alt.letter}">
+                    <span class="alternativa-letra">${alt.letter}</span>
+                    ${conteudo}
+                    ${statusIcon}
+                </div>
+            `;
+        }).join("");
+
+        htmlQuestoes += `
+            <div class="questao-card revisao-card ${acertou ? "acertou" : "errou"}">
+                <div class="revisao-header">
+                    <span class="questao-tag">${questao.discipline} · ENEM ${questao.year}</span>
+                    <span class="badge-resultado ${acertou ? "badge-acerto" : "badge-erro"}">
+                        ${acertou ? "✓ Acertou" : "✗ Errou"}
+                    </span>
+                </div>
+                <div class="questao-contexto">${formatarContexto(questao.context)}</div>
+                ${imagemHtml}
+                <p class="questao-pergunta">${questao.alternativesIntroduction || ""}</p>
+                <div class="alternativas-lista">${alternativasHtml}</div>
+                ${!acertou ? `
+                    <p class="resposta-explicacao">
+                        Você marcou <strong>${respostaUsuario || "nenhuma"}</strong>. 
+                        A resposta correta é <strong>${questao.correctAlternative}</strong>.
+                    </p>
+                ` : ""}
+            </div>
+        `;
+    });
+
+    document.getElementById("prova-conteudo").innerHTML = `
+        <div class="resumo-resultado">
+            <h2>Revisão da Prova</h2>
+            <p class="resultado-nota">${nota}</p>
+            <p class="resultado-mensagem">${acertos} de ${total} acertos</p>
+        </div>
+        <h3 class="titulo-revisao">Questões</h3>
+        ${htmlQuestoes}
+        <button class="btn-proxima" onclick="abrirProvaIntro()" style="margin-top: 30px;">
+            Voltar
+        </button>
+    `;
 }
 
 // ===================== INICIALIZAÇÃO =====================

@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from datetime import date
+from typing import Optional, List, Any
 
 class UserCreate(BaseModel):
     email: str
@@ -26,3 +27,5 @@ class ResultadoCreate(BaseModel):
     acertos: int
     total: int
     nota: int
+    questoes: Optional[List[Any]] = None
+    respostas: Optional[List[Any]] = None

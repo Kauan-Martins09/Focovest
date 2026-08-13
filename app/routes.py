@@ -207,13 +207,16 @@ def criar_resultado(resultado: ResultadoCreate, db: Session = Depends(get_db)):
         usuario_id=resultado.usuario_id,
         acertos=resultado.acertos,
         total=resultado.total,
-        nota=resultado.nota
+        nota=resultado.nota,
+        questoes=resultado.questoes,
+        respostas=resultado.respostas
     )
 
     db.add(novo)
     db.commit()
+    db.refresh(novo)
 
-    return {"msg": "Resultado salvo"}
+    return {"msg": "Resultado salvo", "id": novo.id}
 
 
 @router.get("/resultado/{usuario_id}")

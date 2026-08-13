@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey, DateTime, JSON
 from .db import Base
 from datetime import datetime
 
@@ -36,3 +36,5 @@ class Resultado(Base):
     total = Column(Integer, nullable=False)
     nota = Column(Integer, nullable=False)
     data = Column(DateTime, default=datetime.utcnow)
+    questoes = Column(JSON, nullable=True)      # lista completa das questões
+    respostas = Column(JSON, nullable=True)     # array com as respostas do usuário

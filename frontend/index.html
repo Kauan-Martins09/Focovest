@@ -162,13 +162,43 @@
                 <p>Os 10 temas que mais caíram nos últimos 5 anos.</p>
             </div>
         </button>
-        <button class="bento-card bento-pequeno bento-azul" onclick="iniciarProva()">
+        <button class="bento-card bento-pequeno bento-azul" onclick="abrirProvaIntro()">
             <span class="bento-icone">⏱️</span>
             <div class="bento-texto">
                 <h3>Prova</h3>
                 <p>Simulado completo com as 4 áreas e cronômetro de 90 minutos.</p>
             </div>
         </button>
+    </div>
+</div>
+
+<!-- TELA INTRODUÇÃO DA PROVA -->
+<div id="prova-intro" class="tela">
+    <div class="prova-intro-header">
+        <button onclick="abrirPainel()" class="btn-voltar">←</button>
+        <h1>Simulado estilo ENEM</h1>
+    </div>
+
+    <div class="prova-intro-card">
+        <h2>Instruções</h2>
+        <ul class="prova-instrucoes">
+            <li>A prova contém <strong>60 questões</strong> (15 de cada área).</li>
+            <li>Tempo total: <strong>90 minutos</strong>.</li>
+            <li>As questões são reais do ENEM (anos variados).</li>
+            <li>As 4 áreas ficam misturadas.</li>
+            <li>Ao terminar, sua nota será salva e você poderá revisar depois.</li>
+        </ul>
+
+        <button class="btn-iniciar-prova" onclick="iniciarProva()">
+            Iniciar Prova
+        </button>
+    </div>
+
+    <div class="historico-provas">
+        <h2>Provas anteriores</h2>
+        <div id="lista-historico-provas">
+            <p class="historico-vazio">Carregando histórico...</p>
+        </div>
     </div>
 </div>
 
