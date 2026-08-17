@@ -12,7 +12,7 @@ function abrirLogin(){ mostrarTela("login"); }
 function abrirHome(){ mostrarTela("home"); }
 function voltarHome(){ mostrarTela("home"); }
 function abrirPainel() { mostrarTela("painel"); atualizarPainel() }
-function abrirAulas() { mostrarTela("aulas"); }
+function abrirRedacao() { mostrarTela("redacao"); }
 function abrirMinhaRotina() { mostrarTela("minha-rotina"); }
 function atualizarPainel() {
     const nome = localStorage.getItem("nome") || "Estudante";

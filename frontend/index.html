@@ -155,11 +155,11 @@
                 <p>Calendário de compromissos e anotações de estudo.</p>
             </div>
         </button>
-        <button class="bento-card bento-azul" onclick="abrirAulas()">
+        <button class="bento-card bento-azul" onclick="abrirRedacao()">
             <span class="bento-icone">📚</span>
             <div class="bento-texto">
-                <h3>Aulas</h3>
-                <p>Os 10 temas que mais caíram nos últimos 5 anos.</p>
+                <h3>Redação</h3>
+                <p>Prátique sua escrita em um simulado de redaçã0<optgroup></optgroup></p>
             </div>
         </button>
         <button class="bento-card bento-pequeno bento-azul" onclick="abrirProvaIntro()">
@@ -202,38 +202,12 @@
     </div>
 </div>
 
-<!-- NOVA TELA DE AULAS -->
-<div id="aulas" class="tela">
-    <div class="hero">
-        <div class="hero-image">
-            <img src="img-estudando.png" alt="Estudante">
-            <div class="label-aulas">Aulas</div>
-        </div>
-        <div class="hero-content">
-            <p>Para alcançar a aprovação, é preciso estudar com estratégia e fontes confiáveis. Reunimos aqui as melhores plataformas gratuitas para você dominar os conteúdos do ENEM e dos principais vestibulares.</p>
-            <p>Organize seu cronograma e aproveite esses recursos para potencializar seu aprendizado.</p>
-        </div>
-    </div>
-    <section class="recomendados">
-        <h2>Recomendados</h2>
-        <div class="recomendados-container">
-            <div class="recomendados-card">
-                <h3> Prática e Provas Oficiais</h3>
-                <ul>
-                    <li><strong>Portal INEP:</strong> Todas as provas e gabritos oficiais.</li>
-                    <li><strong>FGV Ensino Médio:</strong> Simulados online e gratuitos.</li>
-                    <li><strong>Brasil Escola:</strong> Excercícios resolvidos e comentados.</li>
-                </ul>
-            </div>
-            <div class="recomendados-card">
-                <h3>Plataformas de Vídeo e Teoria</h3>
-                <ul>
-                    <li><strong>Khan Academy:</strong> Foco em excercícios de exatas e biológicas.</li>
-                    <li><strong>MEC Place:</strong> Livors e apostilas oficiais do governo.</li>
-                    <li><strong>YouTube Edu:</strong> Aulas gratuitas organizadas por matéria.</li>
-                </ul>
-            </div>
-        </div>
+<!-- NOVA TELA DE REDAÇÃO -->
+<div id="Redacao" class="tela">
+    <section class="redacao">
+        <h2>Redação</h2>
+        <input type="text" id="redacao-titulo" placeholder="Título da redação...">
+        <textarea id="redação-texto" placeholder="Escreva sua redação..."></textarea>
         <button onclick="abrirPainel()" style="margin-top: 30px; width: 200px;">Voltar ao Menu</button>
     </section>
 </div>
