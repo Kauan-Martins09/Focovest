@@ -1663,6 +1663,7 @@ button:hover{
     border-radius: 12px;
     margin-bottom: 16px;
     min-height: 300px;
+    resize: none;
     font-family: inherit;
     font-size: 1rem;
     line-height: 1.6;
