@@ -1654,3 +1654,16 @@ button:hover{
     font-size: 0.95rem;
     line-height: 1.5;
 }
+
+#redacao textarea {
+    width: 100%;
+    padding: 20px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    min-height: 300px;
+    resize: vertical;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.6;
+}
