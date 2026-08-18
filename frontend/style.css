@@ -1655,7 +1655,7 @@ button:hover{
     line-height: 1.5;
 }
 
-#redacao-texto textarea {
+#redacao-texto{
     width: 100%;
     padding: 20px;
     border: 2px solid #e2e8f0;
