@@ -733,9 +733,6 @@ button:hover{
     .calendar-box, .side-panel { min-width: 100%; }
 }
 
-@media (max-width: 1024px){
-    .redacao-content {flex-direction: column;}
-}
 
 /* Tela principal */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap');
@@ -1666,8 +1663,11 @@ button:hover{
     border-radius: 12px;
     margin-bottom: 16px;
     min-height: 300px;
-    resize: vertical;
     font-family: inherit;
     font-size: 1rem;
     line-height: 1.6;
+}
+
+@media (max-width: 1024px){
+    .redacao-content {flex-direction: column;}
 }
