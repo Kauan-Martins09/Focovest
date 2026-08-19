@@ -2024,3 +2024,43 @@ button:hover{
     }
     .stats-redacao { gap: 24px; }
 }
+
+.competencias-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.comp-item {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.comp-item span {
+    font-size: 0.8rem;
+    color: #64748b;
+    text-align: center;
+}
+
+.comp-item strong {
+    font-size: 1.5rem;
+    color: #9F96BD;
+}
+
+.nota-total {
+    font-size: 1.2rem;
+    margin: 12px 0 8px;
+    color: #1e2937;
+}
+
+.aviso-nota {
+    font-size: 0.88rem;
+    color: #94a3b8;
+    margin-bottom: 14px;
+}

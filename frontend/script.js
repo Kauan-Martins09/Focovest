@@ -1094,66 +1094,325 @@ function sairDaRedacao() {
     abrirRedacaoIntro();
 }
 
-function finalizarRedacao() {
+// ===================== CORREÇÃO POR REGRAS (sem IA) =====================
+
+function corrigirRedacao(texto, tema) {
+    const linhas = texto.split("\n").length;
+    const palavras = texto.trim().split(/\s+/).filter(Boolean).length;
+    const paragrafos = texto.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+    const numParagrafos = paragrafos.length;
+    const textoLower = texto.toLowerCase();
+
+    // --- Competência 1: Norma culta (heurística simples) ---
+    let c1 = 160;
+    const errosComuns = [
+        { re: /\bvc\b|\btb\b|\bpq\b|\bqdo\b/gi, penalidade: 20, msg: "Evite abreviações informais (vc, tb, pq)." },
+        { re: /\bnao\b/gi, penalidade: 10, msg: "Atenção à acentuação (não)." },
+        { re: /\bvoce\b/gi, penalidade: 10, msg: "Prefira 'você' com acentuação." },
+        { re: /!!!+|\?\?\?+/g, penalidade: 15, msg: "Evite excesso de pontuação emotiva." }
+    ];
+    const avisosC1 = [];
+    errosComuns.forEach(e => {
+        if (e.re.test(texto)) {
+            c1 = Math.max(40, c1 - e.penalidade);
+            avisosC1.push(e.msg);
+        }
+    });
+    if (palavras < 80) {
+        c1 = Math.max(40, c1 - 30);
+        avisosC1.push("Texto muito curto para avaliar bem a norma culta.");
+    }
+
+    // --- Competência 2: Compreensão do tema ---
+    let c2 = 100;
+    const palavrasTema = tema.titulo
+        .toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .split(/\s+/)
+        .filter(p => p.length > 4);
+    const textoNorm = textoLower.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    let hits = 0;
+    palavrasTema.forEach(p => {
+        if (textoNorm.includes(p)) hits++;
+    });
+    const cobertura = palavrasTema.length ? hits / palavrasTema.length : 0;
+    if (cobertura >= 0.4) c2 = 180;
+    else if (cobertura >= 0.25) c2 = 140;
+    else if (cobertura >= 0.1) c2 = 100;
+    else c2 = 60;
+    if (palavras < 100) c2 = Math.min(c2, 100);
+
+    // --- Competência 3: Argumentação / repertório ---
+    let c3 = 100;
+    const marcadoresArgumento = [
+        "segundo", "de acordo", "conforme", "por exemplo", "ou seja",
+        "além disso", "dessa forma", "portanto", "assim", "é possível",
+        "dados", "pesquisa", "estudo", "história", "filosofia", "sociologia",
+        "constituição", "lei", "direito", "ibge", "onu", "governo"
+    ];
+    let repertorio = 0;
+    marcadoresArgumento.forEach(m => {
+        if (textoLower.includes(m)) repertorio++;
+    });
+    if (repertorio >= 5) c3 = 180;
+    else if (repertorio >= 3) c3 = 140;
+    else if (repertorio >= 1) c3 = 100;
+    else c3 = 60;
+    if (numParagrafos < 3) c3 = Math.min(c3, 100);
+
+    // --- Competência 4: Coesão ---
+    let c4 = 100;
+    const conectivos = [
+        "além disso", "portanto", "dessa forma", "assim", "contudo",
+        "entretanto", "no entanto", "por outro lado", "em primeiro lugar",
+        "em segundo lugar", "por fim", "logo", "desse modo", "ainda",
+        "também", "já que", "uma vez que", "visto que", "embora"
+    ];
+    let coesao = 0;
+    conectivos.forEach(c => {
+        if (textoLower.includes(c)) coesao++;
+    });
+    if (coesao >= 5) c4 = 180;
+    else if (coesao >= 3) c4 = 150;
+    else if (coesao >= 1) c4 = 110;
+    else c4 = 70;
+    if (numParagrafos >= 3 && numParagrafos <= 5) c4 = Math.min(200, c4 + 20);
+
+    // --- Competência 5: Proposta de intervenção ---
+    let c5 = 40;
+    const marcadoresIntervencao = [
+        "é necessário", "é preciso", "deve-se", "o governo", "o estado",
+        "a escola", "a mídia", "campanha", "política pública", "projeto",
+        "investir", "criar", "implementar", "promover", "conscientizar",
+        "educação", "lei", "fiscalizar", "parceria", "sociedade"
+    ];
+    let intervencao = 0;
+    marcadoresIntervencao.forEach(m => {
+        if (textoLower.includes(m)) intervencao++;
+    });
+    // Proposta costuma estar no final
+    const ultimoBloco = paragrafos.length ? paragrafos[paragrafos.length - 1].toLowerCase() : "";
+    let noFinal = 0;
+    marcadoresIntervencao.forEach(m => {
+        if (ultimoBloco.includes(m)) noFinal++;
+    });
+
+    if (intervencao >= 4 && noFinal >= 2) c5 = 180;
+    else if (intervencao >= 3) c5 = 140;
+    else if (intervencao >= 2) c5 = 100;
+    else if (intervencao >= 1) c5 = 60;
+    else c5 = 40;
+
+    // Penalidades gerais de tamanho
+    if (linhas > 30) {
+        c1 = Math.max(40, c1 - 20);
+        c2 = Math.max(40, c2 - 20);
+    }
+    if (palavras < 50) {
+        c1 = 40; c2 = 40; c3 = 40; c4 = 40; c5 = 40;
+    }
+
+    // Arredonda para múltiplos de 40 (estilo ENEM aproximado)
+    const arredondar = (n) => Math.round(n / 40) * 40;
+    c1 = Math.min(200, Math.max(0, arredondar(c1)));
+    c2 = Math.min(200, Math.max(0, arredondar(c2)));
+    c3 = Math.min(200, Math.max(0, arredondar(c3)));
+    c4 = Math.min(200, Math.max(0, arredondar(c4)));
+    c5 = Math.min(200, Math.max(0, arredondar(c5)));
+
+    const nota = c1 + c2 + c3 + c4 + c5;
+
+    return {
+        linhas,
+        palavras,
+        paragrafos: numParagrafos,
+        competencias: { c1, c2, c3, c4, c5 },
+        nota,
+        avisosC1,
+        coberturaTema: Math.round(cobertura * 100),
+        repertorio,
+        coesao,
+        intervencao
+    };
+}
+
+function gerarFeedbackHTML(resultado, tema) {
+    const { competencias, avisosC1, coberturaTema, repertorio, coesao, intervencao, paragrafos, linhas, palavras } = resultado;
+
+    let htmlEstrutura = `<h3>Estrutura do texto</h3>`;
+    if (paragrafos < 3) {
+        htmlEstrutura += `<p>⚠️ Apenas <strong>${paragrafos} parágrafo(s)</strong>. O ideal é 3 a 4 (introdução, desenvolvimento e conclusão).</p>`;
+    } else if (paragrafos <= 5) {
+        htmlEstrutura += `<p>✅ Boa divisão em <strong>${paragrafos} parágrafos</strong>.</p>`;
+    } else {
+        htmlEstrutura += `<p>⚠️ Muitos parágrafos (${paragrafos}). Prefira 3 a 5 blocos claros.</p>`;
+    }
+    if (linhas > 30) {
+        htmlEstrutura += `<p style="color:#ef4444">Você passou de 30 linhas (${linhas}). No ENEM o excesso pode ser desconsiderado.</p>`;
+    } else if (linhas < 10) {
+        htmlEstrutura += `<p>Texto curto (${linhas} linhas). Tente desenvolver mais os argumentos.</p>`;
+    } else {
+        htmlEstrutura += `<p>${linhas} linhas · ${palavras} palavras.</p>`;
+    }
+
+    const htmlCompetencias = `
+        <h3>Nota estimada por competência</h3>
+        <div class="competencias-grid">
+            <div class="comp-item"><span>C1 · Norma culta</span><strong>${competencias.c1}</strong></div>
+            <div class="comp-item"><span>C2 · Tema</span><strong>${competencias.c2}</strong></div>
+            <div class="comp-item"><span>C3 · Argumentação</span><strong>${competencias.c3}</strong></div>
+            <div class="comp-item"><span>C4 · Coesão</span><strong>${competencias.c4}</strong></div>
+            <div class="comp-item"><span>C5 · Intervenção</span><strong>${competencias.c5}</strong></div>
+        </div>
+        <p class="nota-total">Nota estimada: <strong>${resultado.nota}</strong> / 1000</p>
+        <p class="aviso-nota">Esta é uma correção automática por regras (sem IA). Serve como treino e orientação, não substitui a banca do ENEM.</p>
+        <ul class="lista-competencias">
+            <li><strong>C1:</strong> ${avisosC1.length ? avisosC1.join(" ") : "Não foram detectados problemas graves de informalidade."}</li>
+            <li><strong>C2:</strong> Aproximadamente ${coberturaTema}% de relação lexical com o tema.</li>
+            <li><strong>C3:</strong> ${repertorio} indício(s) de repertório/argumentação encontrados.</li>
+            <li><strong>C4:</strong> ${coesao} conectivo(s) de coesão identificados.</li>
+            <li><strong>C5:</strong> ${intervencao} elemento(s) típicos de proposta de intervenção.</li>
+        </ul>
+    `;
+
+    return { htmlEstrutura, htmlCompetencias };
+}
+
+async function finalizarRedacao() {
     const texto = document.getElementById("redacao-texto").value.trim();
     if (!texto) {
         alert("Escreva sua redação antes de finalizar.");
         return;
     }
-
-    const linhas = texto.split("\n").length;
-    const palavras = texto.split(/\s+/).filter(Boolean).length;
-    const paragrafos = texto.split(/\n\s*\n/).filter(p => p.trim().length > 0).length;
-
-    // Análise básica de estrutura
-    let feedbackEstrutura = "";
-    if (paragrafos < 3) {
-        feedbackEstrutura = `
-            <h3>⚠️ Estrutura</h3>
-            <p>Seu texto tem apenas <strong>${paragrafos} parágrafo(s)</strong>. 
-            O ideal no ENEM é ter pelo menos 3 ou 4: introdução, desenvolvimento e conclusão.</p>
-        `;
-    } else if (paragrafos >= 3 && paragrafos <= 5) {
-        feedbackEstrutura = `
-            <h3>✅ Estrutura</h3>
-            <p>Boa divisão em <strong>${paragrafos} parágrafos</strong>. 
-            Isso facilita a leitura e a organização da argumentação.</p>
-        `;
-    } else {
-        feedbackEstrutura = `
-            <h3>⚠️ Estrutura</h3>
-            <p>Muitos parágrafos (${paragrafos}). Tente concentrar as ideias em 3 a 5 blocos claros.</p>
-        `;
+    if (!temaAtualRedacao) {
+        alert("Tema não encontrado. Volte e escolha um tema.");
+        return;
     }
 
-    if (linhas > 30) {
-        feedbackEstrutura += `<p style="color:#ef4444;margin-top:10px;"><strong>Atenção:</strong> você ultrapassou 30 linhas (${linhas}). No ENEM, o que passar de 30 pode não ser corrigido.</p>`;
-    } else if (linhas < 8) {
-        feedbackEstrutura += `<p style="margin-top:10px;">Texto curto (${linhas} linhas). Tente desenvolver melhor os argumentos para se aproximar de 20–30 linhas.</p>`;
-    }
-
-    // Dicas das 5 competências (sempre educativas)
-    const feedbackCompetencias = `
-        <h3>📌 As 5 competências do ENEM</h3>
-        <ul class="lista-competencias">
-            <li><strong>C1 – Norma culta:</strong> revise ortografia, acentuação e concordância.</li>
-            <li><strong>C2 – Compreensão do tema:</strong> sua tese está clara e ligada ao tema “${temaAtualRedacao.titulo}”?</li>
-            <li><strong>C3 – Argumentação:</strong> use repertório (dados, fatos históricos, citações) para sustentar os argumentos.</li>
-            <li><strong>C4 – Coesão:</strong> conecte os parágrafos com conectivos (além disso, portanto, dessa forma…).</li>
-            <li><strong>C5 – Proposta de intervenção:</strong> na conclusão, apresente uma solução detalhada (agente, ação, meio, finalidade e detalhamento).</li>
-        </ul>
-        <p class="dica-final">Esta é uma análise automática básica. A correção oficial do ENEM avalia cada competência de 0 a 200 pontos (total 1000).</p>
-    `;
+    const resultado = corrigirRedacao(texto, temaAtualRedacao);
+    const { htmlEstrutura, htmlCompetencias } = gerarFeedbackHTML(resultado, temaAtualRedacao);
 
     document.getElementById("resultado-tema-titulo").textContent = temaAtualRedacao.titulo;
-    document.getElementById("stat-linhas").textContent = linhas;
-    document.getElementById("stat-palavras").textContent = palavras;
-    document.getElementById("stat-paragrafos").textContent = paragrafos;
-    document.getElementById("feedback-estrutura").innerHTML = feedbackEstrutura;
-    document.getElementById("feedback-competencias").innerHTML = feedbackCompetencias;
+    document.getElementById("stat-linhas").textContent = resultado.linhas;
+    document.getElementById("stat-palavras").textContent = resultado.palavras;
+    document.getElementById("stat-paragrafos").textContent = resultado.paragrafos;
+    document.getElementById("feedback-estrutura").innerHTML = htmlEstrutura;
+    document.getElementById("feedback-competencias").innerHTML = htmlCompetencias;
     document.getElementById("texto-final-redacao").textContent = texto;
 
+    // Salva no backend
+    const usuario_id = Number(localStorage.getItem("usuario_id"));
+    if (usuario_id) {
+        try {
+            await fetch("https://focovest-backend.onrender.com/redacao", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    usuario_id,
+                    tema_ano: temaAtualRedacao.ano,
+                    tema_titulo: temaAtualRedacao.titulo,
+                    texto,
+                    linhas: resultado.linhas,
+                    palavras: resultado.palavras,
+                    paragrafos: resultado.paragrafos,
+                    nota: resultado.nota,
+                    feedback: {
+                        competencias: resultado.competencias,
+                        avisosC1: resultado.avisosC1,
+                        coberturaTema: resultado.coberturaTema
+                    }
+                })
+            });
+        } catch (error) {
+            console.error("Erro ao salvar redação:", error);
+            alert("Redação analisada, mas não foi possível salvar no histórico.");
+        }
+    }
+
     mostrarTela("redacao-resultado");
+}
+
+// ===================== HISTÓRICO DE REDAÇÕES =====================
+
+async function carregarHistoricoRedacoes() {
+    const usuario_id = localStorage.getItem("usuario_id");
+    let container = document.getElementById("lista-historico-redacoes");
+    if (!container) return;
+
+    if (!usuario_id) {
+        container.innerHTML = '<p class="historico-vazio">Faça login para ver seu histórico.</p>';
+        return;
+    }
+
+    try {
+        const resposta = await fetch(`https://focovest-backend.onrender.com/redacao/${usuario_id}`);
+        const redacoes = await resposta.json();
+
+        if (!redacoes || redacoes.length === 0) {
+            container.innerHTML = '<p class="historico-vazio">Você ainda não enviou nenhuma redação.</p>';
+            return;
+        }
+
+        container.innerHTML = redacoes.map((r, i) => {
+            const data = new Date(r.data).toLocaleDateString("pt-BR", {
+                day: "2-digit", month: "2-digit", year: "numeric",
+                hour: "2-digit", minute: "2-digit"
+            });
+            window._redacoesHistorico = window._redacoesHistorico || [];
+            window._redacoesHistorico[i] = r;
+            return `
+                <div class="historico-item">
+                    <div class="historico-info">
+                        <strong>Nota: ${r.nota}</strong>
+                        <span>${r.tema_titulo}</span>
+                        <span class="historico-data">ENEM ${r.tema_ano} · ${data}</span>
+                    </div>
+                    <button class="btn-revisar" onclick="verRedacaoSalva(window._redacoesHistorico[${i}])">Ver</button>
+                </div>
+            `;
+        }).join("");
+    } catch (error) {
+        console.error("Erro ao carregar histórico de redações:", error);
+        container.innerHTML = '<p class="historico-vazio">Erro ao carregar histórico.</p>';
+    }
+}
+
+function verRedacaoSalva(r) {
+    // r pode vir como objeto ou precisar de parse se passou string
+    if (typeof r === "string") {
+        try { r = JSON.parse(r); } catch (e) { alert("Erro ao abrir redação."); return; }
+    }
+
+    document.getElementById("resultado-tema-titulo").textContent = r.tema_titulo;
+    document.getElementById("stat-linhas").textContent = r.linhas;
+    document.getElementById("stat-palavras").textContent = r.palavras;
+    document.getElementById("stat-paragrafos").textContent = r.paragrafos;
+
+    const comps = (r.feedback && r.feedback.competencias) ? r.feedback.competencias : null;
+    let htmlComp = `<h3>Nota salva: ${r.nota} / 1000</h3>`;
+    if (comps) {
+        htmlComp += `
+            <div class="competencias-grid">
+                <div class="comp-item"><span>C1</span><strong>${comps.c1}</strong></div>
+                <div class="comp-item"><span>C2</span><strong>${comps.c2}</strong></div>
+                <div class="comp-item"><span>C3</span><strong>${comps.c3}</strong></div>
+                <div class="comp-item"><span>C4</span><strong>${comps.c4}</strong></div>
+                <div class="comp-item"><span>C5</span><strong>${comps.c5}</strong></div>
+            </div>
+        `;
+    }
+    document.getElementById("feedback-estrutura").innerHTML = `<h3>Redação salva</h3><p>ENEM ${r.tema_ano}</p>`;
+    document.getElementById("feedback-competencias").innerHTML = htmlComp;
+    document.getElementById("texto-final-redacao").textContent = r.texto;
+
+    mostrarTela("redacao-resultado");
+}
+
+// Atualiza abrirRedacaoIntro para carregar histórico
+function abrirRedacaoIntro() {
+    mostrarTela("redacao-intro");
+    renderListaTemas();
+    carregarHistoricoRedacoes();
 }
 
 // Garante que o contador funcione mesmo se o DOM já estiver carregado

@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from .db import SessionLocal
-from .models import User, Anotacao, Compromisso, Resultado
-from .schemas import UserCreate, UserLog, AnotacaoCreate, CompromissoCreate, ResultadoCreate
+from .models import User, Anotacao, Compromisso, Resultado, Redacao
+from .schemas import UserCreate, UserLog, AnotacaoCreate, CompromissoCreate, ResultadoCreate, RedacaoCreate
 from .security import hash_senha, verificar_senha
 import httpx
 import random
@@ -226,3 +226,28 @@ def listar_resultados(usuario_id: int, db: Session = Depends(get_db)):
     ).order_by(Resultado.data.desc()).all()
 
     return resultados
+
+@router.post("/redacao")
+def criar_redacao(redacao: RedacaoCreate, db: Session = Depends(get_db)):
+    nova = Redacao(
+        usuario_id=redacao.usuario_id,
+        tema_ano=redacao.tema_ano,
+        tema_titulo=redacao.tema_titulo,
+        texto=redacao.texto,
+        linhas=redacao.linhas,
+        palavras=redacao.palavras,
+        paragrafos=redacao.paragrafos,
+        nota=redacao.nota,
+        feedback=redacao.feedback
+    )
+    db.add(nova)
+    db.commit()
+    db.refresh(nova)
+    return {"msg": "Redação salva", "id": nova.id}
+
+@router.get("/redacao/{usuario_id}")
+def listar_redacoes(usuario_id: int, db: Session = Depends(get_db)):
+    redacoes = db.query(Redacao).filter(
+        Redacao.usuario_id == usuario_id
+    ).order_by(Redacao.data.desc()).all()
+    return redacoes

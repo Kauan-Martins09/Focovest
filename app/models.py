@@ -38,3 +38,18 @@ class Resultado(Base):
     data = Column(DateTime, default=datetime.utcnow)
     questoes = Column(JSON, nullable=True)      # lista completa das questões
     respostas = Column(JSON, nullable=True)     # array com as respostas do usuário
+
+class Redacao(Base):
+    __tablename__ = "redacoes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"))
+    tema_ano = Column(Integer, nullable=False)
+    tema_titulo = Column(String(500), nullable=False)
+    texto = Column(Text, nullable=False)
+    linhas = Column(Integer, nullable=False)
+    palavras = Column(Integer, nullable=False)
+    paragrafos = Column(Integer, nullable=False)
+    nota = Column(Integer, nullable=False)
+    feedback = Column(JSON, nullable=True)
+    data = Column(DateTime, default=datetime.utcnow)

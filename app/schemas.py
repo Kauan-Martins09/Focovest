@@ -29,3 +29,14 @@ class ResultadoCreate(BaseModel):
     nota: int
     questoes: Optional[List[Any]] = None
     respostas: Optional[List[Any]] = None
+
+class RedacaoCreate(BaseModel):
+    usuario_id: int
+    tema_ano: int
+    tema_titulo: str
+    texto: str
+    linhas: int
+    palavras: int
+    paragrafos: int
+    nota: int
+    feedback: Optional[Any] = None
