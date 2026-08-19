@@ -155,11 +155,11 @@
                 <p>Calendário de compromissos e anotações de estudo.</p>
             </div>
         </button>
-        <button class="bento-card bento-azul" onclick="abrirRedacao()">
-            <span class="bento-icone">📚</span>
+        <button class="bento-card bento-azul" onclick="abrirRedacaoIntro()">
+            <span class="bento-icone">✍️</span>
             <div class="bento-texto">
                 <h3>Redação</h3>
-                <p>Prátique sua escrita em um simulado de redaçã0<optgroup></optgroup></p>
+                <p>Pratique sua escrita com temas reais do ENEM.</p>
             </div>
         </button>
         <button class="bento-card bento-pequeno bento-azul" onclick="abrirProvaIntro()">
@@ -202,13 +202,104 @@
     </div>
 </div>
 
-<!-- NOVA TELA DE REDAÇÃO -->
+<!-- TELA INTRODUÇÃO REDAÇÃO -->
+<div id="redacao-intro" class="tela">
+    <div class="redacao-header">
+        <button onclick="abrirPainel()" class="btn-voltar">←</button>
+        <h1>Redação ENEM</h1>
+    </div>
+
+    <div class="redacao-intro-card">
+        <h2>Como funciona</h2>
+        <ul class="redacao-instrucoes">
+            <li>Escolha um <strong>tema oficial</strong> (ou aleatório).</li>
+            <li>Escreva um texto dissertativo-argumentativo de até <strong>30 linhas</strong>.</li>
+            <li>Ao finalizar, você recebe uma <strong>análise básica</strong> da estrutura e dicas das 5 competências.</li>
+            <li>Histórico de redações virá em breve.</li>
+        </ul>
+        <button class="btn-tema-aleatorio" onclick="iniciarRedacaoAleatoria()">
+            🎲 Tema aleatório
+        </button>
+    </div>
+
+    <div class="temas-lista">
+        <h2>Temas disponíveis</h2>
+        <div id="lista-temas-redacao"></div>
+    </div>
+</div>
+
+<!-- TELA ESCRITA DA REDAÇÃO -->
 <div id="redacao" class="tela">
-    <div class="redacao-content">
-        <h1>Redação</h1>
-        <input type="text" id="redacao-titulo" placeholder="Título da redação...">
-        <textarea id="redacao-texto" placeholder="Escreva sua redação..."></textarea>
-        <button onclick="abrirPainel()" style="margin-top: 30px; width: 200px;">Voltar ao Menu</button>
+    <div class="redacao-header">
+        <button onclick="sairDaRedacao()" class="btn-voltar">←</button>
+        <h1>Escreva sua redação</h1>
+    </div>
+
+    <div class="redacao-layout">
+        <aside class="redacao-tema-box">
+            <span class="tema-ano" id="redacao-tema-ano"></span>
+            <h2 id="redacao-tema-titulo"></h2>
+            <div id="redacao-motivadores" class="motivadores"></div>
+            <div class="redacao-dicas">
+                <h3>Lembre-se</h3>
+                <ul>
+                    <li>Introdução com tese clara</li>
+                    <li>2 argumentos no desenvolvimento</li>
+                    <li>Conclusão com proposta de intervenção</li>
+                    <li>Máximo 30 linhas</li>
+                </ul>
+            </div>
+        </aside>
+
+        <div class="redacao-escrita">
+            <div class="redacao-contadores">
+                <span id="contador-linhas">0 / 30 linhas</span>
+                <span id="contador-palavras">0 palavras</span>
+            </div>
+            <textarea id="redacao-texto" placeholder="Escreva sua redação aqui...&#10;&#10;Comece pela introdução, apresentando o tema e sua tese."></textarea>
+            <div class="redacao-acoes">
+                <button class="btn-secundario-redacao" onclick="sairDaRedacao()">Cancelar</button>
+                <button class="btn-finalizar-redacao" onclick="finalizarRedacao()">Finalizar redação</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TELA RESULTADO DA REDAÇÃO -->
+<div id="redacao-resultado" class="tela">
+    <div class="redacao-header">
+        <button onclick="abrirRedacaoIntro()" class="btn-voltar">←</button>
+        <h1>Análise da redação</h1>
+    </div>
+
+    <div class="redacao-resultado-content">
+        <div class="resumo-redacao">
+            <h2 id="resultado-tema-titulo"></h2>
+            <div class="stats-redacao">
+                <div class="stat-item">
+                    <strong id="stat-linhas">0</strong>
+                    <span>linhas</span>
+                </div>
+                <div class="stat-item">
+                    <strong id="stat-palavras">0</strong>
+                    <span>palavras</span>
+                </div>
+                <div class="stat-item">
+                    <strong id="stat-paragrafos">0</strong>
+                    <span>parágrafos</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="feedback-box" id="feedback-estrutura"></div>
+        <div class="feedback-box" id="feedback-competencias"></div>
+
+        <div class="seu-texto-box">
+            <h3>Seu texto</h3>
+            <div id="texto-final-redacao" class="texto-final"></div>
+        </div>
+
+        <button class="btn-finalizar-redacao" onclick="abrirRedacaoIntro()">Nova redação</button>
     </div>
 </div>
 

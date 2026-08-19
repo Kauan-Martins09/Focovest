@@ -12,7 +12,6 @@ function abrirLogin(){ mostrarTela("login"); }
 function abrirHome(){ mostrarTela("home"); }
 function voltarHome(){ mostrarTela("home"); }
 function abrirPainel() { mostrarTela("painel"); atualizarPainel() }
-function abrirRedacao() { mostrarTela("redacao"); }
 function abrirMinhaRotina() { mostrarTela("minha-rotina"); }
 function atualizarPainel() {
     const nome = localStorage.getItem("nome") || "Estudante";
@@ -947,6 +946,224 @@ function mostrarRevisaoProva(questoes, respostas, acertos, total, nota) {
         </button>
     `;
 }
+
+// ===================== REDAÇÃO =====================
+
+const TEMAS_ENEM = [
+    {
+        ano: 2024,
+        titulo: "Desafios para a valorização da herança africana no Brasil",
+        motivadores: [
+            "A cultura africana é parte fundamental da formação da identidade brasileira, presente na música, na culinária, na religião e na linguagem.",
+            "Apesar disso, práticas racistas e a invisibilização histórica ainda dificultam o pleno reconhecimento dessa herança."
+        ]
+    },
+    {
+        ano: 2023,
+        titulo: "Desafios para o enfrentamento da invisibilidade do trabalho de cuidado realizado pela mulher no Brasil",
+        motivadores: [
+            "O trabalho de cuidado (doméstico, de idosos, crianças e pessoas com deficiência) é essencial para a sociedade, mas historicamente desvalorizado e majoritariamente feito por mulheres.",
+            "A falta de políticas públicas e o preconceito de gênero agravam a sobrecarga feminina."
+        ]
+    },
+    {
+        ano: 2022,
+        titulo: "Desafios para a valorização de comunidades e povos tradicionais no Brasil",
+        motivadores: [
+            "Povos indígenas, quilombolas, ribeirinhos e outras comunidades tradicionais possuem saberes e modos de vida fundamentais para a biodiversidade e a cultura nacional.",
+            "A pressão econômica e a falta de reconhecimento legal ameaçam esses grupos."
+        ]
+    },
+    {
+        ano: 2021,
+        titulo: "Invisibilidade e cidadania: o desafio de reconhecer os direitos dos idosos no Brasil",
+        motivadores: [
+            "O envelhecimento da população brasileira cresce rapidamente, mas os direitos dos idosos ainda são pouco efetivados no dia a dia.",
+            "Violência, abandono e barreiras de acesso a serviços públicos são problemas recorrentes."
+        ]
+    },
+    {
+        ano: 2020,
+        titulo: "O estigma associado às doenças mentais na sociedade brasileira",
+        motivadores: [
+            "O preconceito em relação a transtornos mentais atrasa diagnósticos e tratamentos, além de isolar as pessoas afetadas.",
+            "Campanhas de conscientização e políticas públicas de saúde mental ainda são insuficientes."
+        ]
+    },
+    {
+        ano: 2019,
+        titulo: "Democratização do acesso ao cinema no Brasil",
+        motivadores: [
+            "O cinema é ferramenta de cultura, educação e lazer, mas o acesso às salas ainda é desigual no país.",
+            "Preço dos ingressos, concentração de cinemas em grandes centros e falta de políticas de democratização limitam o público."
+        ]
+    },
+    {
+        ano: 2018,
+        titulo: "Manipulação do comportamento do usuário pelo controle de dados na internet",
+        motivadores: [
+            "Redes sociais e plataformas digitais coletam dados para influenciar escolhas de consumo, opinião e até voto.",
+            "A falta de transparência e de educação digital amplia os riscos para a democracia e a privacidade."
+        ]
+    },
+    {
+        ano: 2017,
+        titulo: "Desafios para a formação educacional de surdos no Brasil",
+        motivadores: [
+            "A inclusão de surdos na educação regular ainda enfrenta barreiras de comunicação, formação de professores e materiais adequados.",
+            "O reconhecimento da Libras como língua oficial foi um avanço, mas a efetivação na prática é limitada."
+        ]
+    },
+    {
+        ano: 2016,
+        titulo: "Caminhos para combater a intolerância religiosa no Brasil",
+        motivadores: [
+            "O Brasil é um país de diversidade religiosa, mas casos de intolerância e violência contra religiões de matriz africana e outras minorias são frequentes.",
+            "A laicidade do Estado e o respeito à liberdade de crença precisam ser fortalecidos."
+        ]
+    },
+    {
+        ano: 2015,
+        titulo: "A persistência da violência contra a mulher na sociedade brasileira",
+        motivadores: [
+            "Mesmo com leis como a Maria da Penha, os índices de violência doméstica e feminicídio permanecem altos.",
+            "Fatores culturais, econômicos e a falha na aplicação das leis contribuem para a manutenção do problema."
+        ]
+    }
+];
+
+let temaAtualRedacao = null;
+
+function abrirRedacaoIntro() {
+    mostrarTela("redacao-intro");
+    renderListaTemas();
+}
+
+function renderListaTemas() {
+    const container = document.getElementById("lista-temas-redacao");
+    container.innerHTML = TEMAS_ENEM.map((tema, index) => `
+        <button class="tema-card" onclick="iniciarRedacao(${index})">
+            <span class="tema-card-ano">ENEM ${tema.ano}</span>
+            <h3>${tema.titulo}</h3>
+        </button>
+    `).join("");
+}
+
+function iniciarRedacaoAleatoria() {
+    const index = Math.floor(Math.random() * TEMAS_ENEM.length);
+    iniciarRedacao(index);
+}
+
+function iniciarRedacao(index) {
+    temaAtualRedacao = TEMAS_ENEM[index];
+    document.getElementById("redacao-tema-ano").textContent = `ENEM ${temaAtualRedacao.ano}`;
+    document.getElementById("redacao-tema-titulo").textContent = temaAtualRedacao.titulo;
+    document.getElementById("redacao-motivadores").innerHTML = temaAtualRedacao.motivadores
+        .map(t => `<p class="motivador-item">${t}</p>`)
+        .join("");
+
+    document.getElementById("redacao-texto").value = "";
+    atualizarContadoresRedacao();
+    mostrarTela("redacao");
+}
+
+function atualizarContadoresRedacao() {
+    const texto = document.getElementById("redacao-texto").value;
+    const linhas = texto === "" ? 0 : texto.split("\n").length;
+    const palavras = texto.trim() === "" ? 0 : texto.trim().split(/\s+/).length;
+
+    const contLinhas = document.getElementById("contador-linhas");
+    contLinhas.textContent = `${linhas} / 30 linhas`;
+    contLinhas.style.color = linhas > 30 ? "#ef4444" : "#64748b";
+
+    document.getElementById("contador-palavras").textContent = `${palavras} palavras`;
+}
+
+// Atualiza contadores enquanto digita
+document.addEventListener("DOMContentLoaded", () => {
+    const textarea = document.getElementById("redacao-texto");
+    if (textarea) {
+        textarea.addEventListener("input", atualizarContadoresRedacao);
+    }
+});
+
+function sairDaRedacao() {
+    if (document.getElementById("redacao-texto").value.trim() !== "") {
+        if (!confirm("Sair? O texto atual será perdido.")) return;
+    }
+    abrirRedacaoIntro();
+}
+
+function finalizarRedacao() {
+    const texto = document.getElementById("redacao-texto").value.trim();
+    if (!texto) {
+        alert("Escreva sua redação antes de finalizar.");
+        return;
+    }
+
+    const linhas = texto.split("\n").length;
+    const palavras = texto.split(/\s+/).filter(Boolean).length;
+    const paragrafos = texto.split(/\n\s*\n/).filter(p => p.trim().length > 0).length;
+
+    // Análise básica de estrutura
+    let feedbackEstrutura = "";
+    if (paragrafos < 3) {
+        feedbackEstrutura = `
+            <h3>⚠️ Estrutura</h3>
+            <p>Seu texto tem apenas <strong>${paragrafos} parágrafo(s)</strong>. 
+            O ideal no ENEM é ter pelo menos 3 ou 4: introdução, desenvolvimento e conclusão.</p>
+        `;
+    } else if (paragrafos >= 3 && paragrafos <= 5) {
+        feedbackEstrutura = `
+            <h3>✅ Estrutura</h3>
+            <p>Boa divisão em <strong>${paragrafos} parágrafos</strong>. 
+            Isso facilita a leitura e a organização da argumentação.</p>
+        `;
+    } else {
+        feedbackEstrutura = `
+            <h3>⚠️ Estrutura</h3>
+            <p>Muitos parágrafos (${paragrafos}). Tente concentrar as ideias em 3 a 5 blocos claros.</p>
+        `;
+    }
+
+    if (linhas > 30) {
+        feedbackEstrutura += `<p style="color:#ef4444;margin-top:10px;"><strong>Atenção:</strong> você ultrapassou 30 linhas (${linhas}). No ENEM, o que passar de 30 pode não ser corrigido.</p>`;
+    } else if (linhas < 8) {
+        feedbackEstrutura += `<p style="margin-top:10px;">Texto curto (${linhas} linhas). Tente desenvolver melhor os argumentos para se aproximar de 20–30 linhas.</p>`;
+    }
+
+    // Dicas das 5 competências (sempre educativas)
+    const feedbackCompetencias = `
+        <h3>📌 As 5 competências do ENEM</h3>
+        <ul class="lista-competencias">
+            <li><strong>C1 – Norma culta:</strong> revise ortografia, acentuação e concordância.</li>
+            <li><strong>C2 – Compreensão do tema:</strong> sua tese está clara e ligada ao tema “${temaAtualRedacao.titulo}”?</li>
+            <li><strong>C3 – Argumentação:</strong> use repertório (dados, fatos históricos, citações) para sustentar os argumentos.</li>
+            <li><strong>C4 – Coesão:</strong> conecte os parágrafos com conectivos (além disso, portanto, dessa forma…).</li>
+            <li><strong>C5 – Proposta de intervenção:</strong> na conclusão, apresente uma solução detalhada (agente, ação, meio, finalidade e detalhamento).</li>
+        </ul>
+        <p class="dica-final">Esta é uma análise automática básica. A correção oficial do ENEM avalia cada competência de 0 a 200 pontos (total 1000).</p>
+    `;
+
+    document.getElementById("resultado-tema-titulo").textContent = temaAtualRedacao.titulo;
+    document.getElementById("stat-linhas").textContent = linhas;
+    document.getElementById("stat-palavras").textContent = palavras;
+    document.getElementById("stat-paragrafos").textContent = paragrafos;
+    document.getElementById("feedback-estrutura").innerHTML = feedbackEstrutura;
+    document.getElementById("feedback-competencias").innerHTML = feedbackCompetencias;
+    document.getElementById("texto-final-redacao").textContent = texto;
+
+    mostrarTela("redacao-resultado");
+}
+
+// Garante que o contador funcione mesmo se o DOM já estiver carregado
+setTimeout(() => {
+    const textarea = document.getElementById("redacao-texto");
+    if (textarea && !textarea._listenerBound) {
+        textarea.addEventListener("input", atualizarContadoresRedacao);
+        textarea._listenerBound = true;
+    }
+}, 500);
 
 // ===================== INICIALIZAÇÃO =====================
 
