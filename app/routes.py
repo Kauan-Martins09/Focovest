@@ -192,8 +192,8 @@ async def gerar_prova(quantidade_por_area: int = 15):
 
     for area in areas:
         questoes_area = [q for q in todas_questoes if q["discipline"] == area]
-        selecionadas = random.sample(questoes_area, min(quantidade_por_area, len(questoes_area)))
         questoes_area = [q for q in questoes_area if questao_completa(q)]
+        selecionadas = random.sample(questoes_area, min(quantidade_por_area, len(questoes_area)))
         prova.extend(selecionadas)
 
     random.shuffle(prova)
