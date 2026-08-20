@@ -456,6 +456,7 @@
         <button onclick="abrirPainel()" class="btn-voltar">←</button>
         <h1>Painel Admin</h1>
     </div>
+
     <div class="tabs" id="admin-tabs">
         <button class="tab-btn ativa" data-admin-tab="usuarios">👤 Usuários</button>
         <button class="tab-btn" data-admin-tab="anotacoes">📝 Anotações</button>
@@ -463,6 +464,17 @@
         <button class="tab-btn" data-admin-tab="resultados">🎯 Resultados</button>
         <button class="tab-btn" data-admin-tab="redacoes">✍️ Redações</button>
     </div>
+
+    <div class="admin-toolbar">
+        <input
+            type="text"
+            id="admin-busca"
+            placeholder="Buscar por id, nome, email, idade..."
+            oninput="filtrarAdminTabela()"
+        >
+        <span id="admin-contador" class="admin-contador"></span>
+    </div>
+
     <div class="admin-content" id="admin-content"></div>
 </div>
 

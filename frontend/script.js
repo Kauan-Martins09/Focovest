@@ -1427,7 +1427,11 @@ setTimeout(() => {
     }
 }, 500);
 
+
 // ===================== ADMIN =====================
+
+let adminDadosAtuais = [];
+let adminTabAtual = "usuarios";
 
 function abrirAdmin() {
     mostrarTela("admin");
@@ -1436,79 +1440,189 @@ function abrirAdmin() {
 }
 
 function setupAdminTabs() {
-    document.querySelectorAll('#admin-tabs .tab-btn').forEach(btn => {
+    document.querySelectorAll("#admin-tabs .tab-btn").forEach(btn => {
         btn.onclick = () => {
-            document.querySelectorAll('#admin-tabs .tab-btn').forEach(b => b.classList.remove('ativa'));
-            btn.classList.add('ativa');
+            document.querySelectorAll("#admin-tabs .tab-btn").forEach(b => b.classList.remove("ativa"));
+            btn.classList.add("ativa");
             carregarAdminTab(btn.dataset.adminTab);
         };
     });
 }
 
 async function carregarAdminTab(tab) {
+    adminTabAtual = tab;
     const usuario_id = localStorage.getItem("usuario_id");
     const container = document.getElementById("admin-content");
+    const busca = document.getElementById("admin-busca");
+
     container.innerHTML = '<p class="treino-carregando">Carregando...</p>';
+    if (busca) busca.value = "";
 
     try {
-        const resposta = await fetch(`https://focovest-backend.onrender.com/admin/${tab}?usuario_id=${usuario_id}`);
+        const resposta = await fetch(
+            `https://focovest-backend.onrender.com/admin/${tab}?usuario_id=${usuario_id}`
+        );
         if (!resposta.ok) {
             container.innerHTML = '<p class="treino-erro">Acesso negado.</p>';
             return;
         }
-        const dados = await resposta.json();
-        renderAdminTab(tab, dados);
+        adminDadosAtuais = await resposta.json();
+        renderAdminTabela(adminDadosAtuais);
     } catch (error) {
         console.error(error);
         container.innerHTML = '<p class="treino-erro">Não foi possível carregar os dados.</p>';
     }
 }
 
-function renderAdminTab(tab, dados) {
-    const container = document.getElementById("admin-content");
+function colunasPorTab(tab) {
+    const map = {
+        usuarios: [
+            { key: "id", label: "ID" },
+            { key: "nome", label: "Nome" },
+            { key: "email", label: "Email" },
+            { key: "idade", label: "Idade" },
+            { key: "is_admin", label: "Admin" }
+        ],
+        anotacoes: [
+            { key: "id", label: "ID" },
+            { key: "usuario_nome", label: "Usuário" },
+            { key: "titulo", label: "Título" },
+            { key: "conteudo", label: "Conteúdo" }
+        ],
+        compromissos: [
+            { key: "id", label: "ID" },
+            { key: "usuario_nome", label: "Usuário" },
+            { key: "data", label: "Data" },
+            { key: "descricao", label: "Descrição" }
+        ],
+        resultados: [
+            { key: "id", label: "ID" },
+            { key: "usuario_nome", label: "Usuário" },
+            { key: "acertos", label: "Acertos" },
+            { key: "total", label: "Total" },
+            { key: "nota", label: "Nota" },
+            { key: "data", label: "Data" }
+        ],
+        redacoes: [
+            { key: "id", label: "ID" },
+            { key: "usuario_nome", label: "Usuário" },
+            { key: "tema_titulo", label: "Tema" },
+            { key: "nota", label: "Nota" },
+            { key: "data", label: "Data" }
+        ]
+    };
+    return map[tab] || [];
+}
 
-    if (dados.length === 0) {
-        container.innerHTML = '<p style="color:#999; text-align:center; margin-top:20px;">Nenhum registro encontrado.</p>';
+function rotaSingular(tab) {
+    return {
+        usuarios: "usuario",
+        anotacoes: "anotacao",
+        compromissos: "compromisso",
+        resultados: "resultado",
+        redacoes: "redacao"
+    }[tab];
+}
+
+function formatarCelula(key, valor) {
+    if (valor === null || valor === undefined) return "—";
+    if (key === "is_admin") {
+        return valor ? '<span class="admin-badge">ADMIN</span>' : "Não";
+    }
+    if (key === "data") {
+        try {
+            return new Date(valor).toLocaleString("pt-BR");
+        } catch {
+            return String(valor);
+        }
+    }
+    if (key === "conteudo" || key === "tema_titulo" || key === "descricao") {
+        const t = String(valor);
+        return t.length > 80 ? t.slice(0, 80) + "…" : t;
+    }
+    return String(valor);
+}
+
+function renderAdminTabela(dados) {
+    const container = document.getElementById("admin-content");
+    const contador = document.getElementById("admin-contador");
+    const colunas = colunasPorTab(adminTabAtual);
+
+    if (contador) {
+        contador.textContent = `${dados.length} registro(s)`;
+    }
+
+    if (!dados || dados.length === 0) {
+        container.innerHTML = '<p class="historico-vazio">Nenhum registro encontrado.</p>';
         return;
     }
 
-    const rotaSingular = {
-        usuarios: 'usuario', anotacoes: 'anotacao', compromissos: 'compromisso',
-        resultados: 'resultado', redacoes: 'redacao'
-    }[tab];
+    const thead = colunas.map(c => `<th>${c.label}</th>`).join("") + "<th>Ações</th>";
 
-    container.innerHTML = dados.map(item => {
-        let linha = '';
-        if (tab === 'usuarios') {
-            linha = `<strong>${item.nome}</strong> — ${item.email} (${item.idade} anos)${item.is_admin ? ' <span class="admin-badge">ADMIN</span>' : ''}`;
-        } else if (tab === 'anotacoes') {
-            linha = `<strong>${item.usuario_nome}</strong>: ${item.titulo}`;
-        } else if (tab === 'compromissos') {
-            linha = `<strong>${item.usuario_nome}</strong>: ${item.descricao} (${item.data})`;
-        } else if (tab === 'resultados') {
-            linha = `<strong>${item.usuario_nome}</strong>: ${item.acertos}/${item.total} — nota ${item.nota}`;
-        } else if (tab === 'redacoes') {
-            linha = `<strong>${item.usuario_nome}</strong>: "${item.tema_titulo}" — nota ${item.nota}`;
-        }
+    const tbody = dados.map(item => {
+        const cells = colunas.map(c => {
+            return `<td>${formatarCelula(c.key, item[c.key])}</td>`;
+        }).join("");
 
         return `
-            <div class="admin-item">
-                <span class="admin-item-texto">${linha}</span>
-                <button class="btn-deletar-tarefa" onclick="deletarAdminItem('${rotaSingular}', ${item.id}, '${tab}')">×</button>
-            </div>
+            <tr>
+                ${cells}
+                <td>
+                    <button class="btn-admin-del" title="Excluir"
+                        onclick="deletarAdminItem('${rotaSingular(adminTabAtual)}', ${item.id}, '${adminTabAtual}')">
+                        ×
+                    </button>
+                </td>
+            </tr>
         `;
-    }).join('');
+    }).join("");
+
+    container.innerHTML = `
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead><tr>${thead}</tr></thead>
+                <tbody>${tbody}</tbody>
+            </table>
+        </div>
+    `;
 }
 
-async function deletarAdminItem(rotaSingular, id, tab) {
+function filtrarAdminTabela() {
+    const termo = (document.getElementById("admin-busca")?.value || "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+    if (!termo) {
+        renderAdminTabela(adminDadosAtuais);
+        return;
+    }
+
+    const filtrados = adminDadosAtuais.filter(item => {
+        return Object.values(item).some(v => {
+            if (v === null || v === undefined) return false;
+            return String(v)
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .includes(termo);
+        });
+    });
+
+    renderAdminTabela(filtrados);
+}
+
+async function deletarAdminItem(rotaSingularNome, id, tab) {
     if (!confirm("Tem certeza que deseja excluir este registro? Essa ação não pode ser desfeita.")) return;
 
     const usuario_id = localStorage.getItem("usuario_id");
 
     try {
-        const resposta = await fetch(`https://focovest-backend.onrender.com/admin/${rotaSingular}/${id}?usuario_id=${usuario_id}`, {
-            method: "DELETE"
-        });
+        const resposta = await fetch(
+            `https://focovest-backend.onrender.com/admin/${rotaSingularNome}/${id}?usuario_id=${usuario_id}`,
+            { method: "DELETE" }
+        );
 
         if (resposta.ok) {
             carregarAdminTab(tab);

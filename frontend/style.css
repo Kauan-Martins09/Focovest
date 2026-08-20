@@ -2179,3 +2179,87 @@ button:hover{
         padding: 8px 12px;
     }
 }
+
+/* Toolbar de busca */
+.admin-toolbar {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+#admin-busca {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    background: white;
+}
+
+#admin-busca:focus {
+    outline: none;
+    border-color: #9F96BD;
+}
+
+.admin-contador {
+    font-size: 0.9rem;
+    color: #64748b;
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+/* Tabela */
+.admin-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.admin-table th {
+    text-align: left;
+    padding: 14px 16px;
+    background: #f1f5f9;
+    color: #475569;
+    font-weight: 700;
+    border-bottom: 2px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.admin-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #1e2937;
+    vertical-align: middle;
+}
+
+.admin-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.btn-admin-del {
+    background: #fee2e2;
+    color: #dc2626;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.btn-admin-del:hover {
+    background: #fecaca;
+}
