@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey, DateTime, JSON
+from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey, DateTime, JSON, Boolean
 from .db import Base
 from datetime import datetime
 
@@ -10,6 +10,7 @@ class User(Base):
     senha = Column(String(255))
     nome = Column(String(100))
     idade = Column(Integer)
+    is_admin = Column(Boolean, default=False)
 
 class Anotacao(Base):
     __tablename__ = "anotacoes"

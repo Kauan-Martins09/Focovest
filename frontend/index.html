@@ -169,6 +169,13 @@
                 <p>Simulado completo com as 4 áreas e cronômetro de 90 minutos.</p>
             </div>
         </button>
+        <button class="bento-card bento-pequeno bento-roxo" id="card-admin" style="display:none;" onclick="abrirAdmin()">
+            <span class="bento-icone">🛠️</span>
+            <div class="bento-texto">
+                <h3>Painel Admin</h3>
+                <p>Gerenciar usuários e conteúdo do sistema.</p>
+            </div>
+        </button>
     </div>
 </div>
 
@@ -441,6 +448,22 @@
         <p class="resultado-mensagem" id="prova-resultado-mensagem"></p>
         <button onclick="abrirPainel()">Voltar ao Painel</button>
     </div>
+</div>
+
+<!-- TELA ADMIN -->
+<div id="admin" class="tela">
+    <div class="rotina-header">
+        <button onclick="abrirPainel()" class="btn-voltar">←</button>
+        <h1>Painel Admin</h1>
+    </div>
+    <div class="tabs" id="admin-tabs">
+        <button class="tab-btn ativa" data-admin-tab="usuarios">👤 Usuários</button>
+        <button class="tab-btn" data-admin-tab="anotacoes">📝 Anotações</button>
+        <button class="tab-btn" data-admin-tab="compromissos">🗓️ Compromissos</button>
+        <button class="tab-btn" data-admin-tab="resultados">🎯 Resultados</button>
+        <button class="tab-btn" data-admin-tab="redacoes">✍️ Redações</button>
+    </div>
+    <div class="admin-content" id="admin-content"></div>
 </div>
 
 <script src="script.js"></script>

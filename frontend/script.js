@@ -19,6 +19,8 @@ function atualizarPainel() {
 
     document.getElementById("avatar-inicial").textContent = nome.charAt(0).toUpperCase();
     document.getElementById("nome-usuario-nav").textContent = primeiroNome;
+    document.getElementById("card-admin").style.display = 
+        localStorage.getItem("is_admin") === "true" ? "flex" : "none";
 
     const hora = new Date().getHours();
     let saudacao = "Boa noite";
@@ -84,6 +86,7 @@ async function entrar(){
 
     localStorage.setItem("usuario_id", json.usuario_id);
     localStorage.setItem("nome", json.nome);
+    localStorage.setItem("is_admin", json.is_admin);
 
     await carregarAnotacoes();
     await carregarCompromissos();
@@ -1423,6 +1426,100 @@ setTimeout(() => {
         textarea._listenerBound = true;
     }
 }, 500);
+
+// ===================== ADMIN =====================
+
+function abrirAdmin() {
+    mostrarTela("admin");
+    setupAdminTabs();
+    carregarAdminTab("usuarios");
+}
+
+function setupAdminTabs() {
+    document.querySelectorAll('#admin-tabs .tab-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('#admin-tabs .tab-btn').forEach(b => b.classList.remove('ativa'));
+            btn.classList.add('ativa');
+            carregarAdminTab(btn.dataset.adminTab);
+        };
+    });
+}
+
+async function carregarAdminTab(tab) {
+    const usuario_id = localStorage.getItem("usuario_id");
+    const container = document.getElementById("admin-content");
+    container.innerHTML = '<p class="treino-carregando">Carregando...</p>';
+
+    try {
+        const resposta = await fetch(`https://focovest-backend.onrender.com/admin/${tab}?usuario_id=${usuario_id}`);
+        if (!resposta.ok) {
+            container.innerHTML = '<p class="treino-erro">Acesso negado.</p>';
+            return;
+        }
+        const dados = await resposta.json();
+        renderAdminTab(tab, dados);
+    } catch (error) {
+        console.error(error);
+        container.innerHTML = '<p class="treino-erro">Não foi possível carregar os dados.</p>';
+    }
+}
+
+function renderAdminTab(tab, dados) {
+    const container = document.getElementById("admin-content");
+
+    if (dados.length === 0) {
+        container.innerHTML = '<p style="color:#999; text-align:center; margin-top:20px;">Nenhum registro encontrado.</p>';
+        return;
+    }
+
+    const rotaSingular = {
+        usuarios: 'usuario', anotacoes: 'anotacao', compromissos: 'compromisso',
+        resultados: 'resultado', redacoes: 'redacao'
+    }[tab];
+
+    container.innerHTML = dados.map(item => {
+        let linha = '';
+        if (tab === 'usuarios') {
+            linha = `<strong>${item.nome}</strong> — ${item.email} (${item.idade} anos)${item.is_admin ? ' <span class="admin-badge">ADMIN</span>' : ''}`;
+        } else if (tab === 'anotacoes') {
+            linha = `<strong>${item.usuario_nome}</strong>: ${item.titulo}`;
+        } else if (tab === 'compromissos') {
+            linha = `<strong>${item.usuario_nome}</strong>: ${item.descricao} (${item.data})`;
+        } else if (tab === 'resultados') {
+            linha = `<strong>${item.usuario_nome}</strong>: ${item.acertos}/${item.total} — nota ${item.nota}`;
+        } else if (tab === 'redacoes') {
+            linha = `<strong>${item.usuario_nome}</strong>: "${item.tema_titulo}" — nota ${item.nota}`;
+        }
+
+        return `
+            <div class="admin-item">
+                <span class="admin-item-texto">${linha}</span>
+                <button class="btn-deletar-tarefa" onclick="deletarAdminItem('${rotaSingular}', ${item.id}, '${tab}')">×</button>
+            </div>
+        `;
+    }).join('');
+}
+
+async function deletarAdminItem(rotaSingular, id, tab) {
+    if (!confirm("Tem certeza que deseja excluir este registro? Essa ação não pode ser desfeita.")) return;
+
+    const usuario_id = localStorage.getItem("usuario_id");
+
+    try {
+        const resposta = await fetch(`https://focovest-backend.onrender.com/admin/${rotaSingular}/${id}?usuario_id=${usuario_id}`, {
+            method: "DELETE"
+        });
+
+        if (resposta.ok) {
+            carregarAdminTab(tab);
+        } else {
+            alert("Erro ao excluir o registro.");
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Não foi possível conectar ao servidor.");
+    }
+}
 
 // ===================== INICIALIZAÇÃO =====================
 

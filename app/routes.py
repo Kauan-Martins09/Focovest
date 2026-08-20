@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from .db import SessionLocal
@@ -58,7 +58,8 @@ def login(user: UserLog, db: Session = Depends(get_db)):
     return {
         "success": True,
         "usuario_id": usuario.id,
-        "nome": usuario.nome
+        "nome": usuario.nome,
+        "is_admin": usuario.is_admin
             }
 
 @router.post("/anotacao")
@@ -251,3 +252,125 @@ def listar_redacoes(usuario_id: int, db: Session = Depends(get_db)):
         Redacao.usuario_id == usuario_id
     ).order_by(Redacao.data.desc()).all()
     return redacoes
+
+# ===================== ADMIN =====================
+
+def verificar_admin(usuario_id: int, db: Session):
+    usuario = db.query(User).filter(User.id == usuario_id).first()
+    if not usuario or not usuario.is_admin:
+        raise HTTPException(status_code=403, detail="Acesso negado")
+
+
+@router.get("/admin/usuarios")
+def admin_listar_usuarios(usuario_id: int, db: Session = Depends(get_db)):
+    verificar_admin(usuario_id, db)
+    usuarios = db.query(User).all()
+    return [
+        {"id": u.id, "nome": u.nome, "email": u.email, "idade": u.idade, "is_admin": u.is_admin}
+        for u in usuarios
+    ]
+
+
+@router.delete("/admin/usuario/{id}")
+def admin_deletar_usuario(id: int, usuario_id: int, db: Session = Depends(get_db)):
+    verificar_admin(usuario_id, db)
+
+    if id == usuario_id:
+        raise HTTPException(status_code=400, detail="Você não pode excluir sua própria conta")
+
+    usuario = db.query(User).filter(User.id == id).first()
+    if not usuario:
+        return {"msg": "Usuário não encontrado"}
+
+    db.query(Anotacao).filter(Anotacao.usuario_id == id).delete()
+    db.query(Compromisso).filter(Compromisso.usuario_id == id).delete()
+    db.query(Resultado).filter(Resultado.usuario_id == id).delete()
+    db.query(Redacao).filter(Redacao.usuario_id == id).delete()
+    db.delete(usuario)
+    db.commit()
+
+    return {"msg": "Usuário e todos os seus dados foram excluídos"}
+
+
+@router.get("/admin/anotacoes")
+def admin_listar_anotacoes(usuario_id: int, db: Session = Depends(get_db)):
+    verificar_admin(usuario_id, db)
+    registros = db.query(Anotacao, User.nome).join(User, Anotacao.usuario_id == User.id).all()
+    return [
+        {"id": a.id, "usuario_nome": nome, "titulo": a.titulo, "conteudo": a.conteudo}
+        for a, nome in registros
+    ]
+
+
+@router.delete("/admin/anotacao/{id}")
+def admin_deletar_anotacao(id: int, usuario_id: int, db: Session = Depends(get_db)):
+    verificar_admin(usuario_id, db)
+    anotacao = db.query(Anotacao).filter(Anotacao.id == id).first()
+    if not anotacao:
+        return {"msg": "Anotação não encontrada"}
+    db.delete(anotacao)
+    db.commit()
+    return {"msg": "Anotação excluída"}
+
+
+@router.get("/admin/compromissos")
+def admin_listar_compromissos(usuario_id: int, db: Session = Depends(get_db)):
+    verificar_admin(usuario_id, db)
+    registros = db.query(Compromisso, User.nome).join(User, Compromisso.usuario_id == User.id).all()
+    return [
+        {"id": c.id, "usuario_nome": nome, "data": c.data, "descricao": c.descricao}
+        for c, nome in registros
+    ]
+
+
+@router.delete("/admin/compromisso/{id}")
+def admin_deletar_compromisso(id: int, usuario_id: int, db: Session = Depends(get_db)):
+    verificar_admin(usuario_id, db)
+    compromisso = db.query(Compromisso).filter(Compromisso.id == id).first()
+    if not compromisso:
+        return {"msg": "Compromisso não encontrado"}
+    db.delete(compromisso)
+    db.commit()
+    return {"msg": "Compromisso excluído"}
+
+
+@router.get("/admin/resultados")
+def admin_listar_resultados(usuario_id: int, db: Session = Depends(get_db)):
+    verificar_admin(usuario_id, db)
+    registros = db.query(Resultado, User.nome).join(User, Resultado.usuario_id == User.id).order_by(Resultado.data.desc()).all()
+    return [
+        {"id": r.id, "usuario_nome": nome, "acertos": r.acertos, "total": r.total, "nota": r.nota, "data": r.data}
+        for r, nome in registros
+    ]
+
+
+@router.delete("/admin/resultado/{id}")
+def admin_deletar_resultado(id: int, usuario_id: int, db: Session = Depends(get_db)):
+    verificar_admin(usuario_id, db)
+    resultado = db.query(Resultado).filter(Resultado.id == id).first()
+    if not resultado:
+        return {"msg": "Resultado não encontrado"}
+    db.delete(resultado)
+    db.commit()
+    return {"msg": "Resultado excluído"}
+
+
+@router.get("/admin/redacoes")
+def admin_listar_redacoes(usuario_id: int, db: Session = Depends(get_db)):
+    verificar_admin(usuario_id, db)
+    registros = db.query(Redacao, User.nome).join(User, Redacao.usuario_id == User.id).order_by(Redacao.data.desc()).all()
+    return [
+        {"id": r.id, "usuario_nome": nome, "tema_titulo": r.tema_titulo, "nota": r.nota, "data": r.data}
+        for r, nome in registros
+    ]
+
+
+@router.delete("/admin/redacao/{id}")
+def admin_deletar_redacao(id: int, usuario_id: int, db: Session = Depends(get_db)):
+    verificar_admin(usuario_id, db)
+    redacao = db.query(Redacao).filter(Redacao.id == id).first()
+    if not redacao:
+        return {"msg": "Redação não encontrada"}
+    db.delete(redacao)
+    db.commit()
+    return {"msg": "Redação excluída"}
