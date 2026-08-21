@@ -2263,3 +2263,26 @@ button:hover{
 .btn-admin-del:hover {
     background: #fecaca;
 }
+
+.btn-admin-ok {
+    background: #dcfce7;
+    color: #16a34a;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 6px;
+}
+.btn-admin-sec {
+    background: #fef3c7;
+    color: #d97706;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 6px;
+}

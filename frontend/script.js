@@ -1459,18 +1459,76 @@ async function carregarAdminTab(tab) {
     if (busca) busca.value = "";
 
     try {
+        const rota = tab === "logs" ? "logs" : tab;
         const resposta = await fetch(
-            `https://focovest-backend.onrender.com/admin/${tab}?usuario_id=${usuario_id}`
+            `https://focovest-backend.onrender.com/admin/${rota}?usuario_id=${usuario_id}`
         );
         if (!resposta.ok) {
             container.innerHTML = '<p class="treino-erro">Acesso negado.</p>';
             return;
         }
-        adminDadosAtuais = await resposta.json();
+        let dados = await resposta.json();
+
+        // Histórico: monta texto legível do snapshot
+        if (tab === "logs") {
+            dados = dados.map(l => ({
+                ...l,
+                detalhe: formatarSnapshotLog(l)
+            }));
+        }
+
+        adminDadosAtuais = dados;
         renderAdminTabela(adminDadosAtuais);
     } catch (error) {
         console.error(error);
         container.innerHTML = '<p class="treino-erro">Não foi possível carregar os dados.</p>';
+    }
+}
+
+function formatarSnapshotLog(log) {
+    const s = log.alvo_snapshot || {};
+    const acaoLabel = {
+        delete_usuario: "Excluiu usuário",
+        promover_admin: "Promoveu a admin",
+        rebaixar_admin: "Removeu admin",
+        delete_anotacao: "Excluiu anotação",
+        delete_compromisso: "Excluiu compromisso",
+        delete_resultado: "Excluiu resultado",
+        delete_redacao: "Excluiu redação"
+    }[log.acao] || log.acao;
+
+    if (log.alvo_tipo === "usuario") {
+        return `${acaoLabel}: #${s.id ?? log.alvo_id} · ${s.nome || "?"} · ${s.email || "?"} · ${s.idade ?? "?"} anos`;
+    }
+    if (s.titulo) return `${acaoLabel}: "${s.titulo}"`;
+    if (s.tema_titulo) return `${acaoLabel}: "${s.tema_titulo}" (nota ${s.nota ?? "?"})`;
+    if (s.descricao) return `${acaoLabel}: ${s.descricao}`;
+    if (s.nota !== undefined) return `${acaoLabel}: nota ${s.nota}`;
+    return acaoLabel;
+}
+
+async function alterarAdminStatus(id, acao) {
+    const msg = acao === "promover"
+        ? "Promover este usuário a administrador?"
+        : "Remover o cargo de admin deste usuário?";
+    if (!confirm(msg)) return;
+
+    const usuario_id = localStorage.getItem("usuario_id");
+    try {
+        const resposta = await fetch(
+            `https://focovest-backend.onrender.com/admin/usuario/${id}/${acao}?usuario_id=${usuario_id}`,
+            { method: "POST" }
+        );
+        const json = await resposta.json().catch(() => ({}));
+        if (!resposta.ok) {
+            alert(json.detail || "Erro ao alterar permissão.");
+            return;
+        }
+        alert(json.msg || "Atualizado.");
+        carregarAdminTab("usuarios");
+    } catch (e) {
+        console.error(e);
+        alert("Falha de conexão.");
     }
 }
 
@@ -1509,6 +1567,14 @@ function colunasPorTab(tab) {
             { key: "tema_titulo", label: "Tema" },
             { key: "nota", label: "Nota" },
             { key: "data", label: "Data" }
+        ],
+        logs: [
+            { key: "id", label: "ID" },
+            { key: "data", label: "Quando" },
+            { key: "admin_nome", label: "Admin" },
+            { key: "acao", label: "Ação" },
+            { key: "alvo_tipo", label: "Tipo" },
+            { key: "detalhe", label: "Detalhes do alvo" }
         ]
     };
     return map[tab] || [];
@@ -1564,15 +1630,34 @@ function renderAdminTabela(dados) {
             return `<td>${formatarCelula(c.key, item[c.key])}</td>`;
         }).join("");
 
+        let acoes = "—";
+
+        if (adminTabAtual === "logs") {
+            acoes = "—";
+        } else if (adminTabAtual === "usuarios") {
+            const btnPromover = item.is_admin
+                ? `<button class="btn-admin-sec" title="Remover admin"
+                        onclick="alterarAdminStatus(${item.id}, 'rebaixar')">Rebaixar</button>`
+                : `<button class="btn-admin-ok" title="Tornar admin"
+                        onclick="alterarAdminStatus(${item.id}, 'promover')">Promover</button>`;
+
+            acoes = `
+                ${btnPromover}
+                <button class="btn-admin-del" title="Excluir"
+                    onclick="deletarAdminItem('usuario', ${item.id}, 'usuarios')">×</button>
+            `;
+        } else {
+            const singular = rotaSingular(adminTabAtual);
+            acoes = `
+                <button class="btn-admin-del" title="Excluir"
+                    onclick="deletarAdminItem('${singular}', ${item.id}, '${adminTabAtual}')">×</button>
+            `;
+        }
+
         return `
             <tr>
                 ${cells}
-                <td>
-                    <button class="btn-admin-del" title="Excluir"
-                        onclick="deletarAdminItem('${rotaSingular(adminTabAtual)}', ${item.id}, '${adminTabAtual}')">
-                        ×
-                    </button>
-                </td>
+                <td class="admin-acoes">${acoes}</td>
             </tr>
         `;
     }).join("");

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from .db import SessionLocal
-from .models import User, Anotacao, Compromisso, Resultado, Redacao
+from .models import User, Anotacao, Compromisso, Resultado, Redacao, AdminLog
 from .schemas import UserCreate, UserLog, AnotacaoCreate, CompromissoCreate, ResultadoCreate, RedacaoCreate
 from .security import hash_senha, verificar_senha
 import httpx
@@ -365,12 +365,116 @@ def admin_listar_redacoes(usuario_id: int, db: Session = Depends(get_db)):
     ]
 
 
-@router.delete("/admin/redacao/{id}")
-def admin_deletar_redacao(id: int, usuario_id: int, db: Session = Depends(get_db)):
+@router.delete("/admin/usuario/{id}")
+def admin_deletar_usuario(id: int, usuario_id: int, db: Session = Depends(get_db)):
     verificar_admin(usuario_id, db)
-    redacao = db.query(Redacao).filter(Redacao.id == id).first()
-    if not redacao:
-        return {"msg": "Redação não encontrada"}
-    db.delete(redacao)
+    admin = db.query(User).filter(User.id == usuario_id).first()
+
+    if id == usuario_id:
+        raise HTTPException(status_code=400, detail="Você não pode excluir sua própria conta")
+
+    usuario = db.query(User).filter(User.id == id).first()
+    if not usuario:
+        return {"msg": "Usuário não encontrado"}
+
+    snapshot = {
+        "id": usuario.id,
+        "nome": usuario.nome,
+        "email": usuario.email,
+        "idade": usuario.idade,
+        "is_admin": bool(usuario.is_admin)
+    }
+
+    db.query(Anotacao).filter(Anotacao.usuario_id == id).delete()
+    db.query(Compromisso).filter(Compromisso.usuario_id == id).delete()
+    db.query(Resultado).filter(Resultado.usuario_id == id).delete()
+    db.query(Redacao).filter(Redacao.usuario_id == id).delete()
+    db.delete(usuario)
     db.commit()
-    return {"msg": "Redação excluída"}
+
+    registrar_log(db, admin, "delete_usuario", "usuario", id, snapshot)
+    return {"msg": "Usuário e todos os seus dados foram excluídos"}
+
+def registrar_log(db: Session, admin: User, acao: str, alvo_tipo: str, alvo_id: int | None, snapshot: dict | None):
+    log = AdminLog(
+        admin_id=admin.id,
+        admin_nome=admin.nome or admin.email,
+        acao=acao,
+        alvo_tipo=alvo_tipo,
+        alvo_id=alvo_id,
+        alvo_snapshot=snapshot
+    )
+    db.add(log)
+    db.commit()
+
+@router.post("/admin/usuario/{id}/promover")
+def admin_promover_usuario(id: int, usuario_id: int, db: Session = Depends(get_db)):
+    verificar_admin(usuario_id, db)
+    admin = db.query(User).filter(User.id == usuario_id).first()
+
+    usuario = db.query(User).filter(User.id == id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    if usuario.is_admin:
+        return {"msg": "Usuário já é admin"}
+
+    usuario.is_admin = True
+    db.commit()
+
+    snapshot = {
+        "id": usuario.id,
+        "nome": usuario.nome,
+        "email": usuario.email,
+        "idade": usuario.idade,
+        "is_admin": True
+    }
+    registrar_log(db, admin, "promover_admin", "usuario", id, snapshot)
+    return {"msg": f"{usuario.nome} agora é admin"}
+
+
+@router.post("/admin/usuario/{id}/rebaixar")
+def admin_rebaixar_usuario(id: int, usuario_id: int, db: Session = Depends(get_db)):
+    verificar_admin(usuario_id, db)
+    admin = db.query(User).filter(User.id == usuario_id).first()
+
+    if id == usuario_id:
+        raise HTTPException(status_code=400, detail="Você não pode rebaixar a si mesmo")
+
+    usuario = db.query(User).filter(User.id == id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    if not usuario.is_admin:
+        return {"msg": "Usuário já não é admin"}
+
+    usuario.is_admin = False
+    db.commit()
+
+    snapshot = {
+        "id": usuario.id,
+        "nome": usuario.nome,
+        "email": usuario.email,
+        "idade": usuario.idade,
+        "is_admin": False
+    }
+    registrar_log(db, admin, "rebaixar_admin", "usuario", id, snapshot)
+    return {"msg": f"{usuario.nome} não é mais admin"}
+
+@router.get("/admin/logs")
+def admin_listar_logs(usuario_id: int, db: Session = Depends(get_db)):
+    verificar_admin(usuario_id, db)
+    logs = db.query(AdminLog).order_by(AdminLog.data.desc()).limit(200).all()
+    return [
+        {
+            "id": l.id,
+            "admin_id": l.admin_id,
+            "admin_nome": l.admin_nome,
+            "acao": l.acao,
+            "alvo_tipo": l.alvo_tipo,
+            "alvo_id": l.alvo_id,
+            "alvo_snapshot": l.alvo_snapshot,
+            "data": l.data
+        }
+        for l in logs
+    ]

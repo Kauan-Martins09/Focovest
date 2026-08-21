@@ -54,3 +54,15 @@ class Redacao(Base):
     nota = Column(Integer, nullable=False)
     feedback = Column(JSON, nullable=True)
     data = Column(DateTime, default=datetime.utcnow)
+
+class AdminLog(Base):
+    __tablename__ = "admin_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    admin_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    admin_nome = Column(String(100), nullable=False)
+    acao = Column(String(50), nullable=False)          # ex: delete_usuario, promover_admin
+    alvo_tipo = Column(String(50), nullable=False)     # usuario, anotacao, resultado...
+    alvo_id = Column(Integer, nullable=True)
+    alvo_snapshot = Column(JSON, nullable=True)        # dados completos do que foi afetado
+    data = Column(DateTime, default=datetime.utcnow)
