@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from .db import SessionLocal
 from .models import User, Anotacao, Compromisso, Resultado, Redacao, AdminLog
 from .schemas import UserCreate, UserLog, AnotacaoCreate, CompromissoCreate, ResultadoCreate, RedacaoCreate
-from .security import hash_senha, verificar_senha
+from .security import hash_senha, verificar_senha, criar_token
 import httpx
 import random
 
@@ -52,11 +52,18 @@ def login(user: UserLog, db: Session = Depends(get_db)):
     usuario = db.query(User).filter(User.email == user.email).first()
     if not usuario:
         return {"msg": "usário não encontrado"}
+    
     if not verificar_senha(user.senha, usuario.senha):
         return{"msg": "Senha incorreta"}
+
+    token = criar_token({
+        "usuario.id": usuario.id,
+        "is_admin": usuario.is_admin
+    })
     
     return {
         "success": True,
+        "token": token,
         "usuario_id": usuario.id,
         "nome": usuario.nome,
         "is_admin": usuario.is_admin
