@@ -19,7 +19,7 @@ def verificar_senha(senha: str, hashed_senha: str) -> bool:
     return bcrypt.hashpw(senha_bytes, hashed_bytes)
 
 def criar_token(dados: dict):
-    dados_para_token = dados.copy
+    dados_para_token = dados.copy()
     expira = datetime.utcnow() + timedelta(minutes=TEMPO_EXPIRAÇÂO_MINUTOS)
     dados_para_token.update({"exp" : expira})
     token = jwt.encode(dados_para_token, SECRET_KEY, algorithm=ALGORITHM)

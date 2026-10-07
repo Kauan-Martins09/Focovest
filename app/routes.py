@@ -57,7 +57,7 @@ def login(user: UserLog, db: Session = Depends(get_db)):
         return{"msg": "Senha incorreta"}
 
     token = criar_token({
-        "usuario.id": usuario.id,
+        "usuario_id": usuario.id,
         "is_admin": usuario.is_admin
     })
     
