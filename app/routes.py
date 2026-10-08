@@ -4,7 +4,13 @@ from sqlalchemy.orm import Session
 from .db import SessionLocal
 from .models import User, Anotacao, Compromisso, Resultado, Redacao, AdminLog
 from .schemas import UserCreate, UserLog, AnotacaoCreate, CompromissoCreate, ResultadoCreate, RedacaoCreate
-from .security import hash_senha, verificar_senha, criar_token
+from .security import (
+    hash_senha,
+    verificar_senha,
+    criar_token,
+    usuario_atual
+)
+
 import httpx
 import random
 
@@ -89,7 +95,8 @@ def criar_anotacao(
 @router.get("/anotacao/{usuario_id}")
 def listar_anotacoes(
     usuario_id: int, 
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    usuario=Depends(usuario_atual)
 ):
     
     anotacoes = db.query(Anotacao).filter(

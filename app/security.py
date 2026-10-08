@@ -1,11 +1,16 @@
 import bcrypt
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
 
 # Chave secreta
 SECRET_KEY = "18ed384f1098984b695646bc3f2077285643482d6d19e247e0c0567a5de44e3c"
 ALGORITHM = "HS256"
 TEMPO_EXPIRAÇÂO_MINUTOS = 60 * 24 # 24 horas
+
+bearer_scheme = HTTPBearer(auto_error=False)
 
 def hash_senha(senha: str) -> str:
     senha_bytes = senha[:72].enconde('utf-8')
@@ -27,7 +32,33 @@ def criar_token(dados: dict):
 
 def verificar_token(token: str):
     try:
-        dados = jwt.encode(token, SECRET_KEY, algorithm=ALGORITHM)
+        dados = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
         return dados
     except JWTError:
         return None
+
+    
+def usuario_atual(
+    credenciais: HTTPAuthorizationCredentials = Depends(bearer_scheme)
+):
+    if credenciais is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token não informado",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    dados = verificar_token(credenciais.credentials)
+
+    if dados is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido ou expirado",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    return dados
