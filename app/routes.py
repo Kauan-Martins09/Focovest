@@ -78,11 +78,12 @@ def login(user: UserLog, db: Session = Depends(get_db)):
 @router.post("/anotacao")
 def criar_anotacao(
     anotacao: AnotacaoCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    usuario = Depends(usuario_atual)
 ):
-    
+    # Força o usuario_id do token (ignora o que veio no body)
     nova = Anotacao(
-        usuario_id=anotacao.usuario_id,
+        usuario_id=usuario["usuario_id"],
         titulo=anotacao.titulo,
         conteudo=anotacao.conteudo
     )
@@ -94,11 +95,14 @@ def criar_anotacao(
 
 @router.get("/anotacao/{usuario_id}")
 def listar_anotacoes(
-    usuario_id: int, 
+    usuario_id: int,
     db: Session = Depends(get_db),
-    usuario=Depends(usuario_atual)
+    usuario = Depends(usuario_atual)
 ):
-    
+    # Só pode ver as próprias anotações (admin pode ver qualquer uma)
+    if usuario["usuario_id"] != usuario_id and not usuario.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Acesso negado")
+
     anotacoes = db.query(Anotacao).filter(
         Anotacao.usuario_id == usuario_id
     ).all()
@@ -106,14 +110,19 @@ def listar_anotacoes(
     return anotacoes
 
 @router.delete("/anotacao/{id}")
-def deletar_anotacoes(  
-    id: int, 
-    db: Session = Depends(get_db)
+def deletar_anotacoes(
+    id: int,
+    db: Session = Depends(get_db),
+    usuario = Depends(usuario_atual)
 ):
     anotacao = db.query(Anotacao).filter(Anotacao.id == id).first()
     if not anotacao:
         return {"msg": "Anotação não encontrada"}
-    
+
+    # Só o dono ou admin pode apagar
+    if anotacao.usuario_id != usuario["usuario_id"] and not usuario.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Acesso negado")
+
     db.delete(anotacao)
     db.commit()
     return {"msg": "Anotação excluída com sucesso!"}
