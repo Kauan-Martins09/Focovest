@@ -6,7 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 
 # Chave secreta
-SECRET_KEY = "18ed384f1098984b695646bc3f2077285643482d6d19e247e0c0567a5de44e3c"
+SECRET_KEY = "iAzTfpZh-g8Ya4y1P1XhLhV67WQbIYIbOOiLrKnVxCtBbt7IYdnk_u1Ifp1U7Ok8nFEkzNpVrYKupNT8GBYWYA"
 ALGORITHM = "HS256"
 TEMPO_EXPIRAÇÂO_MINUTOS = 60 * 24 # 24 horas
 

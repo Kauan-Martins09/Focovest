@@ -106,7 +106,7 @@ def listar_anotacoes(
     return anotacoes
 
 @router.delete("/anotacao/{id}")
-def deletar_anotacoes(
+def deletar_anotacoes(  
     id: int, 
     db: Session = Depends(get_db)
 ):
