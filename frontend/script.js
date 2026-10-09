@@ -40,9 +40,19 @@ function togglePerfilMenu() {
     document.getElementById("perfil-menu").classList.toggle("aberto");
 }
 
+function getHeaders() {
+    const token = localStorage.getItem("token");
+    return {
+        "Content-Type": "application/json",
+        "Authorization": token ? `Bearer ${token}` : ""
+    };
+}
+
 function sairConta() {
     localStorage.removeItem("usuario_id");
     localStorage.removeItem("nome");
+    localStorage.removeItem("is_admin");
+    localStorage.removeItem("token");
     voltarHome();
 }
 
@@ -87,6 +97,7 @@ async function entrar(){
     localStorage.setItem("usuario_id", json.usuario_id);
     localStorage.setItem("nome", json.nome);
     localStorage.setItem("is_admin", json.is_admin);
+    localStorage.setItem("token", json.token);
 
     await carregarAnotacoes();
     await carregarCompromissos();
@@ -184,7 +195,8 @@ async function carregarCompromissos() {
 
     try {
         const resposta = await fetch(
-            `https://focovest-backend.onrender.com/compromisso/${usuario_id}`
+            `https://focovest-backend.onrender.com/compromisso/${usuario_id}`,
+            { headers: getHeaders() }
         );
         const json = await resposta.json();
 
@@ -238,7 +250,7 @@ async function adicionarCompromisso() {
     try {
         const resposta = await fetch("https://focovest-backend.onrender.com/compromisso", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: getHeaders(),
             body: JSON.stringify(dados)
         });
 
@@ -258,7 +270,8 @@ async function deletarCompromisso(id) {
 
     try {
         const resposta = await fetch(`https://focovest-backend.onrender.com/compromisso/${id}`, {
-            method: "DELETE"
+            method: "DELETE",
+            headers: getHeaders()
         });
 
         if (resposta.ok) {
@@ -305,13 +318,10 @@ async function salvarAnotacao() {
         conteudo: texto
     }
 
-    const resposta = await
-    fetch("https://focovest-backend.onrender.com/anotacao", {
+    const resposta = await fetch("https://focovest-backend.onrender.com/anotacao", {
         method: "POST",
-        headers: {
-            "Content-type":"application/json"
-        },
-        body:JSON.stringify(dados)
+        headers: getHeaders(),
+        body: JSON.stringify(dados)
     });
 
     const json = await resposta.json();
@@ -329,7 +339,8 @@ async function carregarAnotacoes() {
     console.log("Carregando anotações do usuário:", usuario_id)
 
     const resposta = await fetch(
-        `https://focovest-backend.onrender.com/anotacao/${usuario_id}`
+        `https://focovest-backend.onrender.com/anotacao/${usuario_id}`,
+        { headers: getHeaders() }
     );
 
     const json = await resposta.json();
@@ -362,7 +373,8 @@ async function deletarAnotacao(event, id) {
     if (confirm("Tem certeza que deseja excluir esta anotação?")) {
         try {
             const resposta = await fetch(`https://focovest-backend.onrender.com/anotacao/${id}`, {
-                method: "DELETE"
+                method: "DELETE",
+                headers: getHeaders()
             });
 
             if (resposta.ok) {
@@ -619,7 +631,10 @@ async function carregarHistoricoProvas() {
     }
 
     try {
-        const resposta = await fetch(`https://focovest-backend.onrender.com/resultado/${usuario_id}`);
+        const resposta = await fetch(
+            `https://focovest-backend.onrender.com/resultado/${usuario_id}`,
+            { headers: getHeaders() }
+        );
         const resultados = await resposta.json();
 
         if (!resultados || resultados.length === 0) {
@@ -807,7 +822,7 @@ async function finalizarProva() {
     try {
         await fetch("https://focovest-backend.onrender.com/resultado", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: getHeaders(),
             body: JSON.stringify({
                 usuario_id,
                 acertos,
@@ -849,7 +864,10 @@ function sairDaProva() {
 async function revisarProva(id) {
     const usuario_id = localStorage.getItem("usuario_id");
     try {
-        const resposta = await fetch(`https://focovest-backend.onrender.com/resultado/${usuario_id}`);
+        const resposta = await fetch(
+            `https://focovest-backend.onrender.com/resultado/${usuario_id}`,
+            { headers: getHeaders() }
+        );
         const resultados = await resposta.json();
         const prova = resultados.find(r => r.id === id);
 
@@ -1309,7 +1327,7 @@ async function finalizarRedacao() {
         try {
             await fetch("https://focovest-backend.onrender.com/redacao", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: getHeaders(),
                 body: JSON.stringify({
                     usuario_id,
                     tema_ano: temaAtualRedacao.ano,
@@ -1348,7 +1366,10 @@ async function carregarHistoricoRedacoes() {
     }
 
     try {
-        const resposta = await fetch(`https://focovest-backend.onrender.com/redacao/${usuario_id}`);
+        const resposta = await fetch(
+            `https://focovest-backend.onrender.com/redacao/${usuario_id}`,
+            { headers: getHeaders() }
+        );
         const redacoes = await resposta.json();
 
         if (!redacoes || redacoes.length === 0) {
@@ -1461,7 +1482,8 @@ async function carregarAdminTab(tab) {
     try {
         const rota = tab === "logs" ? "logs" : tab;
         const resposta = await fetch(
-            `https://focovest-backend.onrender.com/admin/${rota}?usuario_id=${usuario_id}`
+            `https://focovest-backend.onrender.com/admin/${rota}?usuario_id=${usuario_id}`,
+            { headers: getHeaders() }
         );
         if (!resposta.ok) {
             container.innerHTML = '<p class="treino-erro">Acesso negado.</p>';
@@ -1517,7 +1539,7 @@ async function alterarAdminStatus(id, acao) {
     try {
         const resposta = await fetch(
             `https://focovest-backend.onrender.com/admin/usuario/${id}/${acao}?usuario_id=${usuario_id}`,
-            { method: "POST" }
+            { method: "POST", headers: getHeaders() }
         );
         const json = await resposta.json().catch(() => ({}));
         if (!resposta.ok) {
@@ -1706,7 +1728,7 @@ async function deletarAdminItem(rotaSingularNome, id, tab) {
     try {
         const resposta = await fetch(
             `https://focovest-backend.onrender.com/admin/${rotaSingularNome}/${id}?usuario_id=${usuario_id}`,
-            { method: "DELETE" }
+            { method: "DELETE", headers: getHeaders() }
         );
 
         if (resposta.ok) {
