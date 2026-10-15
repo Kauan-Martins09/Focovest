@@ -5,7 +5,16 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 # Chave secreta
-SECRET_KEY = "iAzTfpZh-g8Ya4y1P1XhLhV67WQbIYIbOOiLrKnVxCtBbt7IYdnk_u1Ifp1U7Ok8nFEkzNpVrYKupNT8GBYWYA"
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY não configurada no .env")
+
+
 ALGORITHM = "HS256"
 TEMPO_EXPIRACAO_MINUTOS = 60 * 24  # 24 horas
 
