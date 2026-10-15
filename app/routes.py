@@ -13,6 +13,8 @@ from .security import (
 
 import httpx
 import random
+from .gemini_redacao import corrigir_redacao_gemini, GeminiError
+from .correcao_regras import corrigir_redacao_regras
 
 def questao_completa(q):
     tinha_imagem_no_contexto = "![" in (q.get("context") or "")
@@ -264,26 +266,71 @@ def listar_resultados(
         Resultado.usuario_id == usuario_id
     ).order_by(Resultado.data.desc()).all()
 
+
+LIMITE_CARACTERES_REDACAO = 8000
+
+
 @router.post("/redacao")
 def criar_redacao(
-    redacao: RedacaoCreate, 
+    redacao: RedacaoCreate,
     db: Session = Depends(get_db),
-    usuario = Depends(usuario_atual)):
+    usuario = Depends(usuario_atual)
+):
+    if len(redacao.texto) > LIMITE_CARACTERES_REDACAO:
+        raise HTTPException(status_code=400, detail="Redação muito longa")
+
+    # Correção por regras roda sempre: dá os números (linhas/palavras/parágrafos)
+    # e serve de fallback. O servidor não confia mais em nota/feedback do frontend.
+    regras = corrigir_redacao_regras(redacao.texto, redacao.tema_titulo)
+
+    nota = regras["nota"]
+    competencias = regras["competencias"]
+    feedback = {**regras, "origem": "regras"}
+    origem = "regras"
+
+    tema = redacao.tema_titulo
+    if redacao.tema_ano:
+        tema = f"{tema} ({redacao.tema_ano})"
+
+    try:
+        r = corrigir_redacao_gemini(tema, redacao.texto)
+        competencias = {c: r[c] for c in ("c1", "c2", "c3", "c4", "c5")}
+        nota = r["total"]
+        feedback = {
+            "origem": "ia",
+            "competencias": competencias,
+            "comentario": r["feedback"]
+        }
+        origem = "ia"
+    except GeminiError:
+        pass  # fica com o resultado das regras
+
     nova = Redacao(
         usuario_id=usuario["usuario_id"],
         tema_ano=redacao.tema_ano,
         tema_titulo=redacao.tema_titulo,
         texto=redacao.texto,
-        linhas=redacao.linhas,
-        palavras=redacao.palavras,
-        paragrafos=redacao.paragrafos,
-        nota=redacao.nota,
-        feedback=redacao.feedback
+        linhas=regras["linhas"],
+        palavras=regras["palavras"],
+        paragrafos=regras["paragrafos"],
+        nota=nota,
+        feedback=feedback
     )
     db.add(nova)
     db.commit()
     db.refresh(nova)
-    return {"msg": "Redação salva", "id": nova.id}
+
+    return {
+        "msg": "Redação salva",
+        "id": nova.id,
+        "nota": nota,
+        "competencias": competencias,
+        "feedback": feedback,
+        "origem": origem,
+        "linhas": regras["linhas"],
+        "palavras": regras["palavras"],
+        "paragrafos": regras["paragrafos"]
+    }
 
 @router.get("/redacao/{usuario_id}")
 def listar_redacoes(
