@@ -1257,9 +1257,24 @@ function corrigirRedacao(texto, tema) {
     };
 }
 
-function gerarFeedbackHTML(resultado, tema) {
-    const { competencias, avisosC1, coberturaTema, repertorio, coesao, intervencao, paragrafos, linhas, palavras } = resultado;
+function escaparHTML(texto) {
+    return String(texto ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
 
+const ROTULOS_COMPETENCIAS = {
+    c1: "C1 · Norma culta",
+    c2: "C2 · Tema",
+    c3: "C3 · Argumentação",
+    c4: "C4 · Coesão",
+    c5: "C5 · Intervenção"
+};
+
+function gerarEstruturaHTML({ paragrafos, linhas, palavras }) {
     let htmlEstrutura = `<h3>Estrutura do texto</h3>`;
     if (paragrafos < 3) {
         htmlEstrutura += `<p>⚠️ Apenas <strong>${paragrafos} parágrafo(s)</strong>. O ideal é 3 a 4 (introdução, desenvolvimento e conclusão).</p>`;
@@ -1275,18 +1290,33 @@ function gerarFeedbackHTML(resultado, tema) {
     } else {
         htmlEstrutura += `<p>${linhas} linhas · ${palavras} palavras.</p>`;
     }
+    return htmlEstrutura;
+}
+
+function gerarGradeCompetenciasHTML(competencias) {
+    return `
+        <div class="competencias-grid">
+            ${["c1", "c2", "c3", "c4", "c5"].map(c =>
+                `<div class="comp-item"><span>${ROTULOS_COMPETENCIAS[c]}</span><strong>${competencias[c]}</strong></div>`
+            ).join("")}
+        </div>`;
+}
+
+const AVISO_IA = "Correção assistida por IA. Serve como treino e orientação e não é a correção oficial do ENEM.";
+const AVISO_REGRAS_SERVIDOR = "A correção por IA ficou indisponível agora, então usamos a correção automática por regras (sem IA). Serve como treino e não é a correção oficial do ENEM.";
+const AVISO_REGRAS_LOCAL = "Esta é uma correção automática por regras (sem IA). Serve como treino e orientação, não substitui a banca do ENEM.";
+
+function gerarFeedbackHTML(resultado, tema, avisoTexto = AVISO_REGRAS_LOCAL) {
+    const { competencias, avisosC1, coberturaTema, repertorio, coesao, intervencao } = resultado;
+
+    const htmlEstrutura = gerarEstruturaHTML(resultado);
 
     const htmlCompetencias = `
+        <span class="badge-correcao badge-regras">Correção por regras (sem IA)</span>
         <h3>Nota estimada por competência</h3>
-        <div class="competencias-grid">
-            <div class="comp-item"><span>C1 · Norma culta</span><strong>${competencias.c1}</strong></div>
-            <div class="comp-item"><span>C2 · Tema</span><strong>${competencias.c2}</strong></div>
-            <div class="comp-item"><span>C3 · Argumentação</span><strong>${competencias.c3}</strong></div>
-            <div class="comp-item"><span>C4 · Coesão</span><strong>${competencias.c4}</strong></div>
-            <div class="comp-item"><span>C5 · Intervenção</span><strong>${competencias.c5}</strong></div>
-        </div>
+        ${gerarGradeCompetenciasHTML(competencias)}
         <p class="nota-total">Nota estimada: <strong>${resultado.nota}</strong> / 1000</p>
-        <p class="aviso-nota">Esta é uma correção automática por regras (sem IA). Serve como treino e orientação, não substitui a banca do ENEM.</p>
+        <p class="aviso-nota">${avisoTexto}</p>
         <ul class="lista-competencias">
             <li><strong>C1:</strong> ${avisosC1.length ? avisosC1.join(" ") : "Não foram detectados problemas graves de informalidade."}</li>
             <li><strong>C2:</strong> Aproximadamente ${coberturaTema}% de relação lexical com o tema.</li>
@@ -1299,6 +1329,20 @@ function gerarFeedbackHTML(resultado, tema) {
     return { htmlEstrutura, htmlCompetencias };
 }
 
+// Resultado da correção por IA (competências + comentário do Gemini)
+function gerarFeedbackIAHTML({ competencias, nota, comentario }) {
+    return `
+        <span class="badge-correcao badge-ia">Correção assistida por IA</span>
+        <h3>Nota por competência</h3>
+        ${gerarGradeCompetenciasHTML(competencias)}
+        <p class="nota-total">Nota: <strong>${nota}</strong> / 1000</p>
+        <p class="aviso-nota">${AVISO_IA}</p>
+        ${comentario ? `<h3>Comentários da correção</h3><div class="comentario-ia">${escaparHTML(comentario)}</div>` : ""}
+    `;
+}
+
+const LIMITE_CARACTERES_REDACAO = 8000;
+
 async function finalizarRedacao() {
     const texto = document.getElementById("redacao-texto").value.trim();
     if (!texto) {
@@ -1309,46 +1353,106 @@ async function finalizarRedacao() {
         alert("Tema não encontrado. Volte e escolha um tema.");
         return;
     }
+    if (texto.length > LIMITE_CARACTERES_REDACAO) {
+        alert(`Sua redação passou do limite de ${LIMITE_CARACTERES_REDACAO} caracteres. Reduza o texto e tente de novo.`);
+        return;
+    }
 
-    const resultado = corrigirRedacao(texto, temaAtualRedacao);
-    const { htmlEstrutura, htmlCompetencias } = gerarFeedbackHTML(resultado, temaAtualRedacao);
+    // Correção local por regras: preenche os campos obrigatórios do envio
+    // e serve de último recurso se o servidor estiver fora do ar.
+    const local = corrigirRedacao(texto, temaAtualRedacao);
 
-    document.getElementById("resultado-tema-titulo").textContent = temaAtualRedacao.titulo;
-    document.getElementById("stat-linhas").textContent = resultado.linhas;
-    document.getElementById("stat-palavras").textContent = resultado.palavras;
-    document.getElementById("stat-paragrafos").textContent = resultado.paragrafos;
-    document.getElementById("feedback-estrutura").innerHTML = htmlEstrutura;
-    document.getElementById("feedback-competencias").innerHTML = htmlCompetencias;
-    document.getElementById("texto-final-redacao").textContent = texto;
+    const botao = document.getElementById("btn-finalizar-redacao");
+    const rotuloBotao = botao.textContent;
+    botao.disabled = true;
+    botao.textContent = "Corrigindo...";
 
-    // Salva no backend
+    let servidor = null;
     const usuario_id = Number(localStorage.getItem("usuario_id"));
+
     if (usuario_id) {
+        // O servidor pode levar alguns segundos (IA) e mais se estiver acordando
+        const controle = new AbortController();
+        const limiteTempo = setTimeout(() => controle.abort(), 90000);
+
         try {
-            await fetch("https://focovest-backend.onrender.com/redacao", {
+            const resposta = await fetch("https://focovest-backend.onrender.com/redacao", {
                 method: "POST",
                 headers: getHeaders(),
+                signal: controle.signal,
                 body: JSON.stringify({
                     usuario_id,
                     tema_ano: temaAtualRedacao.ano,
                     tema_titulo: temaAtualRedacao.titulo,
                     texto,
-                    linhas: resultado.linhas,
-                    palavras: resultado.palavras,
-                    paragrafos: resultado.paragrafos,
-                    nota: resultado.nota,
+                    linhas: local.linhas,
+                    palavras: local.palavras,
+                    paragrafos: local.paragrafos,
+                    nota: local.nota,
                     feedback: {
-                        competencias: resultado.competencias,
-                        avisosC1: resultado.avisosC1,
-                        coberturaTema: resultado.coberturaTema
+                        competencias: local.competencias,
+                        avisosC1: local.avisosC1,
+                        coberturaTema: local.coberturaTema
                     }
                 })
             });
+
+            if (resposta.status === 401) {
+                alert("Sua sessão expirou. Faça login novamente.");
+                sairConta();
+                return;
+            }
+            if (resposta.status === 400) {
+                const erro = await resposta.json().catch(() => ({}));
+                alert(erro.detail || "Não foi possível enviar essa redação.");
+                return;
+            }
+            if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+
+            servidor = await resposta.json();
         } catch (error) {
-            console.error("Erro ao salvar redação:", error);
+            console.error("Erro ao corrigir/salvar redação:", error);
+        } finally {
+            clearTimeout(limiteTempo);
+            botao.disabled = false;
+            botao.textContent = rotuloBotao;
+        }
+    } else {
+        botao.disabled = false;
+        botao.textContent = rotuloBotao;
+    }
+
+    let htmlEstrutura, htmlCompetencias, stats;
+
+    if (servidor && servidor.origem === "ia") {
+        stats = servidor;
+        htmlEstrutura = gerarEstruturaHTML(servidor);
+        htmlCompetencias = gerarFeedbackIAHTML({
+            competencias: servidor.competencias,
+            nota: servidor.nota,
+            comentario: servidor.feedback && servidor.feedback.comentario
+        });
+    } else if (servidor) {
+        // IA indisponível: o servidor aplicou as regras e já salvou
+        const r = servidor.feedback;
+        stats = r;
+        ({ htmlEstrutura, htmlCompetencias } = gerarFeedbackHTML(r, temaAtualRedacao, AVISO_REGRAS_SERVIDOR));
+    } else {
+        // Servidor fora do ar (ou usuário sem login): mostra a correção local
+        stats = local;
+        ({ htmlEstrutura, htmlCompetencias } = gerarFeedbackHTML(local, temaAtualRedacao));
+        if (usuario_id) {
             alert("Redação analisada, mas não foi possível salvar no histórico.");
         }
     }
+
+    document.getElementById("resultado-tema-titulo").textContent = temaAtualRedacao.titulo;
+    document.getElementById("stat-linhas").textContent = stats.linhas;
+    document.getElementById("stat-palavras").textContent = stats.palavras;
+    document.getElementById("stat-paragrafos").textContent = stats.paragrafos;
+    document.getElementById("feedback-estrutura").innerHTML = htmlEstrutura;
+    document.getElementById("feedback-competencias").innerHTML = htmlCompetencias;
+    document.getElementById("texto-final-redacao").textContent = texto;
 
     mostrarTela("redacao-resultado");
 }
@@ -1412,19 +1516,24 @@ function verRedacaoSalva(r) {
     document.getElementById("stat-palavras").textContent = r.palavras;
     document.getElementById("stat-paragrafos").textContent = r.paragrafos;
 
-    const comps = (r.feedback && r.feedback.competencias) ? r.feedback.competencias : null;
-    let htmlComp = `<h3>Nota salva: ${r.nota} / 1000</h3>`;
-    if (comps) {
-        htmlComp += `
-            <div class="competencias-grid">
-                <div class="comp-item"><span>C1</span><strong>${comps.c1}</strong></div>
-                <div class="comp-item"><span>C2</span><strong>${comps.c2}</strong></div>
-                <div class="comp-item"><span>C3</span><strong>${comps.c3}</strong></div>
-                <div class="comp-item"><span>C4</span><strong>${comps.c4}</strong></div>
-                <div class="comp-item"><span>C5</span><strong>${comps.c5}</strong></div>
-            </div>
-        `;
+    const fb = r.feedback || {};
+    const comps = fb.competencias || null;
+    let htmlComp;
+
+    if (fb.origem === "ia" && comps) {
+        htmlComp = gerarFeedbackIAHTML({
+            competencias: comps,
+            nota: r.nota,
+            comentario: fb.comentario
+        });
+    } else {
+        htmlComp = `<h3>Nota salva: ${r.nota} / 1000</h3>`;
+        if (comps) {
+            htmlComp += gerarGradeCompetenciasHTML(comps);
+        }
+        htmlComp += `<p class="aviso-nota">Correção automática por regras (sem IA). Serve como treino e não é a correção oficial do ENEM.</p>`;
     }
+
     document.getElementById("feedback-estrutura").innerHTML = `<h3>Redação salva</h3><p>ENEM ${r.tema_ano}</p>`;
     document.getElementById("feedback-competencias").innerHTML = htmlComp;
     document.getElementById("texto-final-redacao").textContent = r.texto;
@@ -1744,7 +1853,22 @@ async function deletarAdminItem(rotaSingularNome, id, tab) {
 
 // ===================== INICIALIZAÇÃO =====================
 
+// Contagem regressiva exibida na home (antes do login)
+function atualizarContagemHome() {
+    const numero = document.getElementById("home-dias-enem");
+    if (!numero) return;
+
+    const diaProva = new Date("2026-11-08T00:00:00");
+    const dias = Math.max(0, Math.ceil((diaProva - new Date()) / (1000 * 60 * 60 * 24)));
+
+    numero.textContent = dias;
+    if (dias === 0) {
+        document.getElementById("home-contagem-rotulo").textContent = "O ENEM 2026 chegou. Boa prova!";
+    }
+}
+
 window.onload = async () => {
     setupRotinaTabs();
     setupCalendar();
+    atualizarContagemHome();
 };

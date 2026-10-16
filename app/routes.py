@@ -279,8 +279,8 @@ def criar_redacao(
     if len(redacao.texto) > LIMITE_CARACTERES_REDACAO:
         raise HTTPException(status_code=400, detail="Redação muito longa")
 
-    # Correção por regras roda sempre: dá os números (linhas/palavras/parágrafos)
-    # e serve de fallback. O servidor não confia mais em nota/feedback do frontend.
+    # Regras rodam sempre: dão linhas/palavras/parágrafos e servem de fallback.
+    # O servidor não confia mais em nota/feedback vindos do navegador.
     regras = corrigir_redacao_regras(redacao.texto, redacao.tema_titulo)
 
     nota = regras["nota"]
@@ -331,6 +331,7 @@ def criar_redacao(
         "palavras": regras["palavras"],
         "paragrafos": regras["paragrafos"]
     }
+
 
 @router.get("/redacao/{usuario_id}")
 def listar_redacoes(

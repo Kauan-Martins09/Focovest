@@ -3,72 +3,154 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FocoVest</title>
+<title>FocoVest | Prepare-se para o ENEM</title>
+<meta name="description" content="Questões reais do ENEM, simulados cronometrados, redação com correção assistida por IA e calendário de estudos em um só lugar.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <!-- HOME -->
 <div id="home" class="tela ativa">
-    <div class="bola1"></div>
-    <div class="bola2"></div>
-    <img src="logo-focovest.png" alt="FocoVest" class="logo-topo" style="margin-bottom: 40px ;">
-    <div class="card-principal">
-        <h2>COMEÇA AQUI</h2>
-        <p>
-            O FocoVest reúne tudo que você precisa
-            para se preparar para o ENEM e vestibulares
-            em um só lugar.
-        </p>
-        <button onclick="abrirLogin()">
-            Começar Agora
-        </button>
-    </div>
-    <h2 class="titulo">
-        O que você encontra
-    </h2>
-    <div class="cards">
-        <div class="card">
-            <div class="icone"></div>
-            <div>
-                <h3>Datas de Provas</h3>
-                <p>
-                    Acompanhe as datas importantes
-                    do ENEM e vestibulares.
-                </p>
+    <div class="home-bola home-bola-lilas" aria-hidden="true"></div>
+    <div class="home-bola home-bola-verde" aria-hidden="true"></div>
+
+    <header class="home-nav">
+        <div class="home-container home-nav-interno">
+            <img src="logo-focovest.png" alt="FocoVest" class="home-logo">
+            <nav class="home-nav-links" aria-label="Seções da página">
+                <a href="#recursos">Recursos</a>
+                <a href="#como-funciona">Como funciona</a>
+            </nav>
+            <div class="home-nav-acoes">
+                <button class="btn-nav btn-nav-contorno" onclick="abrirLogin()">Entrar</button>
+                <button class="btn-nav btn-nav-cheio" onclick="abrirCadastro()">Criar conta</button>
             </div>
         </div>
-        <div class="card">
-            <div class="icone"></div>
-            <div>
-                <h3>Provas Anteriores</h3>
-                <p>
-                    Acesse e pratique com questões
-                    de anos anteriores.
+    </header>
+
+    <main>
+        <section class="home-hero">
+            <div class="home-container hero-grade">
+                <div class="hero-texto">
+                    <h1>Sua preparação para o ENEM, em um só lugar.</h1>
+                    <p>
+                        Treine com questões reais, faça simulados cronometrados,
+                        escreva redações com correção assistida por IA e organize
+                        seus estudos sem precisar pular de site em site.
+                    </p>
+                    <div class="hero-acoes">
+                        <button class="btn-hero btn-hero-principal" onclick="abrirCadastro()">Criar minha conta</button>
+                        <button class="btn-hero btn-hero-secundario" onclick="abrirLogin()">Já tenho conta</button>
+                    </div>
+                </div>
+
+                <div class="hero-visual">
+                    <div class="contagem-card">
+                        <p class="contagem-rotulo" id="home-contagem-rotulo">Faltam para o 1º dia do ENEM 2026</p>
+                        <p class="contagem-numero"><span id="home-dias-enem">--</span> <small>dias</small></p>
+                        <ul class="contagem-lista">
+                            <li>Mais de 2.700 questões reais (2009 a 2023)</li>
+                            <li>Simulado de 60 questões em 90 minutos</li>
+                            <li>Redação avaliada nas 5 competências</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="home-secao" id="recursos">
+            <div class="home-container">
+                <h2 class="home-titulo">Tudo o que você usa para estudar</h2>
+                <p class="home-subtitulo">Quatro ferramentas, uma conta, o seu progresso salvo.</p>
+                <div class="recursos-grade">
+                    <article class="recurso">
+                        <div class="recurso-icone recurso-verde">🎯</div>
+                        <h3>Praticar</h3>
+                        <p>Questões reais do ENEM separadas por área: Linguagens, Humanas, Natureza e Matemática.</p>
+                    </article>
+                    <article class="recurso">
+                        <div class="recurso-icone recurso-lilas">⏱️</div>
+                        <h3>Simulado</h3>
+                        <p>Prova completa com 60 questões das 4 áreas e cronômetro de 90 minutos. Sua nota fica salva para revisar depois.</p>
+                    </article>
+                    <article class="recurso">
+                        <div class="recurso-icone recurso-azul">✍️</div>
+                        <h3>Redação</h3>
+                        <p>Escolha um tema do ENEM, escreva e receba nota por competência com comentários de uma IA.</p>
+                    </article>
+                    <article class="recurso">
+                        <div class="recurso-icone recurso-lilas">🗓️</div>
+                        <h3>Minha Rotina</h3>
+                        <p>Calendário de compromissos e anotações de estudo ao alcance de um clique.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="home-secao home-secao-clara" id="como-funciona">
+            <div class="home-container">
+                <h2 class="home-titulo">Como funciona</h2>
+                <ol class="passos">
+                    <li>
+                        <span class="passo-numero">1</span>
+                        <h3>Crie sua conta</h3>
+                        <p>Cadastro rápido com e-mail e senha.</p>
+                    </li>
+                    <li>
+                        <span class="passo-numero">2</span>
+                        <h3>Escolha como estudar</h3>
+                        <p>Treine por área, faça um simulado ou escreva uma redação.</p>
+                    </li>
+                    <li>
+                        <span class="passo-numero">3</span>
+                        <h3>Acompanhe sua evolução</h3>
+                        <p>Histórico de provas e redações para ver onde melhorar.</p>
+                    </li>
+                </ol>
+                <p class="home-aviso">
+                    A correção de redação é assistida por IA e serve como treino.
+                    Ela não é a correção oficial do ENEM.
                 </p>
             </div>
-        </div>
-        <div class="card">
-            <div class="icone" style="background:#b7f0c6;"></div>
-            <div>
-                <h3>Inscrições</h3>
-                <p>
-                    Não perca os prazos dos
-                    principais exames.
-                </p>
+        </section>
+
+        <section class="home-container">
+            <div class="cta-final">
+                <h2>Comece a treinar hoje</h2>
+                <p>Crie sua conta e resolva a primeira questão agora. Cada treino conta.</p>
+                <button class="btn-hero btn-hero-escuro" onclick="abrirCadastro()">Criar minha conta</button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="rodape">
+        <div class="home-container rodape-grade">
+            <div class="rodape-marca">
+                <img src="logo-focovest.png" alt="FocoVest" class="rodape-logo">
+                <p>Plataforma de estudos para o ENEM e vestibulares.</p>
+            </div>
+            <div class="rodape-coluna">
+                <h4>Plataforma</h4>
+                <a href="#recursos">Recursos</a>
+                <a href="#como-funciona">Como funciona</a>
+                <a href="#" onclick="abrirLogin(); return false;">Entrar</a>
+                <a href="#" onclick="abrirCadastro(); return false;">Criar conta</a>
+            </div>
+            <div class="rodape-coluna">
+                <h4>Fontes e links</h4>
+                <a href="https://enem.inep.gov.br" target="_blank" rel="noopener noreferrer">Site oficial do ENEM (Inep)</a>
+                <a href="https://enem.dev" target="_blank" rel="noopener noreferrer">API de questões enem.dev</a>
+                <a href="https://github.com/Kauan-Martins09/Focovest" target="_blank" rel="noopener noreferrer">Código no GitHub</a>
             </div>
         </div>
-        <div class="card">
-            <div class="icone" style="background:#b7f0c6;"></div>
-            <div>
-                <h3>Conteúdos de Estudo</h3>
-                <p>
-                    Material organizado para
-                    otimizar sua preparação.
-                </p>
-            </div>
+        <div class="home-container rodape-base">
+            <p>© 2026 FocoVest. Projeto de TCC do Curso Técnico em Desenvolvimento de Sistemas.</p>
+            <p>Plataforma independente, sem vínculo com o Inep ou o MEC.</p>
         </div>
-    </div>
+    </footer>
 </div>
 
 <!-- CADASTRO -->
@@ -90,6 +172,7 @@
             Voltar ao Início
         </button>
     </div>
+    <p class="rodape-login">© 2026 FocoVest · Projeto de TCC</p>
 </div>
 
 <!-- LOGIN -->
@@ -109,6 +192,7 @@
             Criar nova conta
         </button>
     </div>
+    <p class="rodape-login">© 2026 FocoVest · Projeto de TCC</p>
 </div>
 
 <!-- PAINEL PRINCIPAL -->
@@ -177,6 +261,16 @@
             </div>
         </button>
     </div>
+    <footer class="rodape rodape-painel">
+        <div class="home-container rodape-base rodape-base-sem-linha">
+            <p>© 2026 FocoVest. Projeto de TCC do Curso Técnico em Desenvolvimento de Sistemas.</p>
+            <p>Questões do ENEM via enem.dev. Plataforma independente, sem vínculo com o Inep ou o MEC.</p>
+            <p class="rodape-links-linha">
+                <a href="https://enem.inep.gov.br" target="_blank" rel="noopener noreferrer">Site oficial do ENEM</a>
+                <a href="https://github.com/Kauan-Martins09/Focovest" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </p>
+        </div>
+    </footer>
 </div>
 
 <!-- TELA INTRODUÇÃO DA PROVA -->
@@ -207,6 +301,9 @@
             <p class="historico-vazio">Carregando histórico...</p>
         </div>
     </div>
+    <footer class="rodape-mini">
+        <p>© 2026 FocoVest · Projeto de TCC · Plataforma independente, sem vínculo com o Inep ou o MEC.</p>
+    </footer>
 </div>
 
 <!-- TELA INTRODUÇÃO REDAÇÃO -->
@@ -221,8 +318,8 @@
         <ul class="redacao-instrucoes">
             <li>Escolha um <strong>tema oficial</strong> (ou aleatório).</li>
             <li>Escreva um texto dissertativo-argumentativo de até <strong>30 linhas</strong>.</li>
-            <li>Ao finalizar, você recebe uma <strong>análise básica</strong> da estrutura e dicas das 5 competências.</li>
-            <li>Histórico de redações virá em breve.</li>
+            <li>Ao finalizar, você recebe a <strong>nota por competência (C1 a C5)</strong> e comentários de uma <strong>IA</strong>.</li>
+            <li>A correção é assistida por IA e <strong>não é a correção oficial do ENEM</strong>.</li>
         </ul>
         <button class="btn-tema-aleatorio" onclick="iniciarRedacaoAleatoria()">
             🎲 Tema aleatório
@@ -240,6 +337,9 @@
             <p class="historico-vazio">Carregando histórico...</p>
         </div>
     </div>
+    <footer class="rodape-mini">
+        <p>© 2026 FocoVest · Projeto de TCC · Plataforma independente, sem vínculo com o Inep ou o MEC.</p>
+    </footer>
 </div>
 
 <!-- TELA ESCRITA DA REDAÇÃO -->
@@ -273,7 +373,7 @@
             <textarea id="redacao-texto" placeholder="Escreva sua redação aqui...&#10;&#10;Comece pela introdução, apresentando o tema e sua tese."></textarea>
             <div class="redacao-acoes">
                 <button class="btn-secundario-redacao" onclick="sairDaRedacao()">Cancelar</button>
-                <button class="btn-finalizar-redacao" onclick="finalizarRedacao()">Finalizar redação</button>
+                <button class="btn-finalizar-redacao" id="btn-finalizar-redacao" onclick="finalizarRedacao()">Finalizar redação</button>
             </div>
         </div>
     </div>
@@ -315,6 +415,9 @@
 
         <button class="btn-finalizar-redacao" onclick="abrirRedacaoIntro()">Nova redação</button>
     </div>
+    <footer class="rodape-mini">
+        <p>© 2026 FocoVest · Projeto de TCC · Plataforma independente, sem vínculo com o Inep ou o MEC.</p>
+    </footer>
 </div>
 
 <!-- TELA MINHA ROTINA -->
@@ -372,6 +475,9 @@
             </div>
         </div>
     </div>
+    <footer class="rodape-mini">
+        <p>© 2026 FocoVest · Projeto de TCC · Plataforma independente, sem vínculo com o Inep ou o MEC.</p>
+    </footer>
 </div>
 
 <!-- TELA PRATICAR -->
@@ -403,6 +509,9 @@
             <p>Álgebra, geometria e suas tecnologias.</p>
         </button>
     </div>
+    <footer class="rodape-mini">
+        <p>© 2026 FocoVest · Projeto de TCC · Plataforma independente, sem vínculo com o Inep ou o MEC.</p>
+    </footer>
 </div>
 
 <!-- TELA TREINO (QUIZ) -->
@@ -477,6 +586,9 @@
     </div>
 
     <div class="admin-content" id="admin-content"></div>
+    <footer class="rodape-mini">
+        <p>© 2026 FocoVest · Projeto de TCC · Plataforma independente, sem vínculo com o Inep ou o MEC.</p>
+    </footer>
 </div>
 
 <script src="script.js"></script>
