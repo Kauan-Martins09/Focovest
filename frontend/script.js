@@ -1127,10 +1127,18 @@ function dividirParagrafos(texto) {
     return blocos;
 }
 
+const CARACTERES_POR_LINHA_ENEM = 75;
+
+// Estima quantas linhas manuscritas do ENEM o texto ocuparia (cada parágrafo começa recuado)
+function estimarLinhas(paragrafos) {
+    return paragrafos.reduce(
+        (total, p) => total + Math.max(1, Math.ceil((p.length + 6) / CARACTERES_POR_LINHA_ENEM)), 0);
+}
+
 function corrigirRedacao(texto, tema) {
-    const linhas = texto.split("\n").length;
     const palavras = texto.trim().split(/\s+/).filter(Boolean).length;
     const paragrafos = dividirParagrafos(texto);
+    const linhas = estimarLinhas(paragrafos);
     const numParagrafos = paragrafos.length;
     const textoLower = texto.toLowerCase();
 
@@ -1294,11 +1302,11 @@ function gerarEstruturaHTML({ paragrafos, linhas, palavras }) {
         htmlEstrutura += `<p>⚠️ Muitos parágrafos (${paragrafos}). Prefira 3 a 5 blocos claros.</p>`;
     }
     if (linhas > 30) {
-        htmlEstrutura += `<p style="color:#ef4444">Você passou de 30 linhas (${linhas}). No ENEM o excesso pode ser desconsiderado.</p>`;
+        htmlEstrutura += `<p style="color:#ef4444">Estimamos cerca de ${linhas} linhas, acima das 30 permitidas. No ENEM o excesso pode ser desconsiderado.</p>`;;
     } else if (linhas < 10) {
         htmlEstrutura += `<p>Texto curto (${linhas} linhas). Tente desenvolver mais os argumentos.</p>`;
     } else {
-        htmlEstrutura += `<p>${linhas} linhas · ${palavras} palavras.</p>`;
+        htmlEstrutura += `<p>Cerca de ${linhas} linhas (estimativa) · ${palavras} palavras.</p>`;;
     }
     return htmlEstrutura;
 }

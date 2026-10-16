@@ -21,11 +21,17 @@ def _dividir_paragrafos(texto: str) -> list:
         blocos.pop(0)
     return blocos
 
+CARACTERES_POR_LINHA_ENEM = 75
+
+
+def _estimar_linhas(paragrafos: list) -> int:
+    # Estima quantas linhas manuscritas do ENEM o texto ocuparia (cada parágrafo começa recuado)
+    return sum(max(1, math.ceil((len(p) + 6) / CARACTERES_POR_LINHA_ENEM)) for p in paragrafos)
 
 def corrigir_redacao_regras(texto: str, tema_titulo: str) -> dict:
-    linhas = len(texto.split("\n"))
     palavras = len(texto.strip().split())
     paragrafos = _dividir_paragrafos(texto)
+    linhas = _estimar_linhas(paragrafos)
     num_paragrafos = len(paragrafos)
     texto_lower = texto.lower()
 
