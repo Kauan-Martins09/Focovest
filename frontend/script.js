@@ -1117,10 +1117,20 @@ function sairDaRedacao() {
 
 // ===================== CORREÇÃO POR REGRAS (sem IA) =====================
 
+// Cada linha não vazia é um parágrafo (o aluno costuma separar só com Enter).
+// Uma primeira linha curta e sem pontuação final é tratada como título e não conta.
+function dividirParagrafos(texto) {
+    const blocos = texto.split(/\n+/).map(p => p.trim()).filter(Boolean);
+    if (blocos.length > 1 && blocos[0].length <= 120 && !/[.!?…]$/.test(blocos[0])) {
+        blocos.shift();
+    }
+    return blocos;
+}
+
 function corrigirRedacao(texto, tema) {
     const linhas = texto.split("\n").length;
     const palavras = texto.trim().split(/\s+/).filter(Boolean).length;
-    const paragrafos = texto.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+    const paragrafos = dividirParagrafos(texto);
     const numParagrafos = paragrafos.length;
     const textoLower = texto.toLowerCase();
 

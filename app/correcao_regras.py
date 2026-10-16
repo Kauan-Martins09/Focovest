@@ -13,10 +13,19 @@ def _sem_acentos(s):
     return re.sub(r"[\u0300-\u036f]", "", unicodedata.normalize("NFD", s))
 
 
+def _dividir_paragrafos(texto: str) -> list:
+    # Cada linha não vazia é um parágrafo (o aluno costuma separar só com Enter).
+    # Uma primeira linha curta e sem pontuação final é tratada como título e não conta.
+    blocos = [b.strip() for b in re.split(r"\n+", texto) if b.strip()]
+    if len(blocos) > 1 and len(blocos[0]) <= 120 and not re.search(r"[.!?…]$", blocos[0]):
+        blocos.pop(0)
+    return blocos
+
+
 def corrigir_redacao_regras(texto: str, tema_titulo: str) -> dict:
     linhas = len(texto.split("\n"))
     palavras = len(texto.strip().split())
-    paragrafos = [p for p in re.split(r"\n\s*\n", texto) if p.strip()]
+    paragrafos = _dividir_paragrafos(texto)
     num_paragrafos = len(paragrafos)
     texto_lower = texto.lower()
 

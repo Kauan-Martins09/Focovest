@@ -333,6 +333,7 @@ def criar_redacao(
     }
 
 
+
 @router.get("/redacao/{usuario_id}")
 def listar_redacoes(
     usuario_id: int,
