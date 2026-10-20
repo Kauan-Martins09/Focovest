@@ -1000,7 +1000,7 @@ const TEMAS_ENEM = [
     },
     {
         ano: 2021,
-        titulo: "Invisibilidade e cidadania: o desafio de reconhecer os direitos dos idosos no Brasil",
+        titulo: "Invisibilidade e registro civil: garantia de acesso à cidadania no Brasil",
         motivadores: [
             "O envelhecimento da população brasileira cresce rapidamente, mas os direitos dos idosos ainda são pouco efetivados no dia a dia.",
             "Violência, abandono e barreiras de acesso a serviços públicos são problemas recorrentes."
