@@ -1,3 +1,73 @@
+// ===================== CONFIGURAÇÃO E SEGURANÇA =====================
+
+const API_BASE_URL = "https://focovest-backend.onrender.com";
+const DATA_PRIMEIRO_DIA_ENEM = "2026-11-08T00:00:00-03:00";
+
+/**
+ * Escapa valores antes de inseri-los em HTML.
+ * Use esta função somente quando a montagem com innerHTML for necessária.
+ * Para texto simples, prefira textContent.
+ */
+function escaparHTML(texto) {
+    return String(texto ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+/**
+ * Aceita somente URLs HTTP/HTTPS.
+ * Impede valores como javascript:, data: e outros esquemas perigosos.
+ */
+function urlSegura(url) {
+    if (!url) return "";
+
+    try {
+        const urlAnalisada = new URL(url, window.location.origin);
+
+        if (!["https:", "http:"].includes(urlAnalisada.protocol) ) {
+            return "";
+        }
+
+        return urlAnalisada.href;
+    } catch {
+        return "";
+    }
+}
+
+/**
+ * Faz requisições para o backend de forma padronizada.
+ * O tratamento definitivo de autenticação ainda será complementado
+ * quando corrigirmos app/security.py e app/routes.py.
+ */
+
+async function apiFetch(caminho, opcoes = {}) {
+    const resposta = await fetch(`${API_BASE_URL}${caminho}`, {
+        ...opcoes,
+        headers: {
+            ...getHeaders(),
+            ...(opcoes.headers || {})
+        }
+    });
+
+    if (resposta.status === 401) {
+        sairConta();
+        throw new Error("Sessão expirada.");
+    }
+
+    return resposta;
+}
+
+/**
+ * Lê JSON sem quebrar caso o servidor devolva uma resposta vazia
+ * ou um corpo que não seja JSON válido.
+ */
+async function lerJSON(resposta) {
+    return resposta.json().catch(() => ({}));
+}
+
 // ===================== NAVEGAÇÃO =====================
 
 function mostrarTela(id){
@@ -58,30 +128,59 @@ function sairConta() {
 
 // ===================== CADASTRO E LOGIN =====================
 
-async function cadastrar(){
-    const email = document.getElementById("email_cad").value;
+async function cadastrar() {
+    const email = document.getElementById("email_cad").value.trim();
     const senha = document.getElementById("senha_cad").value;
-    const nome = document.getElementById("nome_cad").value;
-    const idade = Number(document.getElementById("idade_cad").value);
+    const nome = document.getElementById("nome_cad").value.trim();
 
-    const dados = { email, senha, nome, idade };
+    const idadeValor = document.getElementById("idade_cad").value.trim();
+    const idade = Number(idadeValor);
 
-    const resposta = await fetch("https://focovest-backend.onrender.com/cadastro", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dados)
-    });
+    if (
+        !email ||
+        !senha ||
+        !nome ||
+        !idadeValor ||
+        !Number.isInteger(idade) ||
+        idade < 10 ||
+        idade > 100
+    ) {
+        alert("Preencha todos os campos corretamente.");
+        return;
+    }
 
-    const json = await resposta.json();
+    const dados = {
+        email,
+        senha,
+        nome,
+        idade
+    };
 
-    if (json.success) {
-        alert(json.msg);          // "Usuário cadastrado com sucesso"
+    try {
+        const resposta = await apiFetch("/cadastro", {
+            method: "POST",
+            body: JSON.stringify(dados)
+        });
+
+        const json = await lerJSON(resposta);
+
+        if (!resposta.ok) {
+            alert(
+                json.detail ||
+                json.msg ||
+                "Não foi possível criar a conta."
+            );
+            return;
+        }
+
+        alert(json.msg || "Conta criada com sucesso.");
         abrirLogin();
-    } else {
-        alert(json.msg);          // "E-mail já cadastrado"
-        abrirLogin();             // redireciona para o login mesmo assim
+    } catch (error) {
+        console.error("Erro ao cadastrar:", error);
+        alert("Não foi possível conectar ao servidor.");
     }
 }
+
 
 async function entrar(){
     const email = document.getElementById("email_log").value;
@@ -193,21 +292,36 @@ function renderCalendar() {
 // ===================== COMPROMISSO =====================
 
 async function carregarCompromissos() {
-    const usuario_id = localStorage.getItem("usuario_id");
-    if (!usuario_id) return;
+    const usuarioId = localStorage.getItem("usuario_id");
+
+    if (!usuarioId) return;
 
     try {
-        const resposta = await fetch(
-            `https://focovest-backend.onrender.com/compromisso/${usuario_id}`,
-            { headers: getHeaders() }
-        );
-        const json = await resposta.json();
+        const resposta = await apiFetch(`/compromisso/${usuarioId}`);
+
+        if (!resposta.ok) {
+            throw new Error(`Erro HTTP ${resposta.status}`);
+        }
+
+        const dados = await lerJSON(resposta);
+
+        if (!Array.isArray(dados)) {
+            throw new Error("Resposta inválida ao carregar compromissos.");
+        }
 
         compromissos = {};
-        json.forEach(c => {
-            const dataFormatada = c.data; // backend já retorna "AAAA-MM-DD"
-            if (!compromissos[dataFormatada]) compromissos[dataFormatada] = [];
-            compromissos[dataFormatada].push({ id: c.id, titulo: c.descricao });
+
+        dados.forEach(compromisso => {
+            const dataFormatada = compromisso.data;
+
+            if (!compromissos[dataFormatada]) {
+                compromissos[dataFormatada] = [];
+            }
+
+            compromissos[dataFormatada].push({
+                id: compromisso.id,
+                titulo: compromisso.descricao
+            });
         });
 
         atualizarCompromissos();
@@ -216,51 +330,91 @@ async function carregarCompromissos() {
     }
 }
 
+
 function atualizarCompromissos() {
     const dataFormatada = formatarData(selectedDate);
-    const tarefasList = document.querySelector('.tarefas-list');
-    tarefasList.innerHTML = '';
-    
-    if (compromissos[dataFormatada]) {
-        compromissos[dataFormatada].forEach(t => {
-            const div = document.createElement('div');
-            div.className = 'tarefa-item';
-            div.innerHTML = `
-                <span>${t.titulo}</span>
-                <button class="btn-deletar-tarefa" onclick="deletarCompromisso(${t.id})">×</button>
-            `;
-            tarefasList.appendChild(div);
-        });
-    } else {
-        tarefasList.innerHTML = '<p style="color: #999; text-align: center; margin-top: 20px;">Nenhum compromisso</p>';
+    const tarefasList = document.querySelector(".tarefas-list");
+
+    if (!tarefasList) return;
+
+    tarefasList.replaceChildren();
+
+    const compromissosDoDia = compromissos[dataFormatada] || [];
+
+    if (compromissosDoDia.length === 0) {
+        const vazio = document.createElement("p");
+        vazio.className = "lista-vazia";
+        vazio.textContent = "Nenhum compromisso";
+        tarefasList.appendChild(vazio);
+        return;
     }
+
+    compromissosDoDia.forEach(compromisso => {
+        const div = document.createElement("div");
+        div.className = "tarefa-item";
+
+        const texto = document.createElement("span");
+        texto.textContent = compromisso.titulo;
+
+        const botao = document.createElement("button");
+        botao.type = "button";
+        botao.className = "btn-deletar-tarefa";
+        botao.setAttribute("aria-label", "Excluir compromisso");
+        botao.title = "Excluir compromisso";
+        botao.textContent = "×";
+
+        botao.addEventListener("click", () => {
+            deletarCompromisso(compromisso.id);
+        });
+
+        div.append(texto, botao);
+        tarefasList.appendChild(div);
+    });
 }
 
-async function adicionarCompromisso() {
-    const input = document.querySelector('.add-tarefa input');
-    const titulo = input.value.trim();
-    if (!titulo) return;
 
-    const usuario_id = Number(localStorage.getItem("usuario_id"));
-    const dataFormatada = formatarData(selectedDate);
+async function adicionarCompromisso() {
+    const input = document.querySelector(".add-tarefa input");
+
+    if (!input) return;
+
+    const titulo = input.value.trim();
+    const usuarioId = Number(localStorage.getItem("usuario_id"));
+
+    if (!titulo) {
+        alert("Digite uma descrição para o compromisso.");
+        return;
+    }
+
+    if (!usuarioId) {
+        alert("Sua sessão expirou. Faça login novamente.");
+        return;
+    }
 
     const dados = {
-        usuario_id: usuario_id,
-        data: dataFormatada,
+        usuario_id: usuarioId,
+        data: formatarData(selectedDate),
         descricao: titulo
     };
 
     try {
-        const resposta = await fetch("https://focovest-backend.onrender.com/compromisso", {
+        const resposta = await apiFetch("/compromisso", {
             method: "POST",
-            headers: getHeaders(),
             body: JSON.stringify(dados)
         });
 
-        const json = await resposta.json();
-        console.log(json);
+        const json = await lerJSON(resposta);
 
-        input.value = '';
+        if (!resposta.ok) {
+            alert(
+                json.detail ||
+                json.msg ||
+                "Não foi possível salvar o compromisso."
+            );
+            return;
+        }
+
+        input.value = "";
         await carregarCompromissos();
     } catch (error) {
         console.error("Erro ao salvar compromisso:", error);
@@ -268,40 +422,57 @@ async function adicionarCompromisso() {
     }
 }
 
+
 async function deletarCompromisso(id) {
-    if (!confirm("Tem certeza que deseja excluir este compromisso?")) return;
+    if (!confirm("Tem certeza que deseja excluir este compromisso?")) {
+        return;
+    }
 
     try {
-        const resposta = await fetch(`https://focovest-backend.onrender.com/compromisso/${id}`, {
-            method: "DELETE",
-            headers: getHeaders()
+        const resposta = await apiFetch(`/compromisso/${id}`, {
+            method: "DELETE"
         });
 
-        if (resposta.ok) {
-            await carregarCompromissos();
-        } else {
-            alert("Erro ao excluir o compromisso no servidor.");
+        const json = await lerJSON(resposta);
+
+        if (!resposta.ok) {
+            alert(
+                json.detail ||
+                json.msg ||
+                "Erro ao excluir o compromisso."
+            );
+            return;
         }
+
+        await carregarCompromissos();
     } catch (error) {
-        console.error("Erro na requisição:", error);
+        console.error("Erro ao excluir compromisso:", error);
         alert("Não foi possível conectar ao servidor.");
     }
 }
 
+
 function setupCalendar() {
-    document.getElementById('prev-month').onclick = () => {
+    document.getElementById("prev-month").onclick = () => {
+        currentDate.setDate(1);
         currentDate.setMonth(currentDate.getMonth() - 1);
+
         renderCalendar();
     };
-    document.getElementById('next-month').onclick = () => {
+
+    document.getElementById("next-month").onclick = () => {
+        currentDate.setDate(1);
         currentDate.setMonth(currentDate.getMonth() + 1);
+
         renderCalendar();
     };
-    document.querySelector('.btn-add').onclick = adicionarCompromisso;
-    
+
+    document.querySelector(".btn-add").onclick = adicionarCompromisso;
+
     renderCalendar();
     carregarCompromissos();
 }
+
 
 
 // ===================== ANOTAÇÕES =====================
@@ -309,64 +480,135 @@ function setupCalendar() {
 let anotacoes = [];
 
 async function salvarAnotacao() {
-    const titulo = document.getElementById('anotacao-titulo').value.trim();
-    const texto = document.getElementById('anotacao-texto').value.trim();
-    const usuario_id = Number(localStorage.getItem("usuario_id"));
-    
-    if (!titulo || !texto) { alert("Preencha tudo!"); return; }
+    const tituloInput = document.getElementById("anotacao-titulo");
+    const textoInput = document.getElementById("anotacao-texto");
 
-    const dados = {
-        usuario_id: usuario_id,
-        titulo: titulo,
-        conteudo: texto
+    const titulo = tituloInput.value.trim();
+    const texto = textoInput.value.trim();
+    const usuarioId = Number(localStorage.getItem("usuario_id"));
+
+    if (!titulo || !texto) {
+        alert("Preencha o título e o conteúdo da anotação.");
+        return;
     }
 
-    const resposta = await fetch("https://focovest-backend.onrender.com/anotacao", {
-        method: "POST",
-        headers: getHeaders(),
-        body: JSON.stringify(dados)
-    });
+    if (!usuarioId) {
+        alert("Sua sessão expirou. Faça login novamente.");
+        return;
+    }
 
-    const json = await resposta.json();
-    console.log(json);
+    const dados = {
+        usuario_id: usuarioId,
+        titulo,
+        conteudo: texto
+    };
 
-    document.getElementById('anotacao-titulo').value = '';
-    document.getElementById('anotacao-texto').value = '';
+    try {
+        const resposta = await apiFetch("/anotacao", {
+            method: "POST",
+            body: JSON.stringify(dados)
+        });
 
-    await carregarAnotacoes();
+        const json = await lerJSON(resposta);
+
+        if (!resposta.ok) {
+            alert(json.detail || json.msg || "Não foi possível salvar a anotação.");
+            return;
+        }
+
+        tituloInput.value = "";
+        textoInput.value = "";
+
+        await carregarAnotacoes();
+    } catch (error) {
+        console.error("Erro ao salvar anotação:", error);
+        alert("Não foi possível conectar ao servidor.");
+    }
 }
 
 async function carregarAnotacoes() {
-    const usuario_id = localStorage.getItem("usuario_id");
+    const usuarioId = localStorage.getItem("usuario_id");
 
-    console.log("Carregando anotações do usuário:", usuario_id)
+    if (!usuarioId) return;
 
-    const resposta = await fetch(
-        `https://focovest-backend.onrender.com/anotacao/${usuario_id}`,
-        { headers: getHeaders() }
-    );
+    try {
+        const resposta = await apiFetch(`/anotacao/${usuarioId}`);
 
-    const json = await resposta.json();
+        if (!resposta.ok) {
+            throw new Error(`Erro HTTP ${resposta.status}`);
+        }
 
-    anotacoes = json.map(a => ({
-        id: a.id,
-        titulo: a.titulo,
-        texto: a.conteudo
-    }))
+        const dados = await lerJSON(resposta);
 
-    renderAnotacoes();
+        if (!Array.isArray(dados)) {
+            throw new Error("Resposta inválida ao carregar anotações.");
+        }
+
+        anotacoes = dados.map(anotacao => ({
+            id: anotacao.id,
+            titulo: anotacao.titulo,
+            texto: anotacao.conteudo
+        }));
+
+        renderAnotacoes();
+    } catch (error) {
+        console.error("Erro ao carregar anotações:", error);
+    }
 }
 
 function renderAnotacoes() {
-    const lista = document.getElementById('lista-anotacoes');
-    
-    lista.innerHTML = anotacoes.map(a => `
-        <div class="anotacao-card" onclick="abrirAnotacao(${a.id})" style="cursor: pointer;">
-            <h4>${a.titulo}</h4>
-            <p>${a.texto}</p>
-            <button class="btn-deletar" onclick="deletarAnotacao(event, ${a.id})">×</button>
-        </div>
-    `).join('');
+    const lista = document.getElementById("lista-anotacoes");
+
+    if (!lista) return;
+
+    lista.replaceChildren();
+
+    if (anotacoes.length === 0) {
+        const vazio = document.createElement("p");
+        vazio.className = "lista-vazia";
+        vazio.textContent = "Nenhuma anotação salva.";
+        lista.appendChild(vazio);
+        return;
+    }
+
+    anotacoes.forEach(anotacao => {
+        const card = document.createElement("div");
+        card.className = "anotacao-card";
+        card.tabIndex = 0;
+        card.setAttribute("role", "button");
+        card.setAttribute("aria-label", `Abrir anotação ${anotacao.titulo}`);
+
+        const titulo = document.createElement("h4");
+        titulo.textContent = anotacao.titulo;
+
+        const texto = document.createElement("p");
+        texto.textContent = anotacao.texto;
+
+        const botao = document.createElement("button");
+        botao.type = "button";
+        botao.className = "btn-deletar";
+        botao.setAttribute("aria-label", `Excluir anotação ${anotacao.titulo}`);
+        botao.title = "Excluir anotação";
+        botao.textContent = "×";
+
+        card.addEventListener("click", () => {
+            abrirAnotacao(anotacao.id);
+        });
+
+        card.addEventListener("keydown", event => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                abrirAnotacao(anotacao.id);
+            }
+        });
+
+        botao.addEventListener("click", event => {
+            deletarAnotacao(event, anotacao.id);
+        });
+
+        card.append(titulo, texto, botao);
+        lista.appendChild(card);
+    });
 }
 
 async function deletarAnotacao(event, id) {
@@ -1278,15 +1520,6 @@ function corrigirRedacao(texto, tema) {
     };
 }
 
-function escaparHTML(texto) {
-    return String(texto ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-}
-
 const ROTULOS_COMPETENCIAS = {
     c1: "C1 · Norma culta",
     c2: "C2 · Tema",
@@ -1879,7 +2112,7 @@ function atualizarContagemHome() {
     const numero = document.getElementById("home-dias-enem");
     if (!numero) return;
 
-    const diaProva = new Date("2026-11-08T00:00:00");
+    const diaProva = new Date(DATA_PRIMEIRO_DIA_ENEM);
     const dias = Math.max(0, Math.ceil((diaProva - new Date()) / (1000 * 60 * 60 * 24)));
 
     numero.textContent = dias;
