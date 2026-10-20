@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from .db import SessionLocal
@@ -37,8 +37,13 @@ def get_db():
 @router.post("/cadastro")
 def cadastro(user: UserCreate, db: Session = Depends(get_db)):
     usuario = db.query(User).filter(User.email == user.email).first()
-    if  usuario:
-        return{"msg": "Usuário ja cadastrado"}
+
+    if usuario:
+        return {
+            "success": False,
+            "msg": "E-mail já cadastrado",
+            "redirect": "login"          # opcional, mas ajuda o frontend
+        }
     
     senha_hash = hash_senha(user.senha)
 
@@ -58,11 +63,12 @@ def cadastro(user: UserCreate, db: Session = Depends(get_db)):
 @router.post("/login")
 def login(user: UserLog, db: Session = Depends(get_db)):
     usuario = db.query(User).filter(User.email == user.email).first()
-    if not usuario:
-        return {"msg": "usário não encontrado"}
     
-    if not verificar_senha(user.senha, usuario.senha):
-        return{"msg": "Senha incorreta"}
+    if not usuario or not verificar_senha(user.senha, usuario.senha):
+        return {
+            "success": False,
+            "msg": "E-mail ou senha incorretos"
+        }
 
     token = criar_token({
         "usuario_id": usuario.id,
@@ -75,7 +81,7 @@ def login(user: UserLog, db: Session = Depends(get_db)):
         "usuario_id": usuario.id,
         "nome": usuario.nome,
         "is_admin": usuario.is_admin
-            }
+    }
 
 @router.post("/anotacao")
 def criar_anotacao(

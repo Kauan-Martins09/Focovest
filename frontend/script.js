@@ -73,8 +73,14 @@ async function cadastrar(){
     });
 
     const json = await resposta.json();
-    alert(json.msg);
-    abrirLogin();
+
+    if (json.success) {
+        alert(json.msg);          // "Usuário cadastrado com sucesso"
+        abrirLogin();
+    } else {
+        alert(json.msg);          // "E-mail já cadastrado"
+        abrirLogin();             // redireciona para o login mesmo assim
+    }
 }
 
 async function entrar(){
@@ -90,23 +96,20 @@ async function entrar(){
     });
 
     const json = await resposta.json();
-    console.log(json);
 
-    if(json.success){
+    if (json.success) {
+        localStorage.setItem("usuario_id", json.usuario_id);
+        localStorage.setItem("nome", json.nome);
+        localStorage.setItem("is_admin", json.is_admin);
+        localStorage.setItem("token", json.token);
 
-    localStorage.setItem("usuario_id", json.usuario_id);
-    localStorage.setItem("nome", json.nome);
-    localStorage.setItem("is_admin", json.is_admin);
-    localStorage.setItem("token", json.token);
+        await carregarAnotacoes();
+        await carregarCompromissos();
 
-    await carregarAnotacoes();
-    await carregarCompromissos();
-
-    abrirPainel();
-
+        abrirPainel();
     } else {
-            alert(json.msg);
-        }
+        alert(json.msg);   // "E-mail ou senha incorretos"
+    }
 }
 
 // ===================== MINHA ROTINA (TABS) =====================
