@@ -77,12 +77,33 @@ function mostrarTela(id){
     document.getElementById(id).classList.add("ativa");
 }
 
-function abrirCadastro(){ mostrarTela("cadastro"); }
-function abrirLogin(){ mostrarTela("login"); }
-function abrirHome(){ mostrarTela("home"); }
-function voltarHome(){ mostrarTela("home"); }
-function abrirPainel() { mostrarTela("painel"); atualizarPainel() }
-function abrirMinhaRotina() { mostrarTela("minha-rotina"); }
+function abrirCadastro(){ 
+    limparCamposAuth();
+    mostrarTela("cadastro");
+}
+
+function abrirLogin(){ 
+    limparCamposAuth();
+    mostrarTela("login"); 
+}
+
+function abrirHome(){
+    mostrarTela("home"); 
+}
+
+function voltarHome(){ 
+    limparCamposAuth();
+    mostrarTela("home"); 
+}
+
+function abrirPainel() { 
+    mostrarTela("painel"); atualizarPainel() 
+}
+
+function abrirMinhaRotina() { 
+    mostrarTela("minha-rotina"); 
+}
+
 function atualizarPainel() {
     const nome = localStorage.getItem("nome") || "Estudante";
     const primeiroNome = nome.split(" ")[0];
@@ -104,6 +125,27 @@ function atualizarPainel() {
     const diasRestantes = Math.max(0, Math.ceil((diaProva - hoje) / (1000 * 60 * 60 * 24)));
 
     document.getElementById("dias-para-enem").textContent = diasRestantes;
+}
+
+function limparCamposAuth() {
+    // Cadastro
+    const emailCad = document.getElementById("email_cad")
+    const senhaCad = document.getElementById("senha_cad")
+    const nomeCad = document.getElementById("nome_cad")
+    const idadeCad = document.getElementById("idade_cad")
+
+    if (emailCad) emailCad.value = "";
+    if (senhaCad) senhaCad.value = "";
+    if (nomeCad) idadeCad.value = "";
+    if (idadeCad) idadeCad.value = "";
+
+    // Login
+    const emailLog = document.getElementById("email_log")
+    const senhaLog = documente.getElementById("senha_cad")
+
+    if (emailLog) emailLog.value = "";
+    if (senhaLog) senhaLog.value = "";
+
 }
 
 function togglePerfilMenu() {
@@ -174,6 +216,7 @@ async function cadastrar() {
         }
 
         alert(json.msg || "Conta criada com sucesso.");
+        limparCamposAuth();
         abrirLogin();
     } catch (error) {
         console.error("Erro ao cadastrar:", error);
@@ -201,6 +244,8 @@ async function entrar(){
         localStorage.setItem("nome", json.nome);
         localStorage.setItem("is_admin", json.is_admin);
         localStorage.setItem("token", json.token);
+
+        limparCamposAuth();
 
         await carregarAnotacoes();
         await carregarCompromissos();
