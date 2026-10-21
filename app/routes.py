@@ -403,6 +403,8 @@ def admin_deletar_usuario(
     db.query(Resultado).filter(Resultado.usuario_id == id).delete()
     db.query(Redacao).filter(Redacao.usuario_id == id).delete()
 
+    db.query(AdminLog).filter(AdminLog.admin_id == id).delete()
+
     db.delete(usuario_alvo)
     db.commit()
     return {"msg": "Usuário e todos os seus dados foram excluídos"}
