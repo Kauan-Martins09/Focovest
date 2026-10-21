@@ -136,12 +136,12 @@ function limparCamposAuth() {
 
     if (emailCad) emailCad.value = "";
     if (senhaCad) senhaCad.value = "";
-    if (nomeCad) idadeCad.value = "";
+    if (nomeCad) nomeCad.value = "";
     if (idadeCad) idadeCad.value = "";
 
     // Login
     const emailLog = document.getElementById("email_log")
-    const senhaLog = documente.getElementById("senha_cad")
+    const senhaLog = document.getElementById("senha_cad")
 
     if (emailLog) emailLog.value = "";
     if (senhaLog) senhaLog.value = "";
