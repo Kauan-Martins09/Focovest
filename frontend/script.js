@@ -1982,16 +1982,16 @@ function formatarCelula(key, valor) {
     }
     if (key === "data") {
         try {
-            return new Date(valor).toLocaleString("pt-BR");
+            return escaparHTML(new Date(valor).toLocaleString("pt-BR"));
         } catch {
-            return String(valor);
+            return escaparHTML(String(valor));
         }
     }
     if (key === "conteudo" || key === "tema_titulo" || key === "descricao") {
         const t = String(valor);
-        return t.length > 80 ? t.slice(0, 80) + "…" : t;
+        return escaparHTML(t.length > 80 ? t.slice(0, 80) + "…" : t);
     }
-    return String(valor);
+    return escaparHTML(String(valor));
 }
 
 function renderAdminTabela(dados) {
