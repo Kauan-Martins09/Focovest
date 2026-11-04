@@ -4,10 +4,9 @@ import time
 
 import httpx
 
-BAI_API_KEY = os.getenv("BAI_API_KEY") or os.getenv("GEMINI_API_KEY")  # aceita os dois nomes
-BAI_MODEL = os.getenv("BAI_MODEL", "gemini-3.5-flash-lite")
-BASE_URL = "https://api.b.ai/v1"
-URL = f"{BASE_URL}/chat/completions"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+URL = "https://api.groq.com/openai/v1/chat/completions"
 
 COMPETENCIAS = ("c1", "c2", "c3", "c4", "c5")
 
@@ -62,11 +61,11 @@ class GeminiError(Exception):
     pass
 
 def corrigir_redacao_gemini(tema: str, texto: str) -> dict:
-    if not BAI_API_KEY:
-        raise GeminiError("BAI_API_KEY (ou GEMINI_API_KEY) não configurada")
+    if not GROQ_API_KEY:
+        raise GeminiError("GROQ_API_KEY não configurada")
 
     body = {
-        "model": BAI_MODEL,
+        "model": GROQ_MODEL,
         "messages": [
             {"role": "system", "content": SYSTEM},
             {
@@ -76,11 +75,11 @@ def corrigir_redacao_gemini(tema: str, texto: str) -> dict:
         ],
         "temperature": 0.2,
         "max_tokens": 4096,
-        "response_format": {"type": "json_object"},  # ajuda a forçar JSON
+        "response_format": {"type": "json_object"},
     }
 
     headers = {
-        "Authorization": f"Bearer {BAI_API_KEY}",
+        "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json",
     }
 
@@ -91,12 +90,14 @@ def corrigir_redacao_gemini(tema: str, texto: str) -> dict:
             r.raise_for_status()
             data = r.json()
             content = data["choices"][0]["message"]["content"]
-            # Remove possíveis ```json se o modelo colocar
+
+            # limpa possível markdown
             content = content.strip()
             if content.startswith("```"):
                 content = content.split("\n", 1)[-1]
                 if content.endswith("```"):
                     content = content.rsplit("```", 1)[0]
+
             raw = json.loads(content)
             break
         except (httpx.HTTPError, KeyError, IndexError, json.JSONDecodeError) as e:
@@ -110,7 +111,6 @@ def corrigir_redacao_gemini(tema: str, texto: str) -> dict:
             v = int(raw[c])
         except (KeyError, TypeError, ValueError) as e:
             raise GeminiError(f"nota inválida em {c}") from e
-        # força múltiplo de 40
         notas[c] = int(max(0, min(200, v)) / 40 + 0.5) * 40
 
     partes = [
