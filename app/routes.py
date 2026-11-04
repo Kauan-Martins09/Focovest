@@ -308,8 +308,9 @@ def criar_redacao(
             "comentario": r["feedback"]
         }
         origem = "ia"
-    except GeminiError:
-        pass  # fica com o resultado das regras
+    except GeminiError as erro:
+        print(f"ERRO NO GEMINI: {erro}")
+    pass  # fica com o resultado das regras
 
     nova = Redacao(
         usuario_id=usuario["usuario_id"],
