@@ -151,13 +151,37 @@ function restaurarSessao() {
     const token = localStorage.getItem("token");
     const usuarioId = localStorage.getItem("usuario_id");
 
-    // Se não houver sessão salva, permanece na página inicial.
     if (!token || !usuarioId) {
+        localStorage.removeItem("focovest_tela_atual");
         return;
     }
 
-    const telaSalva =
-        localStorage.getItem(CHAVE_TELA_ATUAL) || "painel";
+    let telaSalva =
+        localStorage.getItem("focovest_tela_atual") ||
+        window.location.hash.replace(/^#/, "") ||
+        "painel";
+
+    // Não retoma atividades no meio da execução.
+    if (
+        ["treino", "prova", "redacao", "redacao-resultado"]
+            .includes(telaSalva)
+    ) {
+        if (telaSalva === "treino") {
+            telaSalva = "praticar";
+        } else if (telaSalva === "prova") {
+            telaSalva = "prova-intro";
+        } else {
+            telaSalva = "redacao-intro";
+        }
+    }
+
+    // Usuário comum não pode restaurar o painel administrativo.
+    if (
+        telaSalva === "admin" &&
+        localStorage.getItem("is_admin") !== "true"
+    ) {
+        telaSalva = "painel";
+    }
 
     switch (telaSalva) {
         case "minha-rotina":
@@ -177,18 +201,16 @@ function restaurarSessao() {
             break;
 
         case "admin":
-            if (localStorage.getItem("is_admin") === "true") {
-                abrirAdmin();
-            } else {
-                abrirPainel();
-            }
+            abrirAdmin();
             break;
 
+        case "painel":
         default:
             abrirPainel();
             break;
     }
 }
+
 
 
 
@@ -357,10 +379,10 @@ async function entrar(){
 
     const json = await resposta.json();
 
-    if (json.success) {
+        if (json.success) {
         localStorage.setItem("usuario_id", json.usuario_id);
         localStorage.setItem("nome", json.nome);
-        localStorage.setItem("is_admin", json.is_admin);
+        localStorage.setItem("is_admin", String(json.is_admin));
         localStorage.setItem("token", json.token);
 
         limparCamposAuth();
@@ -369,6 +391,8 @@ async function entrar(){
         await carregarCompromissos();
 
         abrirPainel();
+
+
     } else {
         alert(json.msg);   // "E-mail ou senha incorretos"
     }
@@ -2305,13 +2329,19 @@ function iniciarAnimacoesHome() {
 }
 
 window.onload = async () => {
-    inicializarHistoricoDoNavegador();
-
-    setupRotinaTabs();
-    setupCalendar();
-    atualizarContagemHome();
-    iniciarAnimacoesHome();
-
+    // Deve ser executado primeiro.
     restaurarSessao();
-};
 
+    try {
+        inicializarHistoricoDoNavegador();
+        setupRotinaTabs();
+        setupCalendar();
+        atualizarContagemHome();
+        iniciarAnimacoesHome();
+    } catch (error) {
+        console.error(
+            "Erro ao inicializar componentes da página:",
+            error
+        );
+    }
+};
