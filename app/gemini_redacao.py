@@ -1,12 +1,27 @@
 import json
+import logging
 import os
+import re
 import time
 
 import httpx
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
-URL = "https://api.groq.com/openai/v1/chat/completions"
+log = logging.getLogger("focovest.ia")
+
+# Configuração por variáveis de ambiente (Render). B.AI, endpoint OpenAI Chat Completions
+# (https://docs.b.ai/llmservice/api/).
+#   BAI_API_KEY           chave da B.AI (obrigatória)
+#   BAI_MODEL             ID do modelo (obrigatório; copie de GET /v1/models)
+#   BAI_BASE_URL          opcional, padrão https://api.b.ai/v1
+#   BAI_TEMPERATURE       opcional; só é enviada se definida
+#   BAI_REASONING_EFFORT  opcional (low/medium/high); só é enviada se definida
+#   BAI_JSON_MODE         "1" (padrão) envia response_format=json_object; "0" desliga
+BAI_API_KEY = os.getenv("BAI_API_KEY")
+BAI_MODEL = os.getenv("BAI_MODEL")
+BAI_BASE_URL = (os.getenv("BAI_BASE_URL") or "https://api.b.ai/v1").rstrip("/")
+BAI_TEMPERATURE = os.getenv("BAI_TEMPERATURE")
+BAI_REASONING_EFFORT = os.getenv("BAI_REASONING_EFFORT")
+BAI_JSON_MODE = os.getenv("BAI_JSON_MODE", "1") == "1"
 
 COMPETENCIAS = ("c1", "c2", "c3", "c4", "c5")
 
@@ -60,12 +75,72 @@ Responda APENAS com um JSON válido no seguinte formato (sem markdown, sem ```):
 class GeminiError(Exception):
     pass
 
+
+RETRY_STATUS = {429, 500, 502, 503, 504}
+
+
+def _extrair_json(content: str) -> dict:
+    content = (content or "").strip()
+    if content.startswith("```"):
+        content = re.sub(r"^```[a-zA-Z]*\s*", "", content)
+        content = re.sub(r"\s*```$", "", content)
+    ini, fim = content.find("{"), content.rfind("}")
+    if ini == -1 or fim <= ini:
+        raise ValueError("resposta sem JSON")
+    return json.loads(content[ini:fim + 1])
+
+
+def _validar(raw) -> tuple:
+    if not isinstance(raw, dict):
+        raise ValueError("resposta não é um objeto JSON")
+    notas = {}
+    for c in COMPETENCIAS:
+        try:
+            v = int(float(raw[c]))
+        except (KeyError, TypeError, ValueError) as e:
+            raise ValueError(f"nota inválida em {c}") from e
+        notas[c] = int(max(0, min(200, v)) / 40 + 0.5) * 40
+    return raw, notas
+
+
+def _chamar(body: dict, headers: dict) -> tuple:
+    ultimo = None
+    for tentativa in range(2):
+        try:
+            r = httpx.post(URL, json=body, headers=headers, timeout=30)
+            if r.status_code in RETRY_STATUS and tentativa == 0:
+                try:
+                    espera = float(r.headers.get("retry-after", 2))
+                except ValueError:
+                    espera = 2
+                time.sleep(min(espera, 8))
+                continue
+            r.raise_for_status()
+            choice = r.json()["choices"][0]
+            if choice.get("finish_reason") == "length":
+                raise ValueError("resposta truncada (max_tokens)")
+            content = (choice.get("message") or {}).get("content")
+            return _validar(_extrair_json(content))
+        except httpx.HTTPStatusError as e:
+            # 4xx (chave, modelo, parâmetro inválido) não melhora com nova tentativa
+            raise GeminiError(f"HTTP {e.response.status_code}: {e.response.text[:300]}") from e
+        except (httpx.HTTPError, KeyError, IndexError, ValueError) as e:
+            ultimo = e
+            if tentativa == 0:
+                time.sleep(1)
+    raise GeminiError(str(ultimo))
+
+
+URL = f"{BAI_BASE_URL}/chat/completions"
+
+
 def corrigir_redacao_gemini(tema: str, texto: str) -> dict:
-    if not GROQ_API_KEY:
-        raise GeminiError("GROQ_API_KEY não configurada")
+    if not (BAI_API_KEY and BAI_MODEL):
+        log.error("IA não configurada: defina BAI_API_KEY e BAI_MODEL")
+        raise GeminiError("IA não configurada")
 
     body = {
-        "model": GROQ_MODEL,
+        "model": BAI_MODEL,
         "messages": [
             {"role": "system", "content": SYSTEM},
             {
@@ -73,45 +148,21 @@ def corrigir_redacao_gemini(tema: str, texto: str) -> dict:
                 "content": f"TEMA: {tema}\n\n<redacao>\n{texto}\n</redacao>",
             },
         ],
-        "temperature": 0.2,
-        "max_tokens": 4096,
-        "response_format": {"type": "json_object"},
+        "max_tokens": 8192,  # modelos com raciocínio gastam parte disso "pensando"
     }
+    if BAI_TEMPERATURE:
+        body["temperature"] = float(BAI_TEMPERATURE)
+    if BAI_JSON_MODE:
+        body["response_format"] = {"type": "json_object"}
+    if BAI_REASONING_EFFORT:
+        body["reasoning_effort"] = BAI_REASONING_EFFORT
 
     headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Authorization": f"Bearer {BAI_API_KEY}",
         "Content-Type": "application/json",
     }
 
-    raw = None
-    for tentativa in range(2):
-        try:
-            r = httpx.post(URL, json=body, headers=headers, timeout=45)
-            r.raise_for_status()
-            data = r.json()
-            content = data["choices"][0]["message"]["content"]
-
-            # limpa possível markdown
-            content = content.strip()
-            if content.startswith("```"):
-                content = content.split("\n", 1)[-1]
-                if content.endswith("```"):
-                    content = content.rsplit("```", 1)[0]
-
-            raw = json.loads(content)
-            break
-        except (httpx.HTTPError, KeyError, IndexError, json.JSONDecodeError) as e:
-            if tentativa == 1:
-                raise GeminiError(str(e)) from e
-            time.sleep(2)
-
-    notas = {}
-    for c in COMPETENCIAS:
-        try:
-            v = int(raw[c])
-        except (KeyError, TypeError, ValueError) as e:
-            raise GeminiError(f"nota inválida em {c}") from e
-        notas[c] = int(max(0, min(200, v)) / 40 + 0.5) * 40
+    raw, notas = _chamar(body, headers)
 
     partes = [
         f"{ROTULOS[c]}: {notas[c]}/200. {str(raw.get('analise_' + c, '')).strip()}"
