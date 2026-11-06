@@ -70,12 +70,127 @@ async function lerJSON(resposta) {
 
 // ===================== NAVEGAÇÃO =====================
 
-function mostrarTela(id){
-    document.querySelectorAll(".tela").forEach(t => {
-        t.classList.remove("ativa");
+function mostrarTela(id, opcoes = {}) {
+    const tela = document.getElementById(id);
+
+    if (!tela) {
+        console.error(`Tela não encontrada: ${id}`);
+        return;
+    }
+
+    document.querySelectorAll(".tela").forEach(telaAtual => {
+        telaAtual.classList.remove("ativa");
     });
-    document.getElementById(id).classList.add("ativa");
+
+    tela.classList.add("ativa");
+
+    /*
+     * Registra a troca no histórico do navegador.
+     * Quando a troca veio das setas do navegador,
+     * não cria um novo histórico.
+     */
+    if (opcoes.registrarHistorico !== false) {
+        const hash = `#${id}`;
+
+        if (window.location.hash !== hash) {
+            window.history.pushState(
+                { tela: id },
+                "",
+                hash
+            );
+        }
+    }
+
+    if (
+        TELAS_RESTAURAVEIS.has(id) &&
+        localStorage.getItem("token")
+    ) {
+        localStorage.setItem(CHAVE_TELA_ATUAL, id);
+    }
 }
+
+function inicializarHistoricoDoNavegador() {
+    const telaInformadaNaURL =
+        window.location.hash.replace(/^#/, "");
+
+    const existeTelaInformada =
+        document.getElementById(telaInformadaNaURL);
+
+    const telaInicial =
+        existeTelaInformada
+            ? telaInformadaNaURL
+            : "home";
+
+    window.history.replaceState(
+        { tela: telaInicial },
+        "",
+        `#${telaInicial}`
+    );
+
+    window.addEventListener("popstate", event => {
+        const telaDoHistorico = event.state?.tela;
+
+        if (
+            telaDoHistorico &&
+            document.getElementById(telaDoHistorico)
+        ) {
+            mostrarTela(
+                telaDoHistorico,
+                { registrarHistorico: false }
+            );
+        } else {
+            mostrarTela(
+                "home",
+                { registrarHistorico: false }
+            );
+        }
+    });
+}
+
+function restaurarSessao() {
+    const token = localStorage.getItem("token");
+    const usuarioId = localStorage.getItem("usuario_id");
+
+    // Se não houver sessão salva, permanece na página inicial.
+    if (!token || !usuarioId) {
+        return;
+    }
+
+    const telaSalva =
+        localStorage.getItem(CHAVE_TELA_ATUAL) || "painel";
+
+    switch (telaSalva) {
+        case "minha-rotina":
+            abrirMinhaRotina();
+            break;
+
+        case "praticar":
+            abrirPraticar();
+            break;
+
+        case "prova-intro":
+            abrirProvaIntro();
+            break;
+
+        case "redacao-intro":
+            abrirRedacaoIntro();
+            break;
+
+        case "admin":
+            if (localStorage.getItem("is_admin") === "true") {
+                abrirAdmin();
+            } else {
+                abrirPainel();
+            }
+            break;
+
+        default:
+            abrirPainel();
+            break;
+    }
+}
+
+
 
 function abrirCadastro(){ 
     limparCamposAuth();
@@ -165,8 +280,11 @@ function sairConta() {
     localStorage.removeItem("nome");
     localStorage.removeItem("is_admin");
     localStorage.removeItem("token");
+    localStorage.removeItem(CHAVE_TELA_ATUAL);
+
     voltarHome();
 }
+
 
 // ===================== CADASTRO E LOGIN =====================
 
@@ -2166,8 +2284,34 @@ function atualizarContagemHome() {
     }
 }
 
+function iniciarAnimacoesHome() {
+    const elementos = document.querySelectorAll("#home .home-reveal");
+    if (!elementos.length) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        elementos.forEach(elemento => elemento.classList.add("visivel"));
+        return;
+    }
+
+    const observador = new IntersectionObserver((entradas, observer) => {
+        entradas.forEach(entrada => {
+            if (!entrada.isIntersecting) return;
+            entrada.target.classList.add("visivel");
+            observer.unobserve(entrada.target);
+        });
+    }, { threshold: 0.15 });
+
+    elementos.forEach(elemento => observador.observe(elemento));
+}
+
 window.onload = async () => {
+    inicializarHistoricoDoNavegador();
+
     setupRotinaTabs();
     setupCalendar();
     atualizarContagemHome();
+    iniciarAnimacoesHome();
+
+    restaurarSessao();
 };
+
