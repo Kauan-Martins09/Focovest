@@ -1,5 +1,15 @@
 // ===================== CONFIGURAÇÃO E SEGURANÇA =====================
 
+const CHAVE_TELA_ATUAL = "focovest_tela_atual";
+const TELAS_RESTAURAVEIS = new Set([
+    "painel",
+    "minha-rotina",
+    "praticar",
+    "prova-intro",
+    "redacao-intro",
+    "admin"
+]);
+
 const API_BASE_URL = "https://focovest-backend.onrender.com";
 const DATA_PRIMEIRO_DIA_ENEM = "2026-11-08T00:00:00-03:00";
 
