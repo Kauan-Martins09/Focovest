@@ -40,3 +40,6 @@ class RedacaoCreate(BaseModel):
     paragrafos: int
     nota: int
     feedback: Optional[Any] = None
+
+class MensagemAtendimentoCreate(BaseModel):
+    texto: str

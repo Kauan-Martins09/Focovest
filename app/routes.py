@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from .db import SessionLocal
-from .models import User, Anotacao, Compromisso, Resultado, Redacao, AdminLog
-from .schemas import UserCreate, UserLog, AnotacaoCreate, CompromissoCreate, ResultadoCreate, RedacaoCreate
+from .models import User, Anotacao, Compromisso, Resultado, Redacao, AdminLog, ConversaAtendimento, MensagemAtendimento
+from .schemas import UserCreate, UserLog, AnotacaoCreate, CompromissoCreate, ResultadoCreate, RedacaoCreate, MensagemAtendimentoCreate
 from .security import (
     hash_senha,
     verificar_senha,
@@ -32,6 +32,137 @@ def get_db():
         yield db
     finally:
         db.close()
+
+@router.get("/atendimento/conversa")
+def obter_conversa_atendimento(
+    db: Session = Depends(get_db),
+    usuario=Depends(usuario_atual)
+):
+    conversa = db.query(ConversaAtendimento).filter(
+        ConversaAtendimento.usuario_id == usuario["usuario_id"]
+    ).first()
+
+    if not conversa:
+        conversa = ConversaAtendimento(
+            usuario_id=usuario["usuario_id"]
+        )
+
+        db.add(conversa)
+        db.commit()
+        db.refresh(conversa)
+
+    return {
+        "id": conversa.id,
+        "usuario_id": conversa.usuario_id,
+        "status": conversa.status,
+        "criada_em": conversa.criada_em,
+        "atualizada_em": conversa.atualizada_em
+    }
+
+@router.post("/atendimento/conversa/{conversa_id}/mensagem")
+def enviar_mensagem_atendimento(
+    conversa_id: int,
+    mensagem: MensagemAtendimentoCreate,
+    db: Session = Depends(get_db),
+    usuario=Depends(usuario_atual)
+):
+    conversa = db.query(ConversaAtendimento).filter(
+        ConversaAtendimento.id == conversa_id
+    ).first()
+
+    if not conversa:
+        raise HTTPException(
+            status_code=404,
+            detail="Conversa não encontrada"
+        )
+
+    pode_enviar = (
+        conversa.usuario_id == usuario["usuario_id"]
+        or usuario.get("is_admin")
+        or usuario.get("is_atendimento")
+    )
+
+    if not pode_enviar:
+        raise HTTPException(
+            status_code=403,
+            detail="Você não tem acesso a esta conversa"
+        )
+
+    texto = mensagem.texto.strip()
+
+    if not texto:
+        raise HTTPException(
+            status_code=400,
+            detail="A mensagem não pode ficar vazia"
+        )
+
+    nova_mensagem = MensagemAtendimento(
+        conversa_id=conversa.id,
+        autor_id=usuario["usuario_id"],
+        texto=texto
+    )
+
+    if usuario.get("is_admin") or usuario.get("is_atendimento"):
+        conversa.status = "em_atendimento"
+    else:
+        conversa.status = "aberta"
+
+    db.add(nova_mensagem)
+    db.commit()
+    db.refresh(nova_mensagem)
+
+    return {
+        "id": nova_mensagem.id,
+        "conversa_id": nova_mensagem.conversa_id,
+        "autor_id": nova_mensagem.autor_id,
+        "texto": nova_mensagem.texto,
+        "enviada_em": nova_mensagem.enviada_em
+    }
+
+@router.get("/atendimento/conversa/{conversa_id}/mensagens")
+def listar_mensagens_atendimento(
+    conversa_id: int,
+    db: Session = Depends(get_db),
+    usuario=Depends(usuario_atual)
+):
+    conversa = db.query(ConversaAtendimento).filter(
+        ConversaAtendimento.id == conversa_id
+    ).first()
+
+    if not conversa:
+        raise HTTPException(
+            status_code=404,
+            detail="Conversa não encontrada"
+        )
+
+    pode_visualizar = (
+        conversa.usuario_id == usuario["usuario_id"]
+        or usuario.get("is_admin")
+        or usuario.get("is_atendimento")
+    )
+
+    if not pode_visualizar:
+        raise HTTPException(
+            status_code=403,
+            detail="Você não tem acesso a esta conversa"
+        )
+
+    mensagens = db.query(MensagemAtendimento).filter(
+        MensagemAtendimento.conversa_id == conversa_id
+    ).order_by(
+        MensagemAtendimento.enviada_em.asc()
+    ).all()
+
+    return [
+        {
+            "id": mensagem.id,
+            "conversa_id": mensagem.conversa_id,
+            "autor_id": mensagem.autor_id,
+            "texto": mensagem.texto,
+            "enviada_em": mensagem.enviada_em
+        }
+        for mensagem in mensagens
+    ]
 
 
 @router.post("/cadastro")
@@ -72,7 +203,8 @@ def login(user: UserLog, db: Session = Depends(get_db)):
 
     token = criar_token({
         "usuario_id": usuario.id,
-        "is_admin": usuario.is_admin
+        "is_admin": usuario.is_admin,
+        "is_atendimento": usuario.is_atendimento
     })
     
     return {
@@ -80,7 +212,8 @@ def login(user: UserLog, db: Session = Depends(get_db)):
         "token": token,
         "usuario_id": usuario.id,
         "nome": usuario.nome,
-        "is_admin": usuario.is_admin
+        "is_admin": usuario.is_admin,
+        "is_atendimento": usuario.is_atendimento
     }
 
 @router.post("/anotacao")
@@ -567,6 +700,107 @@ def admin_promover_usuario(
     }
     registrar_log(db, admin, "promover_admin", "usuario", id, snapshot)
     return {"msg": f"{alvo.nome} agora é admin"}
+
+
+@router.post("/admin/usuario/{id}/promover-atendimento")
+def admin_promover_atendimento(
+    id: int,
+    db: Session = Depends(get_db),
+    usuario=Depends(usuario_atual)
+):
+    if not usuario.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Acesso negado")
+
+    admin = db.query(User).filter(
+        User.id == usuario["usuario_id"]
+    ).first()
+
+    alvo = db.query(User).filter(User.id == id).first()
+
+    if not alvo:
+        raise HTTPException(
+            status_code=404,
+            detail="Usuário não encontrado"
+        )
+
+    if alvo.is_atendimento:
+        return {"msg": "Usuário já faz parte do atendimento"}
+
+    alvo.is_atendimento = True
+    db.commit()
+
+    snapshot = {
+        "id": alvo.id,
+        "nome": alvo.nome,
+        "email": alvo.email,
+        "idade": alvo.idade,
+        "is_admin": alvo.is_admin,
+        "is_atendimento": True
+    }
+
+    registrar_log(
+        db,
+        admin,
+        "promover_atendimento",
+        "usuario",
+        id,
+        snapshot
+    )
+
+    return {
+        "msg": f"{alvo.nome} agora faz parte do atendimento",
+        "is_atendimento": True
+    }
+
+@router.post("/admin/usuario/{id}/rebaixar-atendimento")
+def admin_rebaixar_atendimento(
+    id: int,
+    db: Session = Depends(get_db),
+    usuario=Depends(usuario_atual)
+):
+    if not usuario.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Acesso negado")
+
+    admin = db.query(User).filter(
+        User.id == usuario["usuario_id"]
+    ).first()
+
+    alvo = db.query(User).filter(User.id == id).first()
+
+    if not alvo:
+        raise HTTPException(
+            status_code=404,
+            detail="Usuário não encontrado"
+        )
+
+    if not alvo.is_atendimento:
+        return {"msg": "Usuário já não faz parte do atendimento"}
+
+    alvo.is_atendimento = False
+    db.commit()
+
+    snapshot = {
+        "id": alvo.id,
+        "nome": alvo.nome,
+        "email": alvo.email,
+        "idade": alvo.idade,
+        "is_admin": alvo.is_admin,
+        "is_atendimento": False
+    }
+
+    registrar_log(
+        db,
+        admin,
+        "rebaixar_atendimento",
+        "usuario",
+        id,
+        snapshot
+    )
+
+    return {
+        "msg": f"{alvo.nome} não faz mais parte do atendimento",
+        "is_atendimento": False
+    }
 
 
 @router.post("/admin/usuario/{id}/rebaixar")

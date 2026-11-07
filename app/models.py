@@ -11,6 +11,62 @@ class User(Base):
     nome = Column(String(100))
     idade = Column(Integer)
     is_admin = Column(Boolean, default=False)
+    is_atendimento = Column(Boolean, default=False)
+
+class ConversaAtendimento(Base):
+    __tablename__ = "conversas_atendimento"
+
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(
+        Integer,
+        ForeignKey("usuarios.id"),
+        nullable=False
+    )
+
+    status = Column(
+        String(30),
+        nullable=False,
+        default="aberta"
+    )
+
+    criada_em = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )
+
+    atualizada_em = Column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False
+    )
+
+class MensagemAtendimento(Base):
+    __tablename__ = "mensagens_atendimento"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    conversa_id = Column(
+        Integer,
+        ForeignKey("conversas_atendimento.id"),
+        nullable=False
+    )
+
+    autor_id = Column(
+        Integer,
+        ForeignKey("usuarios.id"),
+        nullable=False
+    )
+
+    texto = Column(Text, nullable=False)
+
+    enviada_em = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )
+
 
 class Anotacao(Base):
     __tablename__ = "anotacoes"
