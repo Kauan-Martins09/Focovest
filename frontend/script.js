@@ -7,7 +7,8 @@ const TELAS_RESTAURAVEIS = new Set([
     "praticar",
     "prova-intro",
     "redacao-intro",
-    "admin"
+    "admin",
+    "sac"
 ]);
 
 const API_BASE_URL = "https://focovest-backend.onrender.com";
@@ -246,6 +247,11 @@ function voltarHome(){
 function abrirPainel() { 
     mostrarTela("painel"); atualizarPainel() 
 }
+
+function abrirSAC() {
+    mostrarTela("sac");
+}
+
 
 function abrirMinhaRotina() { 
     mostrarTela("minha-rotina"); 

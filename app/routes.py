@@ -78,7 +78,6 @@ def enviar_mensagem_atendimento(
 
     pode_enviar = (
         conversa.usuario_id == usuario["usuario_id"]
-        or usuario.get("is_admin")
         or usuario.get("is_atendimento")
     )
 
@@ -137,7 +136,6 @@ def listar_mensagens_atendimento(
 
     pode_visualizar = (
         conversa.usuario_id == usuario["usuario_id"]
-        or usuario.get("is_admin")
         or usuario.get("is_atendimento")
     )
 
@@ -163,6 +161,88 @@ def listar_mensagens_atendimento(
         }
         for mensagem in mensagens
     ]
+
+@router.get("/atendimento/conversas")
+def listar_conversas_atendimento(
+    db: Session = Depends(get_db),
+    usuario=Depends(usuario_atual)
+):
+    if not usuario.get("is_atendimento"):
+        raise HTTPException(
+            status_code=403,
+            detail="Apenas usuários de atendimento podem listar as conversas"
+        )
+
+    conversas = db.query(
+        ConversaAtendimento,
+        User.nome,
+        User.email
+    ).join(
+        User,
+        ConversaAtendimento.usuario_id == User.id
+    ).order_by(
+        ConversaAtendimento.atualizada_em.desc()
+    ).all()
+
+    return [
+        {
+            "id": conversa.id,
+            "usuario_id": conversa.usuario_id,
+            "usuario_nome": nome,
+            "usuario_email": email,
+            "status": conversa.status,
+            "criada_em": conversa.criada_em,
+            "atualizada_em": conversa.atualizada_em
+        }
+        for conversa, nome, email in conversas
+    ]
+
+@router.patch("/atendimento/conversa/{conversa_id}/status")
+def alterar_status_conversa(
+    conversa_id: int,
+    status: str,
+    db: Session = Depends(get_db),
+    usuario=Depends(usuario_atual)
+):
+    if not usuario.get("is_atendimento"):
+        raise HTTPException(
+            status_code=403,
+            detail="Apenas usuários de atendimento podem alterar o status"
+        )
+
+    status_validos = {
+        "aberta",
+        "em_atendimento",
+        "encerrada"
+    }
+
+    if status not in status_validos:
+        raise HTTPException(
+            status_code=400,
+            detail="Status inválido"
+        )
+
+    conversa = db.query(ConversaAtendimento).filter(
+        ConversaAtendimento.id == conversa_id
+    ).first()
+
+    if not conversa:
+        raise HTTPException(
+            status_code=404,
+            detail="Conversa não encontrada"
+        )
+
+    conversa.status = status
+
+    db.commit()
+    db.refresh(conversa)
+
+    return {
+        "id": conversa.id,
+        "usuario_id": conversa.usuario_id,
+        "status": conversa.status,
+        "atualizada_em": conversa.atualizada_em
+    }
 
 
 @router.post("/cadastro")

@@ -2851,3 +2851,128 @@ button:disabled:hover{
         transform: none;
     }
 }
+
+/* Tela inicial do SAC */
+#sac {
+    min-height: 100vh;
+    background: #f1f5f9;
+}
+
+.sac-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: #1e293b;
+    color: white;
+}
+
+.sac-header h1 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.sac-header p {
+    margin: 4px 0 0;
+    color: #cbd5e1;
+    font-size: 0.85rem;
+}
+
+.sac-conteudo {
+    display: flex;
+    justify-content: center;
+    padding: 32px 20px;
+}
+
+.sac-card {
+    width: 100%;
+    max-width: 760px;
+    min-height: 560px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+}
+
+.sac-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.sac-card-header h2 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 1.05rem;
+}
+
+.sac-card-header p {
+    margin: 5px 0 0;
+    color: #64748b;
+    font-size: 0.85rem;
+}
+
+.sac-status {
+    color: #16a34a;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.sac-mensagens {
+    flex: 1;
+    min-height: 350px;
+    padding: 24px;
+    background: #efeae2;
+}
+
+.sac-vazio {
+    color: #64748b;
+    text-align: center;
+    padding-top: 100px;
+}
+
+#sac-form {
+    display: flex;
+    gap: 10px;
+    padding: 14px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+}
+
+#sac-form input {
+    flex: 1;
+    margin: 0;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    padding: 12px 16px;
+}
+
+#sac-form button {
+    width: auto;
+    margin: 0;
+    border-radius: 999px;
+    padding: 0 20px;
+    background: #67e191;
+    color: #1e293b;
+}
+
+@media (max-width: 600px) {
+    .sac-card-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .sac-status {
+        align-self: flex-start;
+    }
+
+    #sac-form button {
+        padding: 0 14px;
+    }
+}

@@ -232,6 +232,7 @@
                 <p>Treine com questões reais do ENEM, separadas por área.</p>
             </div>
         </button>
+
         <button class="bento-card bento-roxo" onclick="abrirMinhaRotina()">
             <span class="bento-icone">🗓️</span>
             <div class="bento-texto">
@@ -239,6 +240,7 @@
                 <p>Calendário de compromissos e anotações de estudo.</p>
             </div>
         </button>
+
         <button class="bento-card bento-azul" onclick="abrirRedacaoIntro()">
             <span class="bento-icone">✍️</span>
             <div class="bento-texto">
@@ -246,6 +248,7 @@
                 <p>Pratique sua escrita com temas reais do ENEM.</p>
             </div>
         </button>
+
         <button class="bento-card bento-pequeno bento-azul" onclick="abrirProvaIntro()">
             <span class="bento-icone">⏱️</span>
             <div class="bento-texto">
@@ -253,6 +256,7 @@
                 <p>Simulado completo com as 4 áreas e cronômetro de 90 minutos.</p>
             </div>
         </button>
+
         <button class="bento-card bento-pequeno bento-roxo" id="card-admin" style="display:none;" onclick="abrirAdmin()">
             <span class="bento-icone">🛠️</span>
             <div class="bento-texto">
@@ -260,6 +264,16 @@
                 <p>Gerenciar usuários e conteúdo do sistema.</p>
             </div>
         </button>
+
+        <button class="bento-card bento-pequeno bento-verde" onclick="abrirSAC()">
+            <span class="bento-icone">💬</span>
+
+            <div class="bento-texto">
+                <h3>Falar com o suporte</h3>
+                <p>Envie uma mensagem para o atendimento do FocoVest.</p>
+            </div>
+        </button>
+
     </div>
     <footer class="rodape rodape-painel">
         <div class="home-container rodape-base rodape-base-sem-linha">
@@ -590,6 +604,51 @@
         <p>© 2026 FocoVest · Projeto de TCC · Plataforma independente, sem vínculo com o Inep ou o MEC.</p>
     </footer>
 </div>
+
+<!-- TELA SAC -->
+<div id="sac" class="tela">
+    <div class="sac-header">
+        <button onclick="abrirPainel()" class="btn-voltar">←</button>
+
+        <div>
+            <h1>SAC FocoVest</h1>
+            <p>Atendimento ao estudante</p>
+        </div>
+    </div>
+
+    <main class="sac-conteudo">
+        <section class="sac-card">
+            <div class="sac-card-header">
+                <div>
+                    <h2>Atendimento FocoVest</h2>
+                    <p>Envie sua dúvida para nossa equipe.</p>
+                </div>
+
+                <span class="sac-status">● Online</span>
+            </div>
+
+            <div id="sac-mensagens" class="sac-mensagens">
+                <p class="sac-vazio">
+                    Você ainda não enviou nenhuma mensagem.
+                </p>
+            </div>
+
+            <form id="sac-form">
+                <input
+                    id="sac-input"
+                    type="text"
+                    placeholder="Digite sua mensagem..."
+                    autocomplete="off"
+                >
+
+                <button type="submit">
+                    Enviar
+                </button>
+            </form>
+        </section>
+    </main>
+</div>
+
 
 <script src="script.js"></script>
 </body>
