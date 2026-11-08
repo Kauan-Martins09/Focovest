@@ -3001,3 +3001,21 @@ button:disabled:hover{
 #sac .sac-card {
     width: 100%;
 }
+
+/* Corrige o botão de voltar do cabeçalho do SAC */
+#sac .sac-header .btn-voltar {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    margin: 0;
+    padding: 0;
+}
+
+#sac .sac-header > div {
+    flex: 1;
+}
+
+#sac .sac-header {
+    align-items: center;
+}
