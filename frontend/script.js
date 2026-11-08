@@ -248,9 +248,52 @@ function abrirPainel() {
     mostrarTela("painel"); atualizarPainel() 
 }
 
-function abrirSAC() {
+let conversaSACAtual = null;
+
+async function abrirSAC() {
     mostrarTela("sac");
+
+    const mensagens = document.getElementById("sac-mensagens");
+
+    if (mensagens) {
+        mensagens.innerHTML = `
+            <p class="sac-vazio">
+                Carregando atendimento...
+            </p>
+        `;
+    }
+
+    try {
+        const resposta = await apiFetch("/atendimento/conversa");
+
+        if (!resposta.ok) {
+            throw new Error("Não foi possível carregar a conversa.");
+        }
+
+        conversaSACAtual = await resposta.json();
+
+        console.log("Conversa do SAC:", conversaSACAtual);
+
+        if (mensagens) {
+            mensagens.innerHTML = `
+                <p class="sac-vazio">
+                    Nenhuma mensagem enviada ainda.
+                </p>
+            `;
+        }
+    } catch (erro) {
+        console.error("Erro ao carregar conversa do SAC:", erro);
+
+        if (mensagens) {
+            mensagens.innerHTML = `
+                <p class="sac-vazio">
+                    Não foi possível carregar o atendimento.
+                </p>
+            `;
+        }
+    }
 }
+
 
 
 function abrirMinhaRotina() { 
