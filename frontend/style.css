@@ -2976,3 +2976,28 @@ button:disabled:hover{
         padding: 0 14px;
     }
 }
+
+/* Ajuste para a tela do SAC ocupar toda a largura */
+#sac.ativa {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    min-height: 100vh;
+}
+
+#sac .sac-header {
+    width: 100%;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+#sac .sac-conteudo {
+    width: 100%;
+    box-sizing: border-box;
+    flex: 1;
+}
+
+#sac .sac-card {
+    width: 100%;
+}
