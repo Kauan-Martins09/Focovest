@@ -8,7 +8,8 @@ const TELAS_RESTAURAVEIS = new Set([
     "prova-intro",
     "redacao-intro",
     "admin",
-    "sac"
+    "sac",
+    "atendimento"
 ]);
 
 const API_BASE_URL = "https://focovest-backend.onrender.com";
@@ -194,6 +195,14 @@ function restaurarSessao() {
         telaSalva = "painel";
     }
 
+    if (
+        telaSalva === "atendimento" &&
+        localStorage.getItem("is_atendimento") !== "true"
+    ) {
+        telaSalva = "painel";
+    }
+
+
     switch (telaSalva) {
         case "minha-rotina":
             abrirMinhaRotina();
@@ -213,6 +222,10 @@ function restaurarSessao() {
 
         case "admin":
             abrirAdmin();
+            break;
+
+        case "atendimento":
+            abrirAtendimento();
             break;
 
         case "painel":
@@ -244,11 +257,27 @@ function voltarHome(){
     mostrarTela("home"); 
 }
 
-function abrirPainel() { 
-    mostrarTela("painel"); atualizarPainel() 
+function abrirPainel() {
+    clearInterval(timerConversasAtendimento);
+    clearInterval(timerMensagensAtendimento);
+
+    const inputSac = document.getElementById("sac-input");
+
+    if (inputSac) {
+        inputSac.value = "";
+    }
+
+    mostrarTela("painel");
+    atualizarPainel();
 }
 
+
 let conversaSACAtual = null;
+let conversasAtendimento = [];
+let conversaAtendimentoAtual = null;
+let timerConversasAtendimento = null;
+let timerMensagensAtendimento = null;
+
 
 async function abrirSAC() {
     mostrarTela("sac");
@@ -289,6 +318,33 @@ async function abrirSAC() {
     }
 }
 
+function voltarDoSAC() {
+    const input = document.getElementById("sac-input");
+
+    if (input) {
+        input.value = "";
+    }
+
+    abrirPainel();
+}
+
+
+function abrirAtendimento() {
+    if (localStorage.getItem("is_atendimento") !== "true") {
+        abrirPainel();
+        return;
+    }
+
+    mostrarTela("atendimento");
+    carregarConversasAtendimento();
+
+    clearInterval(timerConversasAtendimento);
+
+    timerConversasAtendimento = setInterval(
+        carregarConversasAtendimento,
+        8000
+    );
+}
 
 
 function abrirMinhaRotina() { 
@@ -303,6 +359,16 @@ function atualizarPainel() {
     document.getElementById("nome-usuario-nav").textContent = primeiroNome;
     document.getElementById("card-admin").style.display = 
         localStorage.getItem("is_admin") === "true" ? "flex" : "none";
+
+    const btnSacNav = document.getElementById("btn-sac-nav");
+
+    if (btnSacNav) {
+        btnSacNav.style.display =
+            localStorage.getItem("is_atendimento") === "true"
+                ? "none"
+                : "inline-flex";
+    }
+
 
     const hora = new Date().getHours();
     let saudacao = "Boa noite";
@@ -357,6 +423,10 @@ function sairConta() {
     localStorage.removeItem("is_admin");
     localStorage.removeItem("token");
     localStorage.removeItem(CHAVE_TELA_ATUAL);
+    localStorage.removeItem("is_atendimento");
+
+    clearInterval(timerConversasAtendimento);
+    clearInterval(timerMensagensAtendimento);
 
     voltarHome();
 }
@@ -434,17 +504,26 @@ async function entrar(){
     const json = await resposta.json();
 
         if (json.success) {
-        localStorage.setItem("usuario_id", json.usuario_id);
-        localStorage.setItem("nome", json.nome);
-        localStorage.setItem("is_admin", String(json.is_admin));
-        localStorage.setItem("token", json.token);
+    localStorage.setItem("usuario_id", json.usuario_id);
+    localStorage.setItem("nome", json.nome);
+    localStorage.setItem("is_admin", String(json.is_admin));
+    localStorage.setItem(
+        "is_atendimento",
+        String(json.is_atendimento)
+    );
+    localStorage.setItem("token", json.token);
 
-        limparCamposAuth();
+    limparCamposAuth();
 
-        await carregarAnotacoes();
-        await carregarCompromissos();
+    if (json.is_atendimento) {
+        abrirAtendimento();
+        return;
+    }
 
-        abrirPainel();
+    await carregarAnotacoes();
+    await carregarCompromissos();
+
+    abrirPainel();
 
 
     } else {
@@ -2521,5 +2600,416 @@ async function carregarMensagensSAC() {
                 Não foi possível carregar as mensagens.
             </p>
         `;
+    }
+}
+
+function formatarHorarioSAC(data) {
+    if (!data) return "";
+
+    const texto = String(data);
+    const dataUTC = texto.endsWith("Z")
+        ? texto
+        : `${texto}Z`;
+
+    return new Date(dataUTC).toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
+
+function textoStatus(status) {
+    const nomes = {
+        aberta: "Aberta",
+        em_atendimento: "Em atendimento",
+        encerrada: "Encerrada"
+    };
+
+    return nomes[status] || status;
+}
+
+function renderizarListaConversasAtendimento() {
+    const lista = document.getElementById(
+        "lista-conversas-atendimento"
+    );
+
+    const contador = document.getElementById(
+        "atendimento-contador"
+    );
+
+    if (!lista) return;
+
+    if (contador) {
+        contador.textContent =
+            `${conversasAtendimento.length} conversa(s)`;
+    }
+
+    if (!conversasAtendimento.length) {
+        lista.innerHTML = `
+            <p class="atendimento-vazio">
+                Nenhuma conversa encontrada.
+            </p>
+        `;
+        return;
+    }
+
+    lista.innerHTML = conversasAtendimento.map(conversa => {
+        const ativa =
+            conversaAtendimentoAtual &&
+            conversaAtendimentoAtual.id === conversa.id;
+
+        return `
+            <button
+                type="button"
+                class="atendimento-conversa-item ${
+                    ativa ? "ativa" : ""
+                }"
+                onclick="selecionarConversaAtendimento(${conversa.id})"
+            >
+                <span class="atendimento-conversa-nome">
+                    ${escaparHTML(conversa.usuario_nome)}
+                </span>
+
+                <span class="atendimento-conversa-email">
+                    ${escaparHTML(conversa.usuario_email)}
+                </span>
+
+                <span class="atendimento-conversa-rodape">
+                    <small>
+                        ${escaparHTML(
+                            textoStatus(conversa.status)
+                        )}
+                    </small>
+
+                    <small>
+                        ${formatarHorarioSAC(
+                            conversa.atualizada_em
+                        )}
+                    </small>
+                </span>
+            </button>
+        `;
+    }).join("");
+}
+
+async function carregarConversasAtendimento() {
+    if (localStorage.getItem("is_atendimento") !== "true") {
+        return;
+    }
+
+    const lista = document.getElementById(
+        "lista-conversas-atendimento"
+    );
+
+    try {
+        const resposta = await apiFetch(
+            "/atendimento/conversas"
+        );
+
+        const dados = await lerJSON(resposta);
+
+        if (!resposta.ok) {
+            throw new Error(
+                dados.detail ||
+                "Não foi possível carregar as conversas."
+            );
+        }
+
+        conversasAtendimento = Array.isArray(dados)
+            ? dados
+            : [];
+
+        renderizarListaConversasAtendimento();
+
+        if (
+            conversaAtendimentoAtual &&
+            conversasAtendimento.some(
+                conversa =>
+                    conversa.id === conversaAtendimentoAtual.id
+            )
+        ) {
+            conversaAtendimentoAtual =
+                conversasAtendimento.find(
+                    conversa =>
+                        conversa.id === conversaAtendimentoAtual.id
+                );
+        }
+
+        if (
+            !conversaAtendimentoAtual &&
+            conversasAtendimento.length
+        ) {
+            await selecionarConversaAtendimento(
+                conversasAtendimento[0].id
+            );
+        }
+    } catch (erro) {
+        console.error(
+            "Erro ao carregar conversas:",
+            erro
+        );
+
+        if (lista) {
+            lista.innerHTML = `
+                <p class="atendimento-vazio">
+                    Não foi possível carregar as conversas.
+                </p>
+            `;
+        }
+    }
+}
+
+async function selecionarConversaAtendimento(id) {
+    const conversa = conversasAtendimento.find(
+        item => item.id === id
+    );
+
+    if (!conversa) return;
+
+    conversaAtendimentoAtual = conversa;
+
+    const nome = document.getElementById(
+        "atendimento-nome-conversa"
+    );
+
+    const email = document.getElementById(
+        "atendimento-email-conversa"
+    );
+
+    const status = document.getElementById(
+        "atendimento-status"
+    );
+
+    const input = document.getElementById(
+        "atendimento-input"
+    );
+
+    const botao = document.getElementById(
+        "atendimento-btn-enviar"
+    );
+
+    if (nome) {
+        nome.textContent = conversa.usuario_nome;
+    }
+
+    if (email) {
+        email.textContent = conversa.usuario_email;
+    }
+
+    if (status) {
+        status.value = conversa.status;
+        status.disabled = false;
+    }
+
+    if (input) {
+        input.disabled = false;
+        input.value = "";
+        input.focus();
+    }
+
+    if (botao) {
+        botao.disabled = false;
+    }
+
+    renderizarListaConversasAtendimento();
+
+    await carregarMensagensAtendimento();
+
+    clearInterval(timerMensagensAtendimento);
+
+    timerMensagensAtendimento = setInterval(
+        carregarMensagensAtendimento,
+        8000
+    );
+}
+
+async function carregarMensagensAtendimento() {
+    if (!conversaAtendimentoAtual) return;
+
+    const mensagens = document.getElementById(
+        "atendimento-mensagens"
+    );
+
+    try {
+        const resposta = await apiFetch(
+            `/atendimento/conversa/${
+                conversaAtendimentoAtual.id
+            }/mensagens`
+        );
+
+        const dados = await lerJSON(resposta);
+
+        if (!resposta.ok) {
+            throw new Error(
+                dados.detail ||
+                "Não foi possível carregar as mensagens."
+            );
+        }
+
+        if (!Array.isArray(dados) || !dados.length) {
+            mensagens.innerHTML = `
+                <p class="atendimento-vazio">
+                    Nenhuma mensagem nesta conversa.
+                </p>
+            `;
+            return;
+        }
+
+        const meuId = Number(
+            localStorage.getItem("usuario_id")
+        );
+
+        mensagens.innerHTML = dados.map(mensagem => {
+            const minhaMensagem =
+                Number(mensagem.autor_id) === meuId;
+
+            return `
+                <div class="
+                    atendimento-mensagem
+                    ${
+                        minhaMensagem
+                            ? "minha"
+                            : "estudante"
+                    }
+                ">
+                    <p>${escaparHTML(mensagem.texto)}</p>
+                    <span>
+                        ${formatarHorarioSAC(
+                            mensagem.enviada_em
+                        )}
+                    </span>
+                </div>
+            `;
+        }).join("");
+
+        mensagens.scrollTop = mensagens.scrollHeight;
+    } catch (erro) {
+        console.error(
+            "Erro ao carregar mensagens do atendimento:",
+            erro
+        );
+
+        mensagens.innerHTML = `
+            <p class="atendimento-vazio">
+                Não foi possível carregar as mensagens.
+            </p>
+        `;
+    }
+}
+
+async function enviarMensagemAtendimento(event) {
+    event.preventDefault();
+
+    if (!conversaAtendimentoAtual) return;
+
+    const input = document.getElementById(
+        "atendimento-input"
+    );
+
+    const botao = document.getElementById(
+        "atendimento-btn-enviar"
+    );
+
+    const texto = input.value.trim();
+
+    if (!texto) {
+        input.focus();
+        return;
+    }
+
+    input.disabled = true;
+    botao.disabled = true;
+    botao.textContent = "Enviando...";
+
+    try {
+        const resposta = await apiFetch(
+            `/atendimento/conversa/${
+                conversaAtendimentoAtual.id
+            }/mensagem`,
+            {
+                method: "POST",
+                body: JSON.stringify({ texto })
+            }
+        );
+
+        const dados = await lerJSON(resposta);
+
+        if (!resposta.ok) {
+            throw new Error(
+                dados.detail ||
+                "Não foi possível enviar a resposta."
+            );
+        }
+
+        input.value = "";
+
+        await carregarMensagensAtendimento();
+        await carregarConversasAtendimento();
+    } catch (erro) {
+        console.error(
+            "Erro ao responder estudante:",
+            erro
+        );
+
+        alert(
+            erro.message ||
+            "Não foi possível enviar a resposta."
+        );
+    } finally {
+        input.disabled = false;
+        botao.disabled = false;
+        botao.textContent = "Enviar";
+        input.focus();
+    }
+}
+
+async function alterarStatusAtendimento(novoStatus) {
+    if (!conversaAtendimentoAtual) return;
+
+    try {
+        const resposta = await apiFetch(
+            `/atendimento/conversa/${
+                conversaAtendimentoAtual.id
+            }/status?status=${encodeURIComponent(
+                novoStatus
+            )}`,
+            {
+                method: "PATCH"
+            }
+        );
+
+        const dados = await lerJSON(resposta);
+
+        if (!resposta.ok) {
+            throw new Error(
+                dados.detail ||
+                "Não foi possível alterar o status."
+            );
+        }
+
+        conversaAtendimentoAtual.status = dados.status;
+
+        const conversaNaLista =
+            conversasAtendimento.find(
+                conversa =>
+                    conversa.id === conversaAtendimentoAtual.id
+            );
+
+        if (conversaNaLista) {
+            conversaNaLista.status = dados.status;
+            conversaNaLista.atualizada_em =
+                dados.atualizada_em;
+        }
+
+        renderizarListaConversasAtendimento();
+    } catch (erro) {
+        console.error(
+            "Erro ao alterar status:",
+            erro
+        );
+
+        alert(
+            erro.message ||
+            "Não foi possível alterar o status."
+        );
     }
 }

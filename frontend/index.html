@@ -199,6 +199,14 @@
 <div id="painel" class="tela">
     <nav class="painel-nav">
         <img src="logo-focovest.png" alt="FocoVest" class="painel-logo">
+        <button
+            type="button"
+            class="btn-sac-nav"
+            onclick="abrirSAC()"
+        >
+            💬 Suporte
+        </button>
+
         <div class="painel-perfil" onclick="togglePerfilMenu()">
             <div class="avatar" id="avatar-inicial">?</div>
             <span id="nome-usuario-nav">Usuário</span>
@@ -262,15 +270,6 @@
             <div class="bento-texto">
                 <h3>Painel Admin</h3>
                 <p>Gerenciar usuários e conteúdo do sistema.</p>
-            </div>
-        </button>
-
-        <button class="bento-card bento-pequeno bento-verde" onclick="abrirSAC()">
-            <span class="bento-icone">💬</span>
-
-            <div class="bento-texto">
-                <h3>Falar com o suporte</h3>
-                <p>Envie uma mensagem para o atendimento do FocoVest.</p>
             </div>
         </button>
 
@@ -608,7 +607,8 @@
 <!-- TELA SAC -->
 <div id="sac" class="tela">
     <div class="sac-header">
-        <button onclick="abrirPainel()" class="btn-voltar">←</button>
+        <button onclick="voltarDoSAC()" class="btn-voltar">←</button>
+
 
         <div>
             <h1>SAC FocoVest</h1>
@@ -642,6 +642,117 @@
                 >
 
                 <button type="submit">
+                    Enviar
+                </button>
+            </form>
+        </section>
+    </main>
+</div>
+
+<!-- CENTRAL DO ATENDENTE -->
+<div id="atendimento" class="tela">
+    <header class="atendimento-header">
+        <div>
+            <h1>Central de atendimento</h1>
+            <p>Gerencie as conversas dos estudantes</p>
+        </div>
+
+        <div class="atendimento-header-acoes">
+            <span class="atendimento-indicador">● Disponível</span>
+            <button
+                type="button"
+                class="atendimento-btn-sair"
+                onclick="sairConta()"
+            >
+                Sair
+            </button>
+        </div>
+    </header>
+
+    <main class="atendimento-layout">
+        <aside class="atendimento-lista">
+            <div class="atendimento-lista-topo">
+                <div>
+                    <h2>Conversas</h2>
+                    <span id="atendimento-contador">Carregando...</span>
+                </div>
+
+                <button
+                    type="button"
+                    class="atendimento-btn-atualizar"
+                    onclick="carregarConversasAtendimento()"
+                    title="Atualizar conversas"
+                >
+                    ↻
+                </button>
+            </div>
+
+            <div
+                id="lista-conversas-atendimento"
+                class="atendimento-conversas"
+            >
+                <p class="atendimento-vazio">
+                    Carregando conversas...
+                </p>
+            </div>
+        </aside>
+
+        <section class="atendimento-chat">
+            <div class="atendimento-chat-topo">
+                <div>
+                    <h2 id="atendimento-nome-conversa">
+                        Selecione uma conversa
+                    </h2>
+
+                    <p id="atendimento-email-conversa">
+                        Escolha um estudante na lista ao lado.
+                    </p>
+                </div>
+
+                <label class="atendimento-status-label">
+                    <span>Status</span>
+
+                    <select
+                        id="atendimento-status"
+                        onchange="alterarStatusAtendimento(this.value)"
+                        disabled
+                    >
+                        <option value="aberta">Aberta</option>
+                        <option value="em_atendimento">
+                            Em atendimento
+                        </option>
+                        <option value="encerrada">Encerrada</option>
+                    </select>
+                </label>
+            </div>
+
+            <div
+                id="atendimento-mensagens"
+                class="atendimento-mensagens"
+            >
+                <p class="atendimento-vazio">
+                    Nenhuma conversa selecionada.
+                </p>
+            </div>
+
+            <form
+                id="atendimento-form"
+                onsubmit="enviarMensagemAtendimento(event)"
+            >
+                <input
+                    id="atendimento-input"
+                    type="text"
+                    maxlength="2000"
+                    placeholder="Responder ao estudante..."
+                    autocomplete="off"
+                    disabled
+                >
+
+                <button
+                    id="atendimento-btn-enviar"
+                    type="submit"
+                    disabled
+                >
                     Enviar
                 </button>
             </form>

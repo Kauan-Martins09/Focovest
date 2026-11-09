@@ -3060,3 +3060,453 @@ button:disabled:hover{
     opacity: 0.65;
 }
 
+.btn-sac-nav {
+    width: auto;
+    min-width: 120px;
+    margin: 0 12px 0 auto;
+    padding: 10px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 999px;
+    background: transparent;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.btn-sac-nav:hover {
+    background: #67e191;
+    color: #1e293b;
+}
+
+@media (max-width: 600px) {
+    .btn-sac-nav {
+        min-width: auto;
+        margin-right: 8px;
+        padding: 9px 11px;
+        font-size: 0.8rem;
+    }
+
+    .btn-sac-nav {
+        font-size: 0;
+    }
+
+    .btn-sac-nav::first-letter {
+        font-size: 1.1rem;
+    }
+}
+
+/* ===== BOTÃO DO SAC NO CABEÇALHO ===== */
+
+.btn-sac-nav {
+    width: auto;
+    min-width: 120px;
+    margin: 0 12px 0 auto;
+    padding: 10px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 999px;
+    background: transparent;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-sac-nav:hover {
+    background: #67e191;
+    color: #1e293b;
+    transform: none;
+}
+
+/* ===== CENTRAL DE ATENDIMENTO ===== */
+
+#atendimento.ativa {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 100vh;
+    background: #f1f5f9;
+}
+
+.atendimento-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 22px max(20px, calc((100% - 1180px) / 2));
+    background: #1e293b;
+    color: #ffffff;
+}
+
+.atendimento-header h1 {
+    margin: 0;
+    font-family: "Poppins", sans-serif;
+    font-size: 1.35rem;
+}
+
+.atendimento-header p {
+    margin-top: 5px;
+    color: #cbd5e1;
+    font-size: 0.85rem;
+}
+
+.atendimento-header-acoes {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.atendimento-indicador {
+    color: #b7f0c6;
+    font-size: 0.85rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.atendimento-btn-sair,
+.atendimento-btn-atualizar {
+    width: auto;
+    margin: 0;
+}
+
+.atendimento-btn-sair {
+    padding: 9px 15px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: transparent;
+    color: #ffffff;
+}
+
+.atendimento-btn-sair:hover {
+    background: #ffffff;
+    color: #1e293b;
+    transform: none;
+}
+
+.atendimento-layout {
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 18px;
+    width: 100%;
+    max-width: 1180px;
+    flex: 1;
+    min-height: 0;
+    margin: 28px auto;
+    padding: 0 20px;
+}
+
+.atendimento-lista,
+.atendimento-chat {
+    min-width: 0;
+    overflow: hidden;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 10px 28px rgba(30, 41, 55, 0.09);
+}
+
+.atendimento-lista {
+    display: flex;
+    flex-direction: column;
+    min-height: 620px;
+}
+
+.atendimento-lista-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.atendimento-lista-topo h2 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 1.05rem;
+}
+
+.atendimento-lista-topo span {
+    display: block;
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 0.78rem;
+}
+
+.atendimento-btn-atualizar {
+    padding: 8px 12px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 1.1rem;
+}
+
+.atendimento-btn-atualizar:hover {
+    background: #dcf8c6;
+    transform: none;
+}
+
+.atendimento-conversas {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.atendimento-conversa-item {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 15px 17px;
+    border-bottom: 1px solid #f1f5f9;
+    border-radius: 0;
+    background: #ffffff;
+    color: #1e293b;
+    text-align: left;
+}
+
+.atendimento-conversa-item:hover,
+.atendimento-conversa-item.ativa {
+    background: #f3f1f9;
+    transform: none;
+}
+
+.atendimento-conversa-nome,
+.atendimento-conversa-email {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.atendimento-conversa-nome {
+    font-weight: 700;
+}
+
+.atendimento-conversa-email {
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 0.78rem;
+}
+
+.atendimento-conversa-rodape {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 9px;
+    color: #94a3b8;
+    font-size: 0.72rem;
+}
+
+.atendimento-chat {
+    display: flex;
+    flex-direction: column;
+    min-height: 620px;
+}
+
+.atendimento-chat-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 18px 22px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.atendimento-chat-topo h2 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 1.05rem;
+}
+
+.atendimento-chat-topo p {
+    margin-top: 5px;
+    color: #64748b;
+    font-size: 0.8rem;
+}
+
+.atendimento-status-label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    color: #64748b;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.atendimento-status-label select {
+    min-width: 145px;
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    color: #475569;
+}
+
+.atendimento-mensagens {
+    flex: 1;
+    min-height: 430px;
+    overflow-y: auto;
+    padding: 24px;
+    background: #efeae2;
+    background-image: radial-gradient(
+        #e5ded4 1px,
+        transparent 1px
+    );
+    background-size: 16px 16px;
+}
+
+.atendimento-mensagem {
+    width: fit-content;
+    max-width: min(75%, 560px);
+    margin: 8px 0;
+    padding: 10px 13px;
+    border-radius: 13px;
+    color: #1e293b;
+    line-height: 1.45;
+    word-break: break-word;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.06);
+}
+
+.atendimento-mensagem p {
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.atendimento-mensagem span {
+    display: block;
+    margin-top: 5px;
+    color: #64748b;
+    font-size: 0.68rem;
+    text-align: right;
+}
+
+.atendimento-mensagem.minha {
+    margin-left: auto;
+    border-top-right-radius: 4px;
+    background: #dcf8c6;
+}
+
+.atendimento-mensagem.estudante {
+    margin-right: auto;
+    border-top-left-radius: 4px;
+    background: #ffffff;
+}
+
+#atendimento-form {
+    display: flex;
+    gap: 10px;
+    padding: 14px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+#atendimento-form input {
+    flex: 1;
+    margin: 0;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    padding: 12px 16px;
+}
+
+#atendimento-form button {
+    width: auto;
+    min-width: 92px;
+    margin: 0;
+    border-radius: 999px;
+    background: #67e191;
+    color: #1e293b;
+}
+
+#atendimento-form button:disabled {
+    cursor: wait;
+    opacity: 0.6;
+}
+
+.atendimento-vazio {
+    padding: 70px 18px;
+    color: #64748b;
+    text-align: center;
+}
+
+/* ===== RESPONSIVIDADE DO SAC E DA CENTRAL ===== */
+
+@media (max-width: 760px) {
+    .atendimento-header {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 18px 20px;
+    }
+
+    .atendimento-header-acoes {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .atendimento-layout {
+        grid-template-columns: 1fr;
+        margin: 18px auto;
+    }
+
+    .atendimento-lista {
+        min-height: 210px;
+        max-height: 250px;
+    }
+
+    .atendimento-conversas {
+        max-height: 175px;
+    }
+
+    .atendimento-chat {
+        min-height: 560px;
+    }
+
+    .atendimento-chat-topo {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .atendimento-status-label {
+        width: 100%;
+    }
+
+    .atendimento-status-label select {
+        width: 100%;
+    }
+
+    .atendimento-mensagem {
+        max-width: 88%;
+    }
+}
+
+@media (max-width: 600px) {
+    .btn-sac-nav {
+        min-width: 44px;
+        margin-right: 8px;
+        padding: 9px 11px;
+        font-size: 0;
+    }
+
+    .btn-sac-nav::first-letter {
+        font-size: 1.1rem;
+    }
+
+    .sac-card {
+        min-height: 520px;
+    }
+
+    .sac-mensagem {
+        max-width: 88%;
+    }
+
+    #sac-form,
+    #atendimento-form {
+        gap: 7px;
+        padding: 10px;
+    }
+
+    #sac-form button,
+    #atendimento-form button {
+        min-width: 74px;
+        padding: 0 12px;
+    }
+
+    .atendimento-mensagens {
+        padding: 16px;
+    }
+}
