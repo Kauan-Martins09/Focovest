@@ -274,13 +274,8 @@ async function abrirSAC() {
 
         console.log("Conversa do SAC:", conversaSACAtual);
 
-        if (mensagens) {
-            mensagens.innerHTML = `
-                <p class="sac-vazio">
-                    Nenhuma mensagem enviada ainda.
-                </p>
-            `;
-        }
+        await carregarMensagensSAC();
+
     } catch (erro) {
         console.error("Erro ao carregar conversa do SAC:", erro);
 
@@ -2404,3 +2399,127 @@ window.onload = async () => {
         );
     }
 };
+
+async function enviarMensagemSAC(event) {
+    event.preventDefault();
+
+    const input = document.getElementById("sac-input");
+    const mensagens = document.getElementById("sac-mensagens");
+    const botao = document.querySelector("#sac-form button");
+
+    const texto = input.value.trim();
+
+    if (!texto) {
+        input.focus();
+        return;
+    }
+
+    if (!conversaSACAtual) {
+        mensagens.innerHTML = `
+            <p class="sac-vazio">
+                A conversa ainda não foi carregada.
+            </p>
+        `;
+        return;
+    }
+
+    input.disabled = true;
+    botao.disabled = true;
+    botao.textContent = "Enviando...";
+
+    try {
+        const resposta = await apiFetch(
+            `/atendimento/conversa/${conversaSACAtual.id}/mensagem`,
+            {
+                method: "POST",
+                body: JSON.stringify({
+                    texto: texto
+                })
+            }
+        );
+
+        const dados = await lerJSON(resposta);
+
+        if (!resposta.ok) {
+            throw new Error(
+                dados.detail || "Não foi possível enviar a mensagem."
+            );
+        }
+
+        input.value = "";
+
+        await carregarMensagensSAC();
+
+    } catch (erro) {
+        console.error("Erro ao enviar mensagem:", erro);
+
+        alert(erro.message || "Não foi possível enviar a mensagem.");
+
+    } finally {
+        input.disabled = false;
+        botao.disabled = false;
+        botao.textContent = "Enviar";
+        input.focus();
+    }
+}
+
+async function carregarMensagensSAC() {
+    if (!conversaSACAtual) return;
+
+    const mensagens = document.getElementById("sac-mensagens");
+
+    try {
+        const resposta = await apiFetch(
+            `/atendimento/conversa/${conversaSACAtual.id}/mensagens`
+        );
+
+        const dados = await lerJSON(resposta);
+
+        if (!resposta.ok) {
+            throw new Error(
+                dados.detail || "Não foi possível carregar as mensagens."
+            );
+        }
+
+        if (!dados.length) {
+            mensagens.innerHTML = `
+                <p class="sac-vazio">
+                    Você ainda não enviou nenhuma mensagem.
+                </p>
+            `;
+            return;
+        }
+
+        mensagens.innerHTML = dados.map(mensagem => {
+            const minhaMensagem =
+                mensagem.autor_id === Number(localStorage.getItem("usuario_id"));
+
+            const horario = new Date(
+                `${mensagem.enviada_em}Z`
+            ).toLocaleTimeString("pt-BR", {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+
+            return `
+                <div class="sac-mensagem ${
+                    minhaMensagem ? "sac-mensagem-minha" : "sac-mensagem-atendimento"
+                }">
+                    <p>${escaparHTML(mensagem.texto)}</p>
+                    <span>${horario}</span>
+                </div>
+            `;
+        }).join("");
+
+        mensagens.scrollTop = mensagens.scrollHeight;
+
+    } catch (erro) {
+        console.error("Erro ao carregar mensagens:", erro);
+
+        mensagens.innerHTML = `
+            <p class="sac-vazio">
+                Não foi possível carregar as mensagens.
+            </p>
+        `;
+    }
+}

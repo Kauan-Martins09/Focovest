@@ -3019,3 +3019,44 @@ button:disabled:hover{
 #sac .sac-header {
     align-items: center;
 }
+
+.sac-mensagem {
+    width: fit-content;
+    max-width: 75%;
+    margin: 10px 0;
+    padding: 10px 14px;
+    border-radius: 14px;
+    color: #1e293b;
+    word-break: break-word;
+}
+
+.sac-mensagem p {
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.sac-mensagem span {
+    display: block;
+    margin-top: 5px;
+    color: #64748b;
+    font-size: 0.7rem;
+    text-align: right;
+}
+
+.sac-mensagem-minha {
+    margin-left: auto;
+    background: #dcf8c6;
+    border-top-right-radius: 4px;
+}
+
+.sac-mensagem-atendimento {
+    margin-right: auto;
+    background: #ffffff;
+    border-top-left-radius: 4px;
+}
+
+#sac-form button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
