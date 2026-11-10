@@ -3475,16 +3475,42 @@ button:disabled:hover{
 }
 
 @media (max-width: 600px) {
-    .btn-sac-nav {
-        min-width: 44px;
-        margin-right: 8px;
-        padding: 9px 11px;
-        font-size: 0;
+    .painel-nav {
+        gap: 8px;
+        padding: 16px 20px;
     }
 
-    .btn-sac-nav::first-letter {
-        font-size: 1.1rem;
+    .painel-logo {
+        flex: 0 1 auto;
+        min-width: 0;
+        max-width: 42%;
+        height: auto;
+        max-height: 42px;
     }
+
+    .btn-sac-nav {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        width: auto;
+        min-width: 44px;
+        margin: 0 4px 0 auto;
+        padding: 9px 11px;
+        font-size: 0.78rem;
+        white-space: nowrap;
+    }
+
+    .painel-perfil {
+        flex: 0 0 auto;
+        gap: 6px;
+        font-size: 0.9rem;
+    }
+
+    .painel-perfil .seta-perfil {
+        font-size: 0.75rem;
+    }
+
 
     .sac-card {
         min-height: 520px;
