@@ -1639,13 +1639,19 @@ async function gerarTemaAleatorio() {
   const btn = document.querySelector(".btn-tema-aleatorio");
   if (!btn) return;
 
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("Faça login para gerar um tema.");
+    return;
+  }
+
   btn.disabled = true;
   const textoOriginal = btn.textContent;
   btn.textContent = "Gerando tema...";
 
   try {
-    const resp = await fetch('${API_URL}/tema-redacao/aleatorio', {
-      headers: { Authorization: 'Bearer ${token}' }
+    const resp = await fetch(`${API_BASE_URL}/tema-redacao/aleatorio`, {
+      headers: { Authorization: `Bearer ${token}` }
     });
 
     if (!resp.ok) {
@@ -1655,18 +1661,16 @@ async function gerarTemaAleatorio() {
 
     const tema = await resp.json();
 
-    // Monta o objeto no mesmo formato que TEMAS_ENEM usa
     temaAtualRedacao = {
       ano: tema.tema_ano,
       titulo: tema.tema_titulo,
       motivadores: tema.textos_motivadores || []
     };
 
-    // Preenche a tela de escrita
-    document.getElementById("redacao-tema-ano").textContent = 'ENEM ${temaAtualRedacao.ano}';
+    document.getElementById("redacao-tema-ano").textContent = `ENEM ${temaAtualRedacao.ano}`;
     document.getElementById("redacao-tema-titulo").textContent = temaAtualRedacao.titulo;
     document.getElementById("redacao-motivadores").innerHTML = temaAtualRedacao.motivadores
-      .map(t => <p class="motivador-item">${t}</p>)
+      .map(t => `<p class="motivador-item">${escaparHTML(t)}</p>`)
       .join("");
 
     document.getElementById("redacao-texto").value = "";
