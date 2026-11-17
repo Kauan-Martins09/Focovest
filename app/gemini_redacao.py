@@ -10,12 +10,12 @@ import httpx
 log = logging.getLogger("focovest.ia")
 
 # Configuração por variáveis de ambiente (Render). B.AI, endpoint OpenAI Chat Completions
-# (https://docs.b.ai/llmservice/api/).
+# (https://docs.bankofai.io/llmservice/api/).
 #   BAI_API_KEY           chave da B.AI (obrigatória)
 #   BAI_MODEL             ID do modelo (obrigatório; copie de GET /v1/models)
 #   BAI_BASE_URL          opcional, padrão https://api.b.ai/v1
 #   BAI_TEMPERATURE       opcional; só é enviada se definida
-#   BAI_REASONING_EFFORT  opcional (low/medium/high); só é enviada se definida
+#   BAI_REASONING_EFFORT  opcional na correção; só use se o modelo aceitar
 #   BAI_JSON_MODE         "1" (padrão) envia response_format=json_object; "0" desliga
 BAI_API_KEY = os.getenv("BAI_API_KEY")
 BAI_MODEL = os.getenv("BAI_MODEL")
@@ -78,70 +78,129 @@ class GeminiError(Exception):
 
 
 RETRY_STATUS = {429, 500, 502, 503, 504}
+MAX_TOKENS = 8192
+MOTIVOS_FIM = {"stop", "length", "content_filter", "tool_calls", "function_call"}
 
 
-def _extrair_json(content: str) -> dict:
-    content = (content or "").strip()
-    if content.startswith("```"):
-        content = re.sub(r"^```[a-zA-Z]*\s*", "", content)
-        content = re.sub(r"\s*```$", "", content)
-    ini, fim = content.find("{"), content.rfind("}")
-    if ini == -1 or fim <= ini:
-        raise ValueError("resposta sem JSON")
-    return json.loads(content[ini:fim + 1])
+def _extrair_json(content: object) -> dict:
+    if content is None or (isinstance(content, str) and not content.strip()):
+        raise ValueError("a B.AI não retornou conteúdo final")
+    if not isinstance(content, str):
+        raise ValueError("conteúdo final da B.AI não é texto")
+    content = content.strip()
+    bloco = re.fullmatch(r"```(?:json)?\s*(.*?)\s*```", content, re.IGNORECASE | re.DOTALL)
+    try:
+        raw = json.loads(bloco.group(1) if bloco else content)
+    except ValueError as erro:
+        raise ValueError("conteúdo final da B.AI não é JSON válido") from erro
+    if not isinstance(raw, dict):
+        raise ValueError("o conteúdo final deve ser um objeto JSON")
+    return raw
 
 
 def _validar(raw) -> tuple:
-    if not isinstance(raw, dict):
-        raise ValueError("resposta não é um objeto JSON")
     notas = {}
     for c in COMPETENCIAS:
         try:
             v = int(float(raw[c]))
-        except (KeyError, TypeError, ValueError) as e:
+        except (KeyError, TypeError, ValueError, OverflowError) as e:
             raise ValueError(f"nota inválida em {c}") from e
         notas[c] = int(max(0, min(200, v)) / 40 + 0.5) * 40
     return raw, notas
 
 
-def _chamar(body: dict, headers: dict) -> tuple:
-    ultimo = None
+def _chamar(body: dict, validar, *, operacao: str):
+    if not (BAI_API_KEY and BAI_MODEL):
+        raise GeminiError("IA não configurada: defina BAI_API_KEY e BAI_MODEL")
+
+    body = {**body, "model": BAI_MODEL, "stream": False}
+    if BAI_TEMPERATURE:
+        try:
+            temperatura = float(BAI_TEMPERATURE)
+        except ValueError as erro:
+            raise GeminiError("BAI_TEMPERATURE deve ser um número") from erro
+        if not 0 <= temperatura <= 2:
+            raise GeminiError("BAI_TEMPERATURE deve estar entre 0 e 2")
+        body["temperature"] = temperatura
+    if BAI_JSON_MODE:
+        body["response_format"] = {"type": "json_object"}
+
+    headers = {"Authorization": f"Bearer {BAI_API_KEY}", "Content-Type": "application/json"}
     for tentativa in range(2):
+        status = None
+        motivo = None
+        content = None
+        so_raciocinio = False
+        recusou = False
         try:
             r = httpx.post(URL, json=body, headers=headers, timeout=30)
-            if r.status_code in RETRY_STATUS and tentativa == 0:
-                try:
-                    espera = float(r.headers.get("retry-after", 2))
-                except ValueError:
-                    espera = 2
-                time.sleep(min(espera, 8))
-                continue
+            status = r.status_code
             r.raise_for_status()
-            choice = r.json()["choices"][0]
-            if choice.get("finish_reason") == "length":
-                raise ValueError("resposta truncada (max_tokens)")
-            content = (choice.get("message") or {}).get("content")
-            return _validar(_extrair_json(content))
-        except httpx.HTTPStatusError as e:
-            # 4xx (chave, modelo, parâmetro inválido) não melhora com nova tentativa
-            raise GeminiError(f"HTTP {e.response.status_code}: {e.response.text[:300]}") from e
-        except (httpx.HTTPError, KeyError, IndexError, ValueError) as e:
-            ultimo = e
-            if tentativa == 0:
-                time.sleep(1)
-    raise GeminiError(str(ultimo))
+            try:
+                envelope = r.json()
+            except ValueError as erro:
+                raise ValueError("o corpo HTTP da B.AI não é JSON válido") from erro
+
+            escolhas = envelope.get("choices") if isinstance(envelope, dict) else None
+            if not isinstance(escolhas, list) or not escolhas or not isinstance(escolhas[0], dict):
+                raise ValueError("a resposta da B.AI não contém choices[0]")
+
+            escolha = escolhas[0]
+            motivo = escolha.get("finish_reason")
+            mensagem = escolha.get("message")
+            if isinstance(mensagem, dict):
+                content = mensagem.get("content")
+                recusou = bool(mensagem.get("refusal"))
+                so_raciocinio = (
+                    (content is None or (isinstance(content, str) and not content.strip()))
+                    and bool(mensagem.get("reasoning_content") or mensagem.get("reasoning"))
+                )
+
+            if motivo == "length":
+                raise ValueError("resposta truncada (finish_reason=length)")
+            if recusou or motivo == "content_filter":
+                raise ValueError("a B.AI recusou ou filtrou a resposta")
+            if not isinstance(mensagem, dict):
+                raise ValueError("a resposta da B.AI não contém message")
+            if so_raciocinio:
+                raise ValueError("a B.AI retornou raciocínio, mas não retornou resposta final")
+
+            return validar(_extrair_json(content))
+        except httpx.HTTPStatusError as erro:
+            detalhe = f"HTTP {status} da B.AI"
+            if status not in RETRY_STATUS or tentativa == 1:
+                raise GeminiError(detalhe) from erro
+            try:
+                espera = float(erro.response.headers.get("retry-after", 2))
+            except ValueError:
+                espera = 2
+            time.sleep(max(0, min(8, espera)))
+        except httpx.HTTPError as erro:
+            if tentativa == 1:
+                raise GeminiError(f"falha de comunicação com a B.AI ({type(erro).__name__})") from erro
+            time.sleep(1)
+        except ValueError as erro:
+            log.warning(
+                "B.AI operacao=%s modelo=%s tentativa=%d status=%s finish_reason=%s "
+                "max_tokens=%d content_tipo=%s content_chars=%d so_raciocinio=%s json_mode=%s: %s",
+                operacao, BAI_MODEL, tentativa + 1, status,
+                motivo if isinstance(motivo, str) and motivo in MOTIVOS_FIM else "ausente/desconhecido",
+                body["max_tokens"], type(content).__name__,
+                len(content) if isinstance(content, str) else 0, so_raciocinio, BAI_JSON_MODE, erro,
+            )
+            if tentativa == 1 or recusou or motivo == "content_filter":
+                raise GeminiError(str(erro)) from erro
+            if motivo == "length":
+                if body["max_tokens"] >= MAX_TOKENS:
+                    raise GeminiError(str(erro)) from erro
+                body["max_tokens"] = MAX_TOKENS
 
 
 URL = f"{BAI_BASE_URL}/chat/completions"
 
 
 def corrigir_redacao_gemini(tema: str, texto: str) -> dict:
-    if not (BAI_API_KEY and BAI_MODEL):
-        log.error("IA não configurada: defina BAI_API_KEY e BAI_MODEL")
-        raise GeminiError("IA não configurada")
-
     body = {
-        "model": BAI_MODEL,
         "messages": [
             {"role": "system", "content": SYSTEM},
             {
@@ -149,21 +208,12 @@ def corrigir_redacao_gemini(tema: str, texto: str) -> dict:
                 "content": f"TEMA: {tema}\n\n<redacao>\n{texto}\n</redacao>",
             },
         ],
-        "max_tokens": 8192,  # modelos com raciocínio gastam parte disso "pensando"
+        "max_tokens": MAX_TOKENS,
     }
-    if BAI_TEMPERATURE:
-        body["temperature"] = float(BAI_TEMPERATURE)
-    if BAI_JSON_MODE:
-        body["response_format"] = {"type": "json_object"}
     if BAI_REASONING_EFFORT:
         body["reasoning_effort"] = BAI_REASONING_EFFORT
 
-    headers = {
-        "Authorization": f"Bearer {BAI_API_KEY}",
-        "Content-Type": "application/json",
-    }
-
-    raw, notas = _chamar(body, headers)
+    raw, notas = _chamar(body, _validar, operacao="corrigir_redacao")
 
     partes = [
         f"{ROTULOS[c]}: {notas[c]}/200. {str(raw.get('analise_' + c, '')).strip()}"
@@ -214,40 +264,25 @@ Responda APENAS com JSON válido, sem markdown:
 {"titulo": "...", "textos_motivadores": ["...", "..."]}"""
 
 
-def gerar_tema_redacao(eixo: str, recorte: str, evitar: list) -> dict:
-    if not (BAI_API_KEY and BAI_MODEL):
-        raise GeminiError("IA não configurada")
+def _validar_tema(raw: dict) -> dict:
+    titulo = raw.get("titulo")
+    if not isinstance(titulo, str) or len(titulo.strip()) < 15:
+        raise ValueError("título inválido")
+    textos = raw.get("textos_motivadores")
+    if not isinstance(textos, list) or not textos or any(not isinstance(t, str) or not t.strip() for t in textos):
+        raise ValueError("textos_motivadores deve ser uma lista não vazia de textos")
+    return {"titulo": titulo.strip()[:500], "textos_motivadores": [t.strip() for t in textos[:3]]}
 
+
+def gerar_tema_redacao(eixo: str, recorte: str, evitar: list) -> dict:
     proibidos = "\n".join(f"- {t}" for t in evitar) or "(nenhum)"
     body = {
-        "model": BAI_MODEL,
         "messages": [
             {"role": "system", "content": SYSTEM_TEMA},
             {"role": "user", "content": (
                 f"EIXO: {eixo}\nRECORTE: {recorte}\n\n<proibidos>\n{proibidos}\n</proibidos>"
             )},
         ],
-        "max_tokens": 1500,
-        "temperature": 1.0,  # alta de propósito: queremos variedade
+        "max_tokens": 4096,
     }
-    if BAI_JSON_MODE:
-        body["response_format"] = {"type": "json_object"}
-    headers = {"Authorization": f"Bearer {BAI_API_KEY}", "Content-Type": "application/json"}
-
-    ultimo = None
-    for tentativa in range(2):
-        try:
-            r = httpx.post(URL, json=body, headers=headers, timeout=30)
-            r.raise_for_status()
-            content = (r.json()["choices"][0].get("message") or {}).get("content")
-            raw = _extrair_json(content)
-            titulo = str(raw.get("titulo", "")).strip()
-            motivadores = [str(t).strip() for t in raw.get("textos_motivadores", []) if str(t).strip()]
-            if len(titulo) < 15:
-                raise ValueError("título inválido")
-            return {"titulo": titulo[:500], "textos_motivadores": motivadores[:3]}
-        except httpx.HTTPStatusError as e:
-            raise GeminiError(f"HTTP {e.response.status_code}: {e.response.text[:300]}") from e
-        except (httpx.HTTPError, KeyError, IndexError, ValueError) as e:
-            ultimo = e
-    raise GeminiError(str(ultimo))
+    return _chamar(body, _validar_tema, operacao="gerar_tema")
