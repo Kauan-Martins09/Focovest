@@ -1637,21 +1637,47 @@ function renderListaTemas() {
 
 async function gerarTemaAleatorio() {
   const btn = document.querySelector(".btn-tema-aleatorio");
+  if (!btn) return;
+
   btn.disabled = true;
+  const textoOriginal = btn.textContent;
   btn.textContent = "Gerando tema...";
+
   try {
-    const resp = await fetch(`${API_URL}/tema-redacao/aleatorio`, {
-      headers: { Authorization: `Bearer ${token}` }
+    const resp = await fetch('${API_URL}/tema-redacao/aleatorio', {
+      headers: { Authorization: 'Bearer ${token}' }
     });
-    if (!resp.ok) throw new Error((await resp.json()).detail);
+
+    if (!resp.ok) {
+      const erro = await resp.json().catch(() => ({}));
+      throw new Error(erro.detail || "Erro ao gerar tema");
+    }
+
     const tema = await resp.json();
-    // aqui você chama o que já abre a tela de escrita com um tema:
-    // iniciarRedacao({ ano: tema.tema_ano, titulo: tema.tema_titulo });
+
+    // Monta o objeto no mesmo formato que TEMAS_ENEM usa
+    temaAtualRedacao = {
+      ano: tema.tema_ano,
+      titulo: tema.tema_titulo,
+      motivadores: tema.textos_motivadores || []
+    };
+
+    // Preenche a tela de escrita
+    document.getElementById("redacao-tema-ano").textContent = 'ENEM ${temaAtualRedacao.ano}';
+    document.getElementById("redacao-tema-titulo").textContent = temaAtualRedacao.titulo;
+    document.getElementById("redacao-motivadores").innerHTML = temaAtualRedacao.motivadores
+      .map(t => <p class="motivador-item">${t}</p>)
+      .join("");
+
+    document.getElementById("redacao-texto").value = "";
+    atualizarContadoresRedacao();
+    mostrarTela("redacao");
+
   } catch (e) {
     alert(e.message || "Erro ao gerar tema");
   } finally {
     btn.disabled = false;
-    btn.textContent = "Tema aleatório";
+    btn.textContent = textoOriginal;
   }
 }
 
