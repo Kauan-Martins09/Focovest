@@ -177,3 +177,76 @@ def corrigir_redacao_gemini(tema: str, texto: str) -> dict:
         "total": sum(notas.values()),
         "feedback": "\n\n".join(partes),
     }
+
+EIXOS = [
+    "saúde mental", "inteligência artificial e trabalho", "desinformação e redes sociais",
+    "mudanças climáticas", "saneamento básico", "mobilidade urbana", "educação básica",
+    "violência contra a mulher", "envelhecimento da população", "segurança alimentar",
+    "inclusão digital", "preconceito e discriminação", "pessoas com deficiência",
+    "cultura e patrimônio histórico", "moradia e habitação", "consumo e endividamento",
+    "uso de jogos e apostas online", "doação de órgãos e sangue", "reciclagem e lixo",
+    "esporte e qualidade de vida", "população em situação de rua", "trabalho informal",
+    "vícios em telas", "povos indígenas", "imigrantes e refugiados", "saúde pública",
+    "segurança pública", "acesso à justiça", "preservação da Amazônia", "leitura e livros",
+]
+
+RECORTES = [
+    "entre os jovens", "nas grandes cidades", "no ambiente digital", "nas escolas",
+    "nas áreas rurais", "no mercado de trabalho", "nas periferias", "entre os idosos",
+    "no sistema público de saúde", "nas famílias brasileiras", "nas comunidades tradicionais",
+    "no contexto das desigualdades regionais",
+]
+
+
+def sortear_eixo_recorte() -> tuple:
+    return random.choice(EIXOS), random.choice(RECORTES)
+
+
+SYSTEM_TEMA = """Você é um elaborador de temas de redação no estilo do ENEM. Crie UM tema \
+dissertativo-argumentativo inédito sobre um problema social brasileiro, a partir do eixo e do \
+recorte informados. O título deve ter no máximo 20 palavras, ser neutro, sem pedir opinião \
+pessoal e seguir o padrão do ENEM (ex.: "Desafios para ...", "Caminhos para ...").
+Regras: não repita temas oficiais já cobrados pelo ENEM e não repita nenhum título da lista \
+<proibidos>. Os textos motivadores devem ser curtos (até 3 frases) e não podem inventar \
+estatísticas, citações ou fontes específicas.
+Responda APENAS com JSON válido, sem markdown:
+{"titulo": "...", "textos_motivadores": ["...", "..."]}"""
+
+
+def gerar_tema_redacao(eixo: str, recorte: str, evitar: list) -> dict:
+    if not (BAI_API_KEY and BAI_MODEL):
+        raise GeminiError("IA não configurada")
+
+    proibidos = "\n".join(f"- {t}" for t in evitar) or "(nenhum)"
+    body = {
+        "model": BAI_MODEL,
+        "messages": [
+            {"role": "system", "content": SYSTEM_TEMA},
+            {"role": "user", "content": (
+                f"EIXO: {eixo}\nRECORTE: {recorte}\n\n<proibidos>\n{proibidos}\n</proibidos>"
+            )},
+        ],
+        "max_tokens": 1500,
+        "temperature": 1.0,  # alta de propósito: queremos variedade
+    }
+    if BAI_JSON_MODE:
+        body["response_format"] = {"type": "json_object"}
+    headers = {"Authorization": f"Bearer {BAI_API_KEY}", "Content-Type": "application/json"}
+
+    ultimo = None
+    for tentativa in range(2):
+        try:
+            r = httpx.post(URL, json=body, headers=headers, timeout=30)
+            r.raise_for_status()
+            content = (r.json()["choices"][0].get("message") or {}).get("content")
+            raw = _extrair_json(content)
+            titulo = str(raw.get("titulo", "")).strip()
+            motivadores = [str(t).strip() for t in raw.get("textos_motivadores", []) if str(t).strip()]
+            if len(titulo) < 15:
+                raise ValueError("título inválido")
+            return {"titulo": titulo[:500], "textos_motivadores": motivadores[:3]}
+        except httpx.HTTPStatusError as e:
+            raise GeminiError(f"HTTP {e.response.status_code}: {e.response.text[:300]}") from e
+        except (httpx.HTTPError, KeyError, IndexError, ValueError) as e:
+            ultimo = e
+    raise GeminiError(str(ultimo))

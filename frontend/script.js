@@ -1635,9 +1635,24 @@ function renderListaTemas() {
     `).join("");
 }
 
-function iniciarRedacaoAleatoria() {
-    const index = Math.floor(Math.random() * TEMAS_ENEM.length);
-    iniciarRedacao(index);
+async function gerarTemaAleatorio() {
+  const btn = document.querySelector(".btn-tema-aleatorio");
+  btn.disabled = true;
+  btn.textContent = "Gerando tema...";
+  try {
+    const resp = await fetch(`${API_URL}/tema-redacao/aleatorio`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!resp.ok) throw new Error((await resp.json()).detail);
+    const tema = await resp.json();
+    // aqui você chama o que já abre a tela de escrita com um tema:
+    // iniciarRedacao({ ano: tema.tema_ano, titulo: tema.tema_titulo });
+  } catch (e) {
+    alert(e.message || "Erro ao gerar tema");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Tema aleatório";
+  }
 }
 
 function iniciarRedacao(index) {

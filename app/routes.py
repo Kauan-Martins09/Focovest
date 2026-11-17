@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from .db import SessionLocal
-from .models import User, Anotacao, Compromisso, Resultado, Redacao, AdminLog, ConversaAtendimento, MensagemAtendimento
+from .models import User, Anotacao, Compromisso, Resultado, Redacao, AdminLog, ConversaAtendimento, MensagemAtendimento, TemaGerado
 from .schemas import UserCreate, UserLog, AnotacaoCreate, CompromissoCreate, ResultadoCreate, RedacaoCreate, MensagemAtendimentoCreate
 from .security import (
     hash_senha,
@@ -13,7 +13,9 @@ from .security import (
 
 import httpx
 import random
-from .gemini_redacao import corrigir_redacao_gemini, GeminiError
+import time
+from datetime import datetime
+from .gemini_redacao import corrigir_redacao_gemini, GeminiError, gerar_tema_redacao, sortear_eixo_recorte
 from .correcao_regras import corrigir_redacao_regras
 
 def questao_completa(q):
@@ -552,7 +554,46 @@ def criar_redacao(
         "paragrafos": regras["paragrafos"]
     }
 
+_ultimo_tema_por_usuario = {}  # trava simples contra cliques seguidos (gasta crédito)
 
+
+@router.get("/tema-redacao/aleatorio")
+def gerar_tema_aleatorio(
+    db: Session = Depends(get_db),
+    usuario=Depends(usuario_atual)
+):
+    agora = time.time()
+    if agora - _ultimo_tema_por_usuario.get(usuario["usuario_id"], 0) < 5:
+        raise HTTPException(status_code=429, detail="Aguarde alguns segundos para gerar outro tema")
+    _ultimo_tema_por_usuario[usuario["usuario_id"]] = agora
+
+    recentes = [
+        t.titulo for t in
+        db.query(TemaGerado).order_by(TemaGerado.id.desc()).limit(40).all()
+    ]
+    recentes_norm = {t.strip().lower() for t in recentes}
+
+    for _ in range(3):
+        eixo, recorte = sortear_eixo_recorte()
+        try:
+            tema = gerar_tema_redacao(eixo, recorte, recentes)
+        except GeminiError as erro:
+            print(f"ERRO AO GERAR TEMA: {erro}")
+            continue
+
+        if tema["titulo"].strip().lower() in recentes_norm:
+            continue  # a IA repetiu um tema: sorteia de novo
+
+        db.add(TemaGerado(titulo=tema["titulo"], eixo=eixo))
+        db.commit()
+        return {
+            "tema_ano": datetime.utcnow().year,
+            "tema_titulo": tema["titulo"],
+            "textos_motivadores": tema["textos_motivadores"],
+            "gerado_por_ia": True,
+        }
+
+    raise HTTPException(status_code=503, detail="Não foi possível gerar um tema agora. Tente novamente.")
 
 @router.get("/redacao/{usuario_id}")
 def listar_redacoes(

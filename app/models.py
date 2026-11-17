@@ -122,3 +122,11 @@ class AdminLog(Base):
     alvo_id = Column(Integer, nullable=True)
     alvo_snapshot = Column(JSON, nullable=True)        # dados completos do que foi afetado
     data = Column(DateTime, default=datetime.utcnow)
+
+class TemaGerado(Base):
+    __tablename__="temas_gerados"
+
+    id = Column(Integer, primary_key=True, index=True)
+    titulo = Column(String(500), nullable=False)
+    eixo = Column(String(100), nullable=False)
+    criado_em = Column(DateTime, default=datetime.utcnow)
