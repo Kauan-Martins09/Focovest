@@ -11,6 +11,8 @@ const TELAS_RESTAURAVEIS = new Set([
     "sac",
     "atendimento"
 ]);
+let visitaTelaAtualId = 0;
+let telaAtivaAtual = "";
 
 const API_BASE_URL = "https://focovest-backend.onrender.com";
 const DATA_PRIMEIRO_DIA_ENEM = "2026-11-08T00:00:00-03:00";
@@ -95,6 +97,10 @@ function mostrarTela(id, opcoes = {}) {
     });
 
     tela.classList.add("ativa");
+    if (telaAtivaAtual !== id) {
+        telaAtivaAtual = id;
+        visitaTelaAtualId += 1;
+    }
 
     /*
      * Registra a troca no histórico do navegador.
@@ -118,6 +124,13 @@ function mostrarTela(id, opcoes = {}) {
         localStorage.getItem("token")
     ) {
         localStorage.setItem(CHAVE_TELA_ATUAL, id);
+    }
+
+    if (
+        ["painel", "redacao-intro", "redacao-resultado"].includes(id) &&
+        typeof planoAtual !== "undefined"
+    ) {
+        renderizarAnuncios();
     }
 }
 
@@ -2208,6 +2221,11 @@ let adminDadosAtuais = [];
 let adminTabAtual = "usuarios";
 
 function abrirAdmin() {
+    if (localStorage.getItem("is_admin") !== "true") {
+        alert("Acesso restrito a administradores.");
+        abrirPainel();
+        return;
+    }
     mostrarTela("admin");
     setupAdminTabs();
     carregarAdminTab("usuarios");
@@ -2228,21 +2246,30 @@ async function carregarAdminTab(tab) {
     const usuario_id = localStorage.getItem("usuario_id");
     const container = document.getElementById("admin-content");
     const busca = document.getElementById("admin-busca");
+    const toolbar = document.querySelector(".admin-toolbar");
 
     container.innerHTML = '<p class="treino-carregando">Carregando...</p>';
     if (busca) busca.value = "";
+    if (toolbar) toolbar.style.display = tab === "financeiro" ? "none" : "";
 
     try {
-        const rota = tab === "logs" ? "logs" : tab;
-        const resposta = await fetch(
-            `https://focovest-backend.onrender.com/admin/${rota}?usuario_id=${usuario_id}`,
-            { headers: getHeaders() }
-        );
+        const caminho = tab === "financeiro"
+            ? "/admin/financeiro/resumo"
+            : `/admin/${tab === "logs" ? "logs" : tab}?usuario_id=${usuario_id}`;
+        const resposta = await apiFetch(caminho);
         if (!resposta.ok) {
-            container.innerHTML = '<p class="treino-erro">Acesso negado.</p>';
+            const erro = await resposta.json().catch(() => ({}));
+            container.innerHTML = `<p class="treino-erro">${escaparHTML(erro.detail || "Não foi possível carregar os dados.")}</p>`;
             return;
         }
         let dados = await resposta.json();
+
+        if (tab === "financeiro") {
+            adminDadosAtuais = [];
+            document.getElementById("admin-contador").textContent = "";
+            renderAdminFinanceiro(dados);
+            return;
+        }
 
         // Histórico: monta texto legível do snapshot
         if (tab === "logs") {
@@ -2258,6 +2285,91 @@ async function carregarAdminTab(tab) {
         console.error(error);
         container.innerHTML = '<p class="treino-erro">Não foi possível carregar os dados.</p>';
     }
+}
+
+function renderAdminFinanceiro(dados) {
+    const container = document.getElementById("admin-content");
+    const indicadores = dados.indicadores || {};
+    const receita = dados.receita || {};
+    const ia = dados.uso_ia || {};
+    const anuncios = dados.anuncios || {};
+    const inteiro = valor => Number.isFinite(Number(valor)) ? Math.max(0, Math.round(Number(valor))) : 0;
+    const moeda = valor => valor === null || valor === undefined || !Number.isFinite(Number(valor))
+        ? "Não configurado"
+        : new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(valor));
+    const inicio = dados.periodo?.inicio_utc
+        ? new Date(`${dados.periodo.inicio_utc}Z`).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })
+        : "este mês";
+    const alunos = inteiro(indicadores.alunos_cadastrados);
+    const free = inteiro(indicadores.free);
+    const premium = inteiro(indicadores.premium_ativos);
+    const percFree = alunos ? Math.round((free / alunos) * 100) : 0;
+    const percPremium = alunos ? Math.round((premium / alunos) * 100) : 0;
+    const operacoes = Array.isArray(ia.por_operacao) ? ia.por_operacao : [];
+    const rotulosOperacao = {
+        correcao_redacao: "Correção de redação",
+        gerar_tema: "Geração de tema"
+    };
+    const maiorUso = Math.max(1, ...operacoes.map(item => inteiro(item.tokens)));
+    const linhasUso = operacoes.length
+        ? operacoes.map(item => {
+            const tokens = inteiro(item.tokens);
+            const largura = Math.min(100, Math.round((tokens / maiorUso) * 100));
+            const rotulo = rotulosOperacao[item.tipo] || escaparHTML(item.tipo || "Outros");
+            return `<div class="financeiro-uso-linha">
+                <div class="financeiro-uso-cabecalho"><span>${rotulo}</span><strong>${tokens.toLocaleString("pt-BR")} tokens · ${inteiro(item.chamadas)} chamadas</strong></div>
+                <div class="financeiro-barra"><span style="width:${largura}%"></span></div>
+            </div>`;
+        }).join("")
+        : '<p class="financeiro-vazio">Nenhum uso de IA registrado neste mês.</p>';
+    const receitaPotencial = receita.mrr_potencial_estimado === null || receita.mrr_potencial_estimado === undefined
+        ? "Preço não configurado"
+        : moeda(receita.mrr_potencial_estimado);
+    const precoReferencia = receita.preco_mensal_referencia === null || receita.preco_mensal_referencia === undefined
+        ? "Configure PRECO_PREMIUM_MENSAL no Render"
+        : `${moeda(receita.preco_mensal_referencia)} por mês, valor de referência`;
+
+    container.innerHTML = `
+        <section class="financeiro-dashboard" aria-labelledby="financeiro-titulo">
+            <header class="financeiro-cabecalho">
+                <div><h2 id="financeiro-titulo">Visão financeira</h2>
+                    <p>Resumo de planos, projeção potencial e consumo de IA desde ${escaparHTML(inicio)}.</p>
+                </div>
+                <button type="button" class="financeiro-atualizar" onclick="carregarAdminTab('financeiro')">Atualizar dados</button>
+            </header>
+            <div class="financeiro-alerta" role="note">
+                <strong>Transparência:</strong> ainda não existe integração ou tabela de pagamentos. A projeção Premium abaixo não é receita recebida; concessões manuais também entram na contagem de contas Premium.
+            </div>
+            <div class="financeiro-indicadores">
+                <article class="financeiro-card"><span>Alunos cadastrados</span><strong>${alunos.toLocaleString("pt-BR")}</strong><small>Contas comuns, sem equipe/admin</small></article>
+                <article class="financeiro-card"><span>Plano Free</span><strong>${free.toLocaleString("pt-BR")}</strong><small>${percFree}% dos alunos</small></article>
+                <article class="financeiro-card"><span>Premium ativo</span><strong>${premium.toLocaleString("pt-BR")}</strong><small>Benefício ativo, pagamento não confirmado</small></article>
+                <article class="financeiro-card financeiro-card-destaque"><span>MRR potencial estimado</span><strong>${escaparHTML(receitaPotencial)}</strong><small>${escaparHTML(precoReferencia)}</small></article>
+                <article class="financeiro-card"><span>Recebimentos confirmados</span><strong>Não integrado</strong><small>O sistema não registra transações reais</small></article>
+            </div>
+            <div class="financeiro-grade-detalhes">
+                <section class="financeiro-bloco">
+                    <h3>Distribuição dos planos</h3>
+                    <div class="financeiro-uso-linha"><div class="financeiro-uso-cabecalho"><span>Free</span><strong>${free.toLocaleString("pt-BR")} (${percFree}%)</strong></div><div class="financeiro-barra"><span style="width:${percFree}%"></span></div></div>
+                    <div class="financeiro-uso-linha"><div class="financeiro-uso-cabecalho"><span>Premium ativo</span><strong>${premium.toLocaleString("pt-BR")} (${percPremium}%)</strong></div><div class="financeiro-barra financeiro-barra-premium"><span style="width:${percPremium}%"></span></div></div>
+                    <p class="financeiro-nota">${inteiro(indicadores.premium_vencendo_em_30_dias)} Premium vence nos próximos 30 dias · ${inteiro(indicadores.premium_vencidos)} expirado(s).</p>
+                </section>
+                <section class="financeiro-bloco">
+                    <h3>Uso de IA no mês</h3>
+                    <div class="financeiro-resumo-ia"><strong>${inteiro(ia.tokens_no_mes).toLocaleString("pt-BR")}</strong><span>tokens · ${inteiro(ia.chamadas_no_mes)} chamadas · média ${inteiro(ia.media_tokens_por_chamada)} tokens/chamada</span></div>
+                    ${linhasUso}
+                    <p class="financeiro-nota">O custo financeiro da IA não é estimado porque não há tabela de preços do provedor conectada.</p>
+                </section>
+            </div>
+            <section class="financeiro-bloco financeiro-integracoes">
+                <h3>Integrações e dados ainda não disponíveis</h3>
+                <ul>
+                    <li>Pagamentos e receita recebida: não conectados; nenhuma transação é inferida pelo status do plano.</li>
+                    <li>Publicidade: anúncios demonstrativos próprios; ${anuncios.impressoes_registradas === null ? "impressões e receita de anúncios não são contabilizadas no servidor." : "impressões informadas pelo servidor."}</li>
+                    <li>Custos da IA: volume de tokens disponível; custo em reais depende de preços e faturas do provedor.</li>
+                </ul>
+            </section>
+        </section>`;
 }
 
 function formatarSnapshotLog(log) {
@@ -3088,34 +3200,33 @@ async function alterarStatusAtendimento(novoStatus) {
 
 let planoAtual = null;
 
-/*
- * Provedor de anúncios:
- *  - "casa": anúncios próprios do FocoVest (gratuito, funciona agora)
- *  - "adsense": Google AdSense (só depois de aprovado; preencha cliente e slots)
- * Se estiver em "adsense" mas faltar algum dado, cai automaticamente em "casa".
- */
 const ANUNCIOS_CONFIG = {
-    provedor: "casa",
-    adsenseCliente: "",   // ex.: "ca-pub-XXXXXXXXXXXXXXXX"
-    adsenseSlots: {
-        "painel": "",
-        "redacao-intro": "",
-        "redacao-resultado": ""
+    provedor: "demonstracao",
+    intervaloPorPosicaoHoras: 24,
+    posicoes: {
+        painel: { formato: "banner horizontal", local: "abaixo dos cards do painel" },
+        "redacao-intro": { formato: "card nativo horizontal", local: "ao final da lista de temas" },
+        "redacao-resultado": { formato: "card nativo horizontal", local: "após o feedback da redação" }
     }
 };
 
-const ANUNCIOS_CASA = [
-    {
-        titulo: "Mais correções de redação com IA",
-        texto: "No plano Premium você tem um limite muito maior de correções por mês.",
-        botao: "Conhecer o Premium"
-    },
-    {
+const ANUNCIOS_CASA = {
+    painel: {
         titulo: "Estude sem interrupções",
-        texto: "Assinando o Premium, os anúncios deixam de aparecer.",
+        texto: "Anúncio demonstrativo próprio do FocoVest. O Premium foi pensado para quem quer estudar sem publicidade.",
         botao: "Ver planos"
+    },
+    "redacao-intro": {
+        titulo: "Mais espaço para praticar redação",
+        texto: "Conheça as opções de plano do FocoVest. Este é um anúncio demonstrativo, sem anunciante externo.",
+        botao: "Conhecer planos"
+    },
+    "redacao-resultado": {
+        titulo: "Continue evoluindo na redação",
+        texto: "Veja os benefícios planejados para o Premium. Nenhuma assinatura ou cobrança é feita por este anúncio.",
+        botao: "Ver benefícios"
     }
-];
+};
 
 async function carregarPlano() {
     try {
@@ -3206,26 +3317,60 @@ function renderizarAnuncios() {
             slot.innerHTML = "";
             slot.hidden = true;
             delete slot.dataset.renderizado;
+            delete slot.dataset.visita;
+            return;
+        }
+
+        const telaPai = slot.closest(".tela");
+        if (telaPai && !telaPai.classList.contains("ativa")) return;
+
+        if (
+            slot.dataset.renderizado === "1" &&
+            slot.dataset.visita === String(visitaTelaAtualId)
+        ) {
+            slot.hidden = false;
+            return;
+        }
+
+        if (!podeExibirAnuncio(slot)) {
+            slot.innerHTML = "";
+            slot.hidden = true;
+            delete slot.dataset.renderizado;
+            delete slot.dataset.visita;
             return;
         }
 
         slot.hidden = false;
-        if (slot.dataset.renderizado === "1") return; // não recria a cada abertura de tela
-
-        if (ANUNCIOS_CONFIG.provedor === "adsense") {
-            renderizarAnuncioAdsense(slot);
-        } else {
-            renderizarAnuncioCasa(slot);
-        }
+        renderizarAnuncioCasa(slot);
         slot.dataset.renderizado = "1";
+        slot.dataset.visita = String(visitaTelaAtualId);
     });
 }
 
+function podeExibirAnuncio(slot) {
+    const posicao = slot.dataset.anuncio;
+    if (!posicao || !ANUNCIOS_CONFIG.posicoes[posicao]) return false;
+
+    const chave = `focovest_anuncio_${posicao}_visto_em`;
+    const intervalo = ANUNCIOS_CONFIG.intervaloPorPosicaoHoras * 60 * 60 * 1000;
+    try {
+        const ultimaExibicao = Number(localStorage.getItem(chave) || 0);
+        if (Date.now() - ultimaExibicao < intervalo) return false;
+        localStorage.setItem(chave, String(Date.now()));
+    } catch (erro) {
+        // Sem persistência não é possível respeitar o limite de frequência; não exibir o anúncio.
+        console.warn("Não foi possível aplicar a frequência local dos anúncios:", erro);
+        return false;
+    }
+    return true;
+}
+
 function renderizarAnuncioCasa(slot) {
-    const anuncio = ANUNCIOS_CASA[Math.floor(Math.random() * ANUNCIOS_CASA.length)];
+    const anuncio = ANUNCIOS_CASA[slot.dataset.anuncio];
+    if (!anuncio) return;
 
     slot.innerHTML = `
-        <span class="anuncio-rotulo">Publicidade</span>
+        <span class="anuncio-rotulo">Publicidade demonstrativa · conteúdo próprio FocoVest</span>
         <div class="anuncio-casa">
             <div>
                 <strong>${escaparHTML(anuncio.titulo)}</strong>
@@ -3236,31 +3381,6 @@ function renderizarAnuncioCasa(slot) {
             </button>
         </div>
     `;
-}
-
-function renderizarAnuncioAdsense(slot) {
-    const idSlot = ANUNCIOS_CONFIG.adsenseSlots[slot.dataset.anuncio];
-
-    if (!ANUNCIOS_CONFIG.adsenseCliente || !idSlot) {
-        renderizarAnuncioCasa(slot);
-        return;
-    }
-
-    slot.innerHTML = `
-        <span class="anuncio-rotulo">Publicidade</span>
-        <ins class="adsbygoogle"
-             style="display:block"
-             data-ad-client="${escaparHTML(ANUNCIOS_CONFIG.adsenseCliente)}"
-             data-ad-slot="${escaparHTML(idSlot)}"
-             data-ad-format="auto"
-             data-full-width-responsive="true"></ins>
-    `;
-
-    try {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch (erro) {
-        console.error("Erro ao carregar AdSense:", erro);
-    }
 }
 
 function abrirModalPlanos() {

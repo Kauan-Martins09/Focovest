@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from .db import SessionLocal
@@ -12,12 +13,14 @@ from .security import (
 )
 
 import httpx
+import math
+import os
 import random
 import time
 from datetime import datetime, timedelta
 from .gemini_redacao import corrigir_redacao_gemini, GeminiError, gerar_tema_redacao, sortear_eixo_recorte
 from .correcao_regras import corrigir_redacao_regras
-from .planos import resumo_plano, registrar_uso_ia
+from .planos import resumo_plano, registrar_uso_ia, eh_premium, inicio_do_mes
 
 def questao_completa(q):
     tinha_imagem_no_contexto = "![" in (q.get("context") or "")
@@ -675,6 +678,90 @@ def admin_listar_usuarios(
         {"id": u.id, "nome": u.nome, "email": u.email, "idade": u.idade, "is_admin": u.is_admin}
         for u in usuarios
     ]
+
+
+def _preco_premium_referencia() -> float | None:
+    """Preço de referência para projeção; não representa pagamento recebido."""
+    bruto = os.getenv("PRECO_PREMIUM_MENSAL", "19.99").strip().replace(",", ".")
+    try:
+        valor = float(bruto)
+    except (TypeError, ValueError):
+        return None
+    return round(valor, 2) if math.isfinite(valor) and valor >= 0 else None
+
+
+@router.get("/admin/financeiro/resumo")
+def admin_resumo_financeiro(
+    db: Session = Depends(get_db),
+    usuario=Depends(usuario_atual)
+):
+    if not usuario.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Acesso negado")
+
+    agora = datetime.utcnow()
+    inicio_mes = inicio_do_mes()
+    todas_contas = db.query(User).all()
+    alunos = [u for u in todas_contas if not bool(u.is_admin) and not bool(u.is_atendimento)]
+    premium_ativos = [u for u in alunos if eh_premium(u)]
+    premium_vencidos = [
+        u for u in alunos
+        if u.plano == "premium" and not eh_premium(u)
+    ]
+    premium_vencendo = [
+        u for u in alunos
+        if u.plano == "premium"
+        and u.plano_expira_em is not None
+        and agora < u.plano_expira_em <= agora + timedelta(days=30)
+    ]
+
+    uso_por_tipo = db.query(
+        UsoIA.tipo,
+        func.count(UsoIA.id),
+        func.coalesce(func.sum(UsoIA.tokens_total), 0)
+    ).filter(
+        UsoIA.criado_em >= inicio_mes
+    ).group_by(UsoIA.tipo).all()
+
+    operacoes = [
+        {"tipo": tipo or "outros", "chamadas": int(chamadas or 0), "tokens": int(tokens or 0)}
+        for tipo, chamadas, tokens in uso_por_tipo
+    ]
+    total_chamadas = sum(item["chamadas"] for item in operacoes)
+    total_tokens = sum(item["tokens"] for item in operacoes)
+    preco_referencia = _preco_premium_referencia()
+
+    return {
+        "periodo": {
+            "inicio_utc": inicio_mes.isoformat(),
+            "atualizado_em_utc": agora.isoformat()
+        },
+        "indicadores": {
+            "alunos_cadastrados": len(alunos),
+            "free": max(0, len(alunos) - len(premium_ativos)),
+            "premium_ativos": len(premium_ativos),
+            "premium_vencidos": len(premium_vencidos),
+            "premium_vencendo_em_30_dias": len(premium_vencendo)
+        },
+        "receita": {
+            "preco_mensal_referencia": preco_referencia,
+            "mrr_potencial_estimado": round(len(premium_ativos) * preco_referencia, 2)
+            if preco_referencia is not None else None,
+            "pagamentos_integrados": False,
+            "receita_recebida": None
+        },
+        "uso_ia": {
+            "chamadas_no_mes": total_chamadas,
+            "tokens_no_mes": total_tokens,
+            "media_tokens_por_chamada": round(total_tokens / total_chamadas)
+            if total_chamadas else 0,
+            "por_operacao": operacoes
+        },
+        "anuncios": {
+            "integracao_externa": False,
+            "impressoes_registradas": None,
+            "receita_registrada": None
+        }
+    }
 
 
 @router.delete("/admin/usuario/{id}")
