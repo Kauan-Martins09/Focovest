@@ -1242,13 +1242,15 @@ html{
     width: 100%; margin: 0;
     padding: 12px 18px;
     background: white;
-    color: #ef4444;
+    color: #1e2937;
     border-radius: 0;
     text-align: left;
     font-weight: 600;
 }
 
-.perfil-menu button:hover { background: #fef2f2; }
+.perfil-menu button:hover { background: #f1f5f9; }
+.perfil-menu .perfil-menu-sair { color: #ef4444; }
+.perfil-menu .perfil-menu-sair:hover { background: #fef2f2; }
 
 .painel-hero {
     width: 100%;

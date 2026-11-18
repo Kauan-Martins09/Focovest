@@ -411,6 +411,11 @@ function togglePerfilMenu() {
     document.getElementById("perfil-menu").classList.toggle("aberto");
 }
 
+function abrirPlanosDoPerfil() {
+    document.getElementById("perfil-menu")?.classList.remove("aberto");
+    abrirModalPlanos();
+}
+
 function getHeaders() {
     const token = localStorage.getItem("token");
     return {
@@ -1657,7 +1662,7 @@ async function gerarTemaAleatorio() {
   btn.textContent = "Gerando tema...";
 
   try {
-    const resp = await fetch(`${API_BASE_URL}/tema-redacao/aleatorio`, {
+    const resp = await apiFetch("/tema-redacao/aleatorio", {
       headers: { Authorization: `Bearer ${token}` }
     });
 
@@ -1685,7 +1690,11 @@ async function gerarTemaAleatorio() {
     mostrarTela("redacao");
 
   } catch (e) {
-    alert(e.message || "Erro ao gerar tema");
+    if (e instanceof TypeError) {
+      alert("Não foi possível conectar à API do FocoVest. O servidor pode estar reiniciando ou indisponível; aguarde alguns instantes e tente novamente.");
+    } else {
+      alert(e.message || "Erro ao gerar tema");
+    }
   } finally {
     btn.disabled = false;
     btn.textContent = textoOriginal;

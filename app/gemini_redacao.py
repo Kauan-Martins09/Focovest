@@ -287,5 +287,5 @@ def gerar_tema_redacao(eixo: str, recorte: str, evitar: list) -> dict:
         ],
         "max_tokens": 4096,
     }
-        tema, uso = _chamar(body, _validar_tema, operacao="gerar_tema")
+    tema, uso = _chamar(body, _validar_tema, operacao="gerar_tema")
     return {**tema, "uso": uso}
