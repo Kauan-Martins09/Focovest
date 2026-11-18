@@ -12,6 +12,8 @@ class User(Base):
     idade = Column(Integer)
     is_admin = Column(Boolean, default=False)
     is_atendimento = Column(Boolean, default=False)
+    plano = Column(String(20), nullable=False, default="free")
+    plano_expira_em = Column(DateTime, nullable=True)
 
 class ConversaAtendimento(Base):
     __tablename__ = "conversas_atendimento"
@@ -130,3 +132,14 @@ class TemaGerado(Base):
     titulo = Column(String(500), nullable=False)
     eixo = Column(String(100), nullable=False)
     criado_em = Column(DateTime, default=datetime.utcnow)
+
+class UsoIA(Base):
+    __tablename__ = "uso_ia"
+
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    tipo = Column(String(30), nullable=False)   # ex: correcao_redacao
+    tokens_entrada = Column(Integer, nullable=False, default=0)
+    tokens_saida = Column(Integer, nullable=False, default=0)
+    tokens_total = Column(Integer, nullable=False, default=0)
+    criado_em = Column(DateTime, default=datetime.utcnow, nullable=False)

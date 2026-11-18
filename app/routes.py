@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from .db import SessionLocal
-from .models import User, Anotacao, Compromisso, Resultado, Redacao, AdminLog, ConversaAtendimento, MensagemAtendimento, TemaGerado
+from .models import User, Anotacao, Compromisso, Resultado, Redacao, AdminLog, ConversaAtendimento, MensagemAtendimento, TemaGerado, UsoIA
 from .schemas import UserCreate, UserLog, AnotacaoCreate, CompromissoCreate, ResultadoCreate, RedacaoCreate, MensagemAtendimentoCreate
 from .security import (
     hash_senha,
@@ -14,9 +14,10 @@ from .security import (
 import httpx
 import random
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from .gemini_redacao import corrigir_redacao_gemini, GeminiError, gerar_tema_redacao, sortear_eixo_recorte
 from .correcao_regras import corrigir_redacao_regras
+from .planos import resumo_plano, registrar_uso_ia
 
 def questao_completa(q):
     tinha_imagem_no_contexto = "![" in (q.get("context") or "")
@@ -513,19 +514,31 @@ def criar_redacao(
     if redacao.tema_ano:
         tema = f"{tema} ({redacao.tema_ano})"
 
-    try:
-        r = corrigir_redacao_gemini(tema, redacao.texto)
-        competencias = {c: r[c] for c in ("c1", "c2", "c3", "c4", "c5")}
-        nota = r["total"]
-        feedback = {
-            "origem": "ia",
-            "competencias": competencias,
-            "comentario": r["feedback"]
-        }
-        origem = "ia"
-    except GeminiError as erro:
-        print(f"ERRO NO GEMINI: {erro}")
-    pass  # fica com o resultado das regras
+    conta = db.query(User).filter(User.id == usuario["usuario_id"]).first()
+    if not conta:
+        raise HTTPException(status_code=401, detail="Usuário não encontrado")
+
+    plano = resumo_plano(db, conta)
+    motivo_regras = None  # None = a IA corrigiu normalmente
+
+    if plano["tokens_restantes"] <= 0:
+        # Limite do mês esgotado: não chama a IA, usa as regras (gratuitas)
+        motivo_regras = "limite"
+    else:
+        try:
+            r = corrigir_redacao_gemini(tema, redacao.texto)
+            competencias = {c: r[c] for c in ("c1", "c2", "c3", "c4", "c5")}
+            nota = r["total"]
+            feedback = {
+                "origem": "ia",
+                "competencias": competencias,
+                "comentario": r["feedback"]
+            }
+            origem = "ia"
+            registrar_uso_ia(db, conta.id, "correcao_redacao", r.get("uso"))
+        except GeminiError as erro:
+            print(f"ERRO NO GEMINI: {erro}")
+            motivo_regras = "erro"
 
     nova = Redacao(
         usuario_id=usuario["usuario_id"],
@@ -541,6 +554,7 @@ def criar_redacao(
     db.add(nova)
     db.commit()
     db.refresh(nova)
+    plano = resumo_plano(db, conta)  # recalcula já com o uso desta correção
 
     return {
         "msg": "Redação salva",
@@ -551,7 +565,9 @@ def criar_redacao(
         "origem": origem,
         "linhas": regras["linhas"],
         "palavras": regras["palavras"],
-        "paragrafos": regras["paragrafos"]
+        "paragrafos": regras["paragrafos"],
+        "motivo_regras": motivo_regras,
+        "plano": plano
     }
 
 _ultimo_tema_por_usuario = {}  # trava simples contra cliques seguidos (gasta crédito)
@@ -562,6 +578,17 @@ def gerar_tema_aleatorio(
     db: Session = Depends(get_db),
     usuario=Depends(usuario_atual)
 ):
+
+    conta = db.query(User).filter(User.id == usuario["usuario_id"]).first()
+    if not conta:
+        raise HTTPException(status_code=401, detail="Usuário não encontrado")
+
+    if resumo_plano(db, conta)["tokens_restantes"] <= 0:
+        raise HTTPException(
+            status_code=429,
+            detail="Você atingiu o limite mensal de IA do seu plano. Escolha um dos temas oficiais da lista ou aguarde a renovação."
+        )
+    
     agora = time.time()
     if agora - _ultimo_tema_por_usuario.get(usuario["usuario_id"], 0) < 5:
         raise HTTPException(status_code=429, detail="Aguarde alguns segundos para gerar outro tema")
@@ -580,6 +607,9 @@ def gerar_tema_aleatorio(
         except GeminiError as erro:
             print(f"ERRO AO GERAR TEMA: {erro}")
             continue
+
+        # Conta o gasto mesmo se o tema vier repetido: a chamada foi cobrada
+        registrar_uso_ia(db, conta.id, "gerar_tema", tema.get("uso"))
 
         if tema["titulo"].strip().lower() in recentes_norm:
             continue  # a IA repetiu um tema: sorteia de novo
@@ -607,6 +637,16 @@ def listar_redacoes(
     return db.query(Redacao).filter(
         Redacao.usuario_id == usuario_id
     ).order_by(Redacao.data.desc()).all()
+
+@router.get("/plano")
+def obter_plano(
+    db: Session = Depends(get_db),
+    usuario=Depends(usuario_atual)
+):
+    conta = db.query(User).filter(User.id == usuario["usuario_id"]).first()
+    if not conta:
+        raise HTTPException(status_code=401, detail="Usuário não encontrado")
+    return resumo_plano(db, conta)
 
 # ===================== ADMIN =====================
 def registrar_log(db: Session, admin: User, acao: str, alvo_tipo: str, alvo_id: int | None, snapshot: dict | None):
@@ -657,8 +697,8 @@ def admin_deletar_usuario(
     db.query(Compromisso).filter(Compromisso.usuario_id == id).delete()
     db.query(Resultado).filter(Resultado.usuario_id == id).delete()
     db.query(Redacao).filter(Redacao.usuario_id == id).delete()
-
     db.query(AdminLog).filter(AdminLog.admin_id == id).delete()
+    db.query(UsoIA).filter(UsoIA.usuario_id == id).delete()
 
     db.delete(usuario_alvo)
     db.commit()
@@ -956,6 +996,79 @@ def admin_rebaixar_usuario(
     registrar_log(db, admin, "rebaixar_admin", "usuario", id, snapshot)
     return {"msg": f"{alvo.nome} não é mais admin"}
 
+
+@router.post("/admin/usuario/{id}/ativar-premium")
+def admin_ativar_premium(
+    id: int,
+    dias: int = 30,
+    db: Session = Depends(get_db),
+    usuario=Depends(usuario_atual)
+):
+    if not usuario.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Acesso negado")
+
+    if dias < 1 or dias > 3650:
+        raise HTTPException(status_code=400, detail="Informe de 1 a 3650 dias")
+
+    admin = db.query(User).filter(User.id == usuario["usuario_id"]).first()
+    alvo = db.query(User).filter(User.id == id).first()
+    if not alvo:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    # Se já é Premium vigente, soma os dias ao vencimento atual (não perde dias pagos)
+    agora = datetime.utcnow()
+    base = agora
+    if alvo.plano == "premium" and alvo.plano_expira_em and alvo.plano_expira_em > agora:
+        base = alvo.plano_expira_em
+
+    alvo.plano = "premium"
+    alvo.plano_expira_em = base + timedelta(days=dias)
+    db.commit()
+
+    registrar_log(db, admin, "ativar_premium", "usuario", id, {
+        "id": alvo.id,
+        "nome": alvo.nome,
+        "email": alvo.email,
+        "plano": "premium",
+        "dias": dias,
+        "plano_expira_em": alvo.plano_expira_em.isoformat()
+    })
+
+    return {
+        "msg": f"{alvo.nome} agora é Premium",
+        "plano_expira_em": alvo.plano_expira_em
+    }
+
+
+@router.post("/admin/usuario/{id}/desativar-premium")
+def admin_desativar_premium(
+    id: int,
+    db: Session = Depends(get_db),
+    usuario=Depends(usuario_atual)
+):
+    if not usuario.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Acesso negado")
+
+    admin = db.query(User).filter(User.id == usuario["usuario_id"]).first()
+    alvo = db.query(User).filter(User.id == id).first()
+    if not alvo:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    if alvo.plano != "premium":
+        return {"msg": "Usuário já está no plano Free"}
+
+    alvo.plano = "free"
+    alvo.plano_expira_em = None
+    db.commit()
+
+    registrar_log(db, admin, "desativar_premium", "usuario", id, {
+        "id": alvo.id,
+        "nome": alvo.nome,
+        "email": alvo.email,
+        "plano": "free"
+    })
+
+    return {"msg": f"{alvo.nome} voltou ao plano Free"}
 
 @router.get("/admin/logs")
 def admin_listar_logs(

@@ -382,6 +382,8 @@ function atualizarPainel() {
     const diasRestantes = Math.max(0, Math.ceil((diaProva - hoje) / (1000 * 60 * 60 * 24)));
 
     document.getElementById("dias-para-enem").textContent = diasRestantes;
+
+    carregarPlano();
 }
 
 function limparCamposAuth() {
@@ -418,6 +420,9 @@ function getHeaders() {
 }
 
 function sairConta() {
+    planoAtual = null;
+    atualizarPlanoNaTela();
+    renderizarAnuncios();
     localStorage.removeItem("usuario_id");
     localStorage.removeItem("nome");
     localStorage.removeItem("is_admin");
@@ -1623,6 +1628,8 @@ let temaAtualRedacao = null;
 function abrirRedacaoIntro() {
     mostrarTela("redacao-intro");
     renderListaTemas();
+    carregarHistoricoRedacoes();
+    carregarPlano();
 }
 
 function renderListaTemas() {
@@ -2029,6 +2036,12 @@ async function finalizarRedacao() {
             if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
 
             servidor = await resposta.json();
+
+            if (servidor.plano) {
+                planoAtual = servidor.plano;
+                atualizarPlanoNaTela();
+            }
+
         } catch (error) {
             console.error("Erro ao corrigir/salvar redação:", error);
         } finally {
@@ -2055,7 +2068,10 @@ async function finalizarRedacao() {
         // IA indisponível: o servidor aplicou as regras e já salvou
         const r = servidor.feedback;
         stats = r;
-        ({ htmlEstrutura, htmlCompetencias } = gerarFeedbackHTML(r, temaAtualRedacao, AVISO_REGRAS_SERVIDOR));
+        const aviso = servidor.motivo_regras === "limite"
+            ? montarAvisoLimite(servidor.plano)
+            : AVISO_REGRAS_SERVIDOR;
+        ({ htmlEstrutura, htmlCompetencias } = gerarFeedbackHTML(r, temaAtualRedacao, aviso));
     } else {
         // Servidor fora do ar (ou usuário sem login): mostra a correção local
         stats = local;
@@ -3058,3 +3074,206 @@ async function alterarStatusAtendimento(novoStatus) {
         );
     }
 }
+
+// ===================== PLANOS, LIMITE DE IA E ANÚNCIOS =====================
+
+let planoAtual = null;
+
+/*
+ * Provedor de anúncios:
+ *  - "casa": anúncios próprios do FocoVest (gratuito, funciona agora)
+ *  - "adsense": Google AdSense (só depois de aprovado; preencha cliente e slots)
+ * Se estiver em "adsense" mas faltar algum dado, cai automaticamente em "casa".
+ */
+const ANUNCIOS_CONFIG = {
+    provedor: "casa",
+    adsenseCliente: "",   // ex.: "ca-pub-XXXXXXXXXXXXXXXX"
+    adsenseSlots: {
+        "painel": "",
+        "redacao-intro": "",
+        "redacao-resultado": ""
+    }
+};
+
+const ANUNCIOS_CASA = [
+    {
+        titulo: "Mais correções de redação com IA",
+        texto: "No plano Premium você tem um limite muito maior de correções por mês.",
+        botao: "Conhecer o Premium"
+    },
+    {
+        titulo: "Estude sem interrupções",
+        texto: "Assinando o Premium, os anúncios deixam de aparecer.",
+        botao: "Ver planos"
+    }
+];
+
+async function carregarPlano() {
+    try {
+        const resposta = await apiFetch("/plano");
+        if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+        planoAtual = await resposta.json();
+    } catch (erro) {
+        console.error("Erro ao carregar plano:", erro);
+        // Sem saber o plano, não exibimos anúncio para não mostrar a um Premium por engano
+        planoAtual = null;
+    }
+
+    atualizarPlanoNaTela();
+    renderizarAnuncios();
+}
+
+function formatarDataRenovacao(iso) {
+    if (!iso) return "";
+    // O servidor manda UTC sem o "Z"; adicionamos para o navegador interpretar certo
+    const data = new Date(iso.endsWith("Z") ? iso : `${iso}Z`);
+    if (isNaN(data)) return "";
+    return data.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+}
+
+function montarAvisoLimite(plano) {
+    const data = plano ? formatarDataRenovacao(plano.renova_em) : "";
+    const premium = plano && plano.plano === "premium";
+
+    return `Você atingiu o limite mensal de correções por IA do seu plano` +
+        `${data ? ` (renova em ${data})` : ""}, então usamos a correção automática por regras (sem IA). ` +
+        `${premium ? "" : "No plano Premium o limite é muito maior. "}` +
+        `Serve como treino e não é a correção oficial do ENEM.`;
+}
+
+function atualizarPlanoNaTela() {
+    const wrap = document.getElementById("plano-card-wrap");
+    const avisoRedacao = document.getElementById("redacao-aviso-limite");
+
+    if (!planoAtual) {
+        if (wrap) wrap.style.display = "none";
+        if (avisoRedacao) avisoRedacao.hidden = true;
+        return;
+    }
+
+    const premium = planoAtual.plano === "premium";
+    const percentual = planoAtual.tokens_limite > 0
+        ? Math.min(100, Math.round((planoAtual.tokens_usados / planoAtual.tokens_limite) * 100))
+        : 0;
+    const dataRenovacao = formatarDataRenovacao(planoAtual.renova_em);
+    const esgotado = planoAtual.tokens_restantes <= 0;
+
+    if (wrap) {
+        wrap.style.display = "";
+
+        const badge = document.getElementById("plano-badge");
+        badge.textContent = premium ? "Plano Premium" : "Plano Free";
+        badge.classList.toggle("plano-badge-premium", premium);
+
+        document.getElementById("plano-uso-texto").textContent = esgotado
+            ? `Você usou todo o limite de correções por IA deste mês. Renova em ${dataRenovacao}.`
+            : `Uso da IA neste mês: ${percentual}% · renova em ${dataRenovacao}`;
+
+        const barra = document.getElementById("plano-barra-preenchida");
+        barra.style.width = `${percentual}%`;
+        barra.classList.toggle("plano-barra-cheia", percentual >= 80);
+
+        document.getElementById("btn-upgrade").style.display = premium ? "none" : "";
+    }
+
+    if (avisoRedacao) {
+        if (esgotado) {
+            avisoRedacao.textContent =
+                `Seu limite de IA deste mês acabou (renova em ${dataRenovacao}). ` +
+                `Você ainda pode escrever: a redação será corrigida pelas regras automáticas, ` +
+                `e o tema aleatório por IA fica indisponível (use os temas oficiais).`;
+            avisoRedacao.hidden = false;
+        } else {
+            avisoRedacao.hidden = true;
+        }
+    }
+}
+
+function renderizarAnuncios() {
+    const mostrar = Boolean(planoAtual && planoAtual.mostrar_anuncios);
+
+    document.querySelectorAll(".anuncio").forEach(slot => {
+        if (!mostrar) {
+            slot.innerHTML = "";
+            slot.hidden = true;
+            delete slot.dataset.renderizado;
+            return;
+        }
+
+        slot.hidden = false;
+        if (slot.dataset.renderizado === "1") return; // não recria a cada abertura de tela
+
+        if (ANUNCIOS_CONFIG.provedor === "adsense") {
+            renderizarAnuncioAdsense(slot);
+        } else {
+            renderizarAnuncioCasa(slot);
+        }
+        slot.dataset.renderizado = "1";
+    });
+}
+
+function renderizarAnuncioCasa(slot) {
+    const anuncio = ANUNCIOS_CASA[Math.floor(Math.random() * ANUNCIOS_CASA.length)];
+
+    slot.innerHTML = `
+        <span class="anuncio-rotulo">Publicidade</span>
+        <div class="anuncio-casa">
+            <div>
+                <strong>${escaparHTML(anuncio.titulo)}</strong>
+                <p>${escaparHTML(anuncio.texto)}</p>
+            </div>
+            <button type="button" class="anuncio-botao" onclick="abrirModalPlanos()">
+                ${escaparHTML(anuncio.botao)}
+            </button>
+        </div>
+    `;
+}
+
+function renderizarAnuncioAdsense(slot) {
+    const idSlot = ANUNCIOS_CONFIG.adsenseSlots[slot.dataset.anuncio];
+
+    if (!ANUNCIOS_CONFIG.adsenseCliente || !idSlot) {
+        renderizarAnuncioCasa(slot);
+        return;
+    }
+
+    slot.innerHTML = `
+        <span class="anuncio-rotulo">Publicidade</span>
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="${escaparHTML(ANUNCIOS_CONFIG.adsenseCliente)}"
+             data-ad-slot="${escaparHTML(idSlot)}"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+    `;
+
+    try {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (erro) {
+        console.error("Erro ao carregar AdSense:", erro);
+    }
+}
+
+function abrirModalPlanos() {
+    const modal = document.getElementById("modal-planos");
+    if (modal) modal.hidden = false;
+}
+
+function fecharModalPlanos() {
+    const modal = document.getElementById("modal-planos");
+    if (modal) modal.hidden = true;
+}
+
+(function configurarModalPlanos() {
+    const modal = document.getElementById("modal-planos");
+    if (!modal) return;
+
+    // Clicar fora da caixa fecha o modal
+    modal.addEventListener("click", evento => {
+        if (evento.target === modal) fecharModalPlanos();
+    });
+
+    document.addEventListener("keydown", evento => {
+        if (evento.key === "Escape" && !modal.hidden) fecharModalPlanos();
+    });
+})();

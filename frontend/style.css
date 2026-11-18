@@ -3578,3 +3578,188 @@ button:disabled:hover{
         font-size: 0.9rem;
     }
 }
+
+/* ===================== PLANOS E ANÚNCIOS ===================== */
+.plano-card-wrap {
+    width: 100%;
+    max-width: 1100px;
+    padding: 0 30px;
+    margin: 0 auto 10px;
+}
+
+.plano-card {
+    background: white;
+    border-radius: 18px;
+    padding: 18px 22px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.07);
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.plano-info { flex: 1; min-width: 240px; }
+
+.plano-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    background: rgba(159,150,189,0.2);
+    color: #4b4470;
+    margin-bottom: 8px;
+}
+
+.plano-badge-premium {
+    background: linear-gradient(90deg, #9F96BD, #67E191);
+    color: white;
+}
+
+.plano-uso-texto {
+    color: #4b5563;
+    font-size: 0.92rem;
+    margin-bottom: 8px;
+}
+
+.plano-barra {
+    height: 10px;
+    border-radius: 999px;
+    background: #e5e7eb;
+    overflow: hidden;
+}
+
+.plano-barra-preenchida {
+    height: 100%;
+    width: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #9F96BD, #67E191);
+    transition: width 0.4s ease;
+}
+
+.plano-barra-preenchida.plano-barra-cheia { background: #e5534b; }
+
+.btn-upgrade,
+.anuncio-botao {
+    background: linear-gradient(90deg, #9F96BD, #67E191);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 18px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Anúncios */
+.anuncio {
+    width: 100%;
+    max-width: 1100px;
+    margin: 20px auto;
+    padding: 0 30px;
+}
+
+.anuncio[hidden] { display: none; }
+
+.anuncio-rotulo {
+    display: block;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    margin-bottom: 6px;
+}
+
+.anuncio-casa {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    min-height: 90px;
+    padding: 16px 20px;
+    border-radius: 16px;
+    border: 1px dashed rgba(159,150,189,0.6);
+    background: linear-gradient(135deg, rgba(159,150,189,0.14), rgba(103,225,145,0.14));
+}
+
+.anuncio-casa strong { color: #1e2937; }
+.anuncio-casa p { color: #4b5563; font-size: 0.9rem; margin-top: 4px; }
+
+/* Aviso de limite na tela de redação */
+.redacao-aviso-limite {
+    background: #fff4e5;
+    border-left: 4px solid #f5a524;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin: 14px 0;
+    color: #7a4b00;
+    font-size: 0.92rem;
+}
+
+.redacao-aviso-limite[hidden] { display: none; }
+
+/* Modal de planos */
+.modal-planos {
+    position: fixed;
+    inset: 0;
+    background: rgba(17,24,39,0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 1000;
+}
+
+.modal-planos[hidden] { display: none; }
+
+.modal-planos-caixa {
+    position: relative;
+    background: white;
+    border-radius: 22px;
+    padding: 28px;
+    width: 100%;
+    max-width: 640px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+}
+
+.modal-planos-caixa h2 { color: #1e2937; margin-bottom: 18px; }
+
+.modal-planos-fechar {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.planos-comparativo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+@media (max-width: 560px) {
+    .planos-comparativo { grid-template-columns: 1fr; }
+}
+
+.plano-opcao {
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 18px;
+}
+
+.plano-opcao-destaque {
+    border-color: #9F96BD;
+    background: rgba(159,150,189,0.08);
+}
+
+.plano-opcao h3 { color: #1e2937; margin-bottom: 4px; }
+.plano-preco { font-weight: bold; color: #4b4470; margin-bottom: 10px; }
+.plano-opcao ul { padding-left: 18px; color: #4b5563; font-size: 0.92rem; line-height: 1.6; }
+.plano-aviso { margin-top: 16px; color: #6b7280; font-size: 0.85rem; }

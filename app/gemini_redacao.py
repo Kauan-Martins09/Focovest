@@ -165,7 +165,8 @@ def _chamar(body: dict, validar, *, operacao: str):
             if so_raciocinio:
                 raise ValueError("a B.AI retornou raciocínio, mas não retornou resposta final")
 
-            return validar(_extrair_json(content))
+            uso = envelope.get("usage")
+            return validar(_extrair_json(content)), (uso if isinstance(uso, dict) else {})
         except httpx.HTTPStatusError as erro:
             detalhe = f"HTTP {status} da B.AI"
             if status not in RETRY_STATUS or tentativa == 1:
@@ -213,7 +214,7 @@ def corrigir_redacao_gemini(tema: str, texto: str) -> dict:
     if BAI_REASONING_EFFORT:
         body["reasoning_effort"] = BAI_REASONING_EFFORT
 
-    raw, notas = _chamar(body, _validar, operacao="corrigir_redacao")
+    (raw, notas), uso = _chamar(body, _validar, operacao="corrigir_redacao")
 
     partes = [
         f"{ROTULOS[c]}: {notas[c]}/200. {str(raw.get('analise_' + c, '')).strip()}"
@@ -227,6 +228,7 @@ def corrigir_redacao_gemini(tema: str, texto: str) -> dict:
         **notas,
         "total": sum(notas.values()),
         "feedback": "\n\n".join(partes),
+        "uso": uso,
     }
 
 EIXOS = [
@@ -285,4 +287,5 @@ def gerar_tema_redacao(eixo: str, recorte: str, evitar: list) -> dict:
         ],
         "max_tokens": 4096,
     }
-    return _chamar(body, _validar_tema, operacao="gerar_tema")
+        tema, uso = _chamar(body, _validar_tema, operacao="gerar_tema")
+    return {**tema, "uso": uso}

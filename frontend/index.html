@@ -231,6 +231,19 @@
             <div class="intro-icone">🎯</div>
         </section>
     </div>
+
+        <div class="plano-card-wrap" id="plano-card-wrap" style="display:none;">
+        <section class="plano-card">
+            <div class="plano-info">
+                <span class="plano-badge" id="plano-badge">Plano Free</span>
+                <p class="plano-uso-texto" id="plano-uso-texto"></p>
+                <div class="plano-barra">
+                    <div class="plano-barra-preenchida" id="plano-barra-preenchida"></div>
+                </div>
+            </div>
+            <button type="button" class="btn-upgrade" id="btn-upgrade" onclick="abrirModalPlanos()">Conhecer o Premium</button>
+        </section>
+    </div>
     
     <div class="bento-grid">
         <button class="bento-card bento-verde" onclick="abrirPraticar()">
@@ -274,6 +287,9 @@
         </button>
 
     </div>
+
+    <div class="anuncio" data-anuncio="painel" hidden></div>
+
     <footer class="rodape rodape-painel">
         <div class="home-container rodape-base rodape-base-sem-linha">
             <p>© 2026 FocoVest. Projeto de TCC do Curso Técnico em Desenvolvimento de Sistemas.</p>
@@ -334,6 +350,7 @@
             <li>Ao finalizar, você recebe a <strong>nota por competência (C1 a C5)</strong> e comentários de uma <strong>IA</strong>.</li>
             <li>A correção é assistida por IA e <strong>não é a correção oficial do ENEM</strong>.</li>
         </ul>
+        <p class="redacao-aviso-limite" id="redacao-aviso-limite" hidden></p>
         <button class="btn-tema-aleatorio" onclick="gerarTemaAleatorio()">
             🎲 Tema aleatório
         </button>
@@ -343,6 +360,8 @@
         <h2>Temas disponíveis</h2>
         <div id="lista-temas-redacao"></div>
     </div>
+    
+    <div class="anuncio" data-anuncio="redacao-intro" hidden></div>
 
     <div class="historico-provas" style="width:100%; max-width:1100px; margin-top: 36px;">
         <h2>Suas redações</h2>
@@ -425,6 +444,8 @@
             <h3>Seu texto</h3>
             <div id="texto-final-redacao" class="texto-final"></div>
         </div>
+
+        <div class="anuncio" data-anuncio="redacao-resultado" hidden></div>
 
         <button class="btn-finalizar-redacao" onclick="abrirRedacaoIntro()">Nova redação</button>
     </div>
@@ -758,6 +779,36 @@
             </form>
         </section>
     </main>
+</div>
+
+<div id="modal-planos" class="modal-planos" hidden>
+    <div class="modal-planos-caixa" role="dialog" aria-modal="true" aria-labelledby="modal-planos-titulo">
+        <button type="button" class="modal-planos-fechar" onclick="fecharModalPlanos()" aria-label="Fechar">×</button>
+        <h2 id="modal-planos-titulo">Escolha seu plano</h2>
+
+        <div class="planos-comparativo">
+            <div class="plano-opcao">
+                <h3>Free</h3>
+                <p class="plano-preco">R$ 0</p>
+                <ul>
+                    <li>Simulados, quizzes e calendário</li>
+                    <li>Correção de redação por IA com limite mensal</li>
+                    <li>Com anúncios</li>
+                </ul>
+            </div>
+            <div class="plano-opcao plano-opcao-destaque">
+                <h3>Premium</h3>
+                <p class="plano-preco">Em breve</p>
+                <ul>
+                    <li>Sem anúncios</li>
+                    <li>Limite de correções por IA muito maior</li>
+                    <li>Feedback imediato nas provas (em breve)</li>
+                </ul>
+            </div>
+        </div>
+
+        <p class="plano-aviso">A assinatura online ainda está sendo implantada. Em breve você poderá assinar por aqui.</p>
+    </div>
 </div>
 
 
